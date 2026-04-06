@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 async function getProduct(slug: string) {
   return await prisma.product.findUnique({
@@ -126,23 +127,59 @@ export default async function ProductDetailsPage({
 
               <Separator className="bg-zinc-50" />
 
-              {/* Variant selection (Dynamic from Database) */}
-              <div className="space-y-10">
-                {product.sizes.length > 0 && (
+              {/* Size & Inventory Sync (Dynamic from Database) */}
+              <div className="space-y-10 font-sans">
+                {(product.sizes as string[])?.length > 0 && (
                   <div className="space-y-5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Select Size</label>
-                      <button className="text-[10px] font-bold text-brand uppercase tracking-widest hover:underline px-1">Size Guide</button>
+                    <div className="flex items-center justify-between px-1">
+                      <div className="space-y-0.5">
+                        <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none">Select Size</label>
+                        <p className="text-[9px] text-zinc-300 font-bold uppercase tracking-widest">Real-time Stock Sync</p>
+                      </div>
+                      <button className="text-[10px] font-bold text-brand uppercase tracking-widest hover:underline">Size Guide</button>
                     </div>
-                    <div className="flex flex-wrap gap-3">
-                      {product.sizes.map((size: string) => (
-                        <button 
-                          key={size}
-                          className="min-w-[4rem] h-14 rounded-2xl border border-zinc-100 flex items-center justify-center font-bold text-sm text-zinc-900 transition-all hover:border-brand hover:text-brand hover:bg-brand/5 active:scale-95 shadow-sm"
-                        >
-                          {size}
-                        </button>
-                      ))}
+                    <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-3">
+                      {(product.sizes as string[]).map((sizeData: string) => {
+                        const [size, qtyStr] = sizeData.split(":");
+                        const quantity = parseInt(qtyStr || "0");
+                        const isOutOfStock = quantity === 0;
+                        const isLowStock = !isOutOfStock && quantity <= 5;
+
+                        return (
+                          <button 
+                            key={size}
+                            disabled={isOutOfStock}
+                            className={cn(
+                              "relative group h-16 rounded-2xl border flex flex-col items-center justify-center transition-all duration-300 shadow-sm overflow-hidden",
+                              isOutOfStock 
+                                ? "bg-zinc-50 border-zinc-50 text-zinc-300 cursor-not-allowed" 
+                                : "bg-white border-zinc-100 text-zinc-900 hover:border-zinc-900 hover:shadow-xl hover:shadow-zinc-200 active:scale-95"
+                            )}
+                          >
+                            <span className="text-sm font-black tracking-tight z-10">{size}</span>
+                            
+                            {!isOutOfStock && (
+                              <span className={cn(
+                                "text-[9px] font-bold uppercase tracking-widest mt-0.5 z-10",
+                                isLowStock ? "text-brand" : "text-zinc-400 group-hover:text-zinc-900"
+                              )}>
+                                {isLowStock ? `Only ${quantity} Left` : "Available"}
+                              </span>
+                            )}
+
+                            {isOutOfStock && (
+                              <span className="text-[9px] font-bold uppercase tracking-widest mt-0.5 z-10 text-zinc-300">
+                                Sold Out
+                              </span>
+                            )}
+
+                            {/* Elegant diagonal line for out of stock */}
+                            {isOutOfStock && (
+                              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-zinc-100 to-transparent opacity-50" />
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

@@ -35,14 +35,23 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-6 sm:space-y-12">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-heading tracking-tight text-zinc-900 px-1">Overview</h1>
-          <p className="text-zinc-500 font-medium px-2 mt-2">Welcome back! Here's what's happening today.</p>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8 overflow-hidden">
+        <div className="space-y-1 sm:space-y-2">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-heading tracking-tight text-zinc-900">
+            Overview
+          </h1>
+          <p className="text-zinc-500 font-medium text-sm sm:text-base leading-relaxed max-w-xl">
+            Welcome back, <span className="text-zinc-900 font-bold">Admin</span>! Your digital flagship is operating at peak performance.
+          </p>
         </div>
-        <div className="bg-white/50 border border-zinc-100 rounded-2xl p-2 px-4 flex items-center gap-3">
-           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-           <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none">Live Monitoring Active</p>
+        <div className="flex items-center gap-4 bg-white/60 backdrop-blur-md border border-zinc-100 rounded-[24px] p-1.5 pr-6 w-fit shadow-sm">
+           <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse ring-4 ring-emerald-500/20" />
+           </div>
+           <div className="flex flex-col">
+             <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest leading-none">System Health</p>
+             <p className="text-xs font-bold text-zinc-900 mt-0.5">Live Monitoring Active</p>
+           </div>
         </div>
       </div>
 

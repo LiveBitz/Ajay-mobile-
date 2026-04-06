@@ -28,14 +28,18 @@ export default async function CategoriesAdminPage() {
 
   return (
     <div className="space-y-8 pb-20">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold font-heading tracking-tight">Categories</h1>
-          <p className="text-zinc-500 font-medium whitespace-nowrap">Organize your store's core collections.</p>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8 overflow-hidden">
+        <div className="space-y-1 sm:space-y-3">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-heading tracking-tight text-zinc-900 px-1">
+            Collections
+          </h1>
+          <p className="text-zinc-500 font-medium text-sm sm:text-base leading-relaxed px-2">
+            Organize your store's <span className="text-brand font-bold">Core Clusters</span>.
+          </p>
         </div>
-        <Button className="bg-brand hover:bg-brand/90 text-white gap-2 rounded-2xl h-14 px-8 shadow-lg shadow-brand/20">
-          <Plus className="w-5 h-5" />
-          Add Category
+        <Button className="bg-brand hover:bg-brand/90 text-white gap-3 rounded-[24px] h-16 px-10 shadow-2xl shadow-brand/20 transition-all hover:scale-[1.02] active:scale-95 font-extrabold w-full lg:w-auto">
+          <Plus className="w-6 h-6" />
+          Add New Collection
         </Button>
       </div>
 
