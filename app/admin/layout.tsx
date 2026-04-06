@@ -66,7 +66,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Dynamic Content Page */}
         <section className="flex-1 overflow-x-hidden">
-          <div className="p-4 sm:p-8 lg:p-12 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+          <div className="p-4 sm:p-8 lg:p-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
             {children}
           </div>
         </section>

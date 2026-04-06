@@ -27,6 +27,22 @@ export type Filters = {
   subCategories: string[];
 };
 
+const normalizeArray = (val: any): string[] => {
+  if (Array.isArray(val)) return val;
+  if (!val) return [];
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      // If it's a plain string that can't be parsed as JSON, treat it as empty or single item?
+      // Usually it's either an array or a JSON string of an array.
+      return [];
+    }
+  }
+  return [];
+};
+
 export function useProductFilter(products: Product[], slug: string) {
   const [filters, setFilters] = useState<Filters>({
     sizes: [],
@@ -61,8 +77,14 @@ export function useProductFilter(products: Product[], slug: string) {
     let max = 0;
 
     baseProducts.forEach((p) => {
-      p.sizes.forEach((s) => (sCounts[s] = (sCounts[s] || 0) + 1));
-      p.colors.forEach((c) => (cCounts[c] = (cCounts[c] || 0) + 1));
+      // Handle structured sizes (size:qty) with deep array defense
+      normalizeArray(p.sizes).forEach((s) => {
+        const [size, qty] = s.split(":");
+        if (qty !== "0") {
+          sCounts[size] = (sCounts[size] || 0) + 1;
+        }
+      });
+      normalizeArray(p.colors).forEach((c) => (cCounts[c] = (cCounts[c] || 0) + 1));
       subCounts[p.subCategory] = (subCounts[p.subCategory] || 0) + 1;
       if (p.price > max) max = p.price;
     });
@@ -89,12 +111,12 @@ export function useProductFilter(products: Product[], slug: string) {
       .filter(
         (p) =>
           filters.sizes.length === 0 ||
-          p.sizes.some((s) => filters.sizes.includes(s))
+          normalizeArray(p.sizes).some((s) => filters.sizes.includes(s.split(":")[0]))
       )
       .filter(
         (p) =>
           filters.colors.length === 0 ||
-          p.colors.some((c) => filters.colors.includes(c))
+          normalizeArray(p.colors).some((c) => filters.colors.includes(c))
       )
       .filter(
         (p) =>
