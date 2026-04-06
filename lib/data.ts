@@ -1,7 +1,8 @@
 export type Product = {
-  id: number;
+  id: number | string;
   name: string;
-  category: string;
+  slug: string;
+  category: any;
   subCategory: string;
   price: number;
   originalPrice: number;
@@ -20,7 +21,7 @@ export const productsBySlug: Record<string, string> = {
   accessories: "Premium Accessories",
 };
 
-export const allProducts: Product[] = [
+export const allProducts: any[] = [
   { id: 1, name: "Classic White Oversized Tee", category: "men", subCategory: "T-Shirts", price: 699, originalPrice: 999, discount: 30, sizes: ["S","M","L","XL"], colors: ["White","Black"], image: "https://picsum.photos/seed/p1/400/400", isNew: true, isBestSeller: false },
   { id: 2, name: "Acid Wash Graphic Tee", category: "men", subCategory: "T-Shirts", price: 799, originalPrice: 1099, discount: 27, sizes: ["M","L","XL","XXL"], colors: ["Grey","Black"], image: "https://picsum.photos/seed/p2/400/400", isNew: false, isBestSeller: true },
   { id: 3, name: "Pullover Hoodie - Navy", category: "men", subCategory: "Hoodies", price: 1299, originalPrice: 1799, discount: 28, sizes: ["S","M","L"], colors: ["Navy","Black"], image: "https://picsum.photos/seed/p3/400/400", isNew: true, isBestSeller: false },
@@ -53,9 +54,10 @@ export const allProducts: Product[] = [
   { id: 24, name: "Silver Cufflinks", category: "accessories", subCategory: "Jewelry", price: 1499, originalPrice: 1999, discount: 25, sizes: ["One Size"], colors: ["Grey"], image: "https://picsum.photos/seed/acc4/400/400", isNew: false, isBestSeller: false },
 ];
 
-export const products = allProducts.map(p => ({
+export const products = (allProducts as any[]).map(p => ({
   id: p.id,
   name: p.name,
+  slug: p.slug || p.name.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, ""),
   category: p.category.charAt(0).toUpperCase() + p.category.slice(1),
   price: p.price,
   originalPrice: p.originalPrice,

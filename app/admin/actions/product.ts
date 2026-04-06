@@ -16,6 +16,8 @@ export async function createProduct(data: any) {
         sizes: data.sizes,
         colors: data.colors,
         image: data.image,
+        description: data.description || "",
+        features: data.features || [],
         isNew: data.isNew,
         isBestSeller: data.isBestSeller,
         category: {
@@ -47,6 +49,8 @@ export async function updateProduct(id: string, data: any) {
         sizes: data.sizes,
         colors: data.colors,
         image: data.image,
+        description: data.description || "",
+        features: data.features || [],
         isNew: data.isNew,
         isBestSeller: data.isBestSeller,
         categoryId: data.categoryId,

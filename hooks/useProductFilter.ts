@@ -67,13 +67,22 @@ export function useProductFilter(products: Product[], slug: string) {
       if (p.price > max) max = p.price;
     });
 
+    const calculatedMax = Math.ceil((max || 10000) / 100) * 100;
+
     return { 
       sizes: sCounts, 
       colors: cCounts, 
       subCategories: subCounts,
-      maxPrice: Math.ceil((max || 10000) / 100) * 100
+      maxPrice: calculatedMax
     };
   }, [baseProducts]);
+
+  // Sync price range when category changes
+  const [lastMaxPrice, setLastMaxPrice] = useState(counts.maxPrice);
+  if (counts.maxPrice !== lastMaxPrice) {
+    setLastMaxPrice(counts.maxPrice);
+    setFilters(prev => ({ ...prev, priceRange: [0, counts.maxPrice] }));
+  }
 
   const filteredProducts = useMemo(() => {
     return baseProducts

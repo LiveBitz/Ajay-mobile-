@@ -40,6 +40,10 @@ const colorMap: Record<string, { hex: string; border?: string }> = {
   "Blue": { hex: "#0000FF" },
   "Purple": { hex: "#800080" },
   "Orange": { hex: "#FFA500" },
+  "Lavender": { hex: "#E6E6FA" },
+  "Maroon": { hex: "#800000" },
+  "Olive": { hex: "#808000" },
+  "Teal": { hex: "#008080" },
 };
 
 const discounts = [10, 20, 30, 40, 50];
@@ -209,7 +213,7 @@ export function FilterSidebar({ filters, setFilters, clearAll, counts, className
                   onClick={() => toggleExpanded("color")}
                   className="flex items-center justify-between w-full group"
                 >
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-zinc-900 font-heading">Color</h4>
+                  <h4 className="text-sm font-bold uppercase tracking-widest text-zinc-900 font-heading">Color Palette</h4>
                   <div className="flex items-center gap-2">
                     {!expanded.color && <span className="text-[10px] font-bold text-brand">{getSelectionSummary("colors")}</span>}
                     <ChevronDown className={cn("w-4 h-4 transition-transform text-zinc-400 group-hover:text-zinc-900", expanded.color ? "rotate-180" : "")} />
@@ -217,29 +221,34 @@ export function FilterSidebar({ filters, setFilters, clearAll, counts, className
                 </button>
                 
                 {expanded.color && (
-                  <div className="flex flex-wrap gap-3 pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex flex-wrap gap-4 pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
                     {availableColors.map((colorName) => {
                       const count = counts.colors[colorName] || 0;
-                      const colorInfo = colorMap[colorName] || { hex: "#F4F4F5" }; // Default neutral 
+                      const colorInfo = colorMap[colorName] || { hex: colorName.toLowerCase() }; // Try CSS color name or hex
                       const isDisabled = count === 0 && !filters.colors.includes(colorName);
+                      
                       return (
-                        <button
-                          key={colorName}
-                          onClick={() => !isDisabled && toggleArrayFilter("colors", colorName)}
-                          title={`${colorName} (${count})`}
-                          disabled={isDisabled}
-                          className={cn(
-                            "w-8 h-8 rounded-full border shadow-sm transition-all relative flex items-center justify-center",
-                            colorInfo.border || "border-transparent",
-                            filters.colors.includes(colorName) ? "ring-2 ring-brand ring-offset-2 scale-110" : "hover:scale-110",
-                            isDisabled ? "opacity-20 grayscale cursor-not-allowed pointer-events-none" : "opacity-100"
-                          )}
-                          style={{ backgroundColor: colorInfo.hex }}
-                        >
-                          {filters.colors.includes(colorName) && (
-                            <Check className={cn("w-4 h-4", colorName === "White" ? "text-zinc-950" : "text-white")} />
-                          )}
-                        </button>
+                        <div key={colorName} className="flex flex-col items-center gap-2">
+                          <button
+                            onClick={() => !isDisabled && toggleArrayFilter("colors", colorName)}
+                            title={`${colorName} (${count})`}
+                            disabled={isDisabled}
+                            className={cn(
+                              "w-10 h-10 rounded-2xl border shadow-sm transition-all relative flex items-center justify-center overflow-hidden",
+                              colorInfo.border || "border-zinc-100",
+                              filters.colors.includes(colorName) ? "ring-2 ring-brand ring-offset-2 scale-110" : "hover:scale-105",
+                              isDisabled ? "opacity-20 grayscale cursor-not-allowed" : "opacity-100"
+                            )}
+                            style={{ backgroundColor: colorInfo.hex }}
+                          >
+                            {filters.colors.includes(colorName) && (
+                              <Check className={cn("w-5 h-5", ["White", "Yellow", "Beige"].includes(colorName) ? "text-zinc-950" : "text-white")} />
+                            )}
+                          </button>
+                          <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-tighter truncate max-w-[48px]">
+                            {colorName}
+                          </span>
+                        </div>
                       );
                     })}
                   </div>

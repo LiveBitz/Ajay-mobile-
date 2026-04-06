@@ -32,6 +32,8 @@ model Product {
   sizes         String[] // Supported in PostgreSQL
   colors        String[] 
   image         String
+  description   String   @default("")
+  features      String[] @default([])
   isNew         Boolean  @default(false)
   isBestSeller  Boolean  @default(false)
   createdAt     DateTime @default(now())

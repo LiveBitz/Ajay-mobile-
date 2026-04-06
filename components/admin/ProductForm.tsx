@@ -55,6 +55,8 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
     isBestSeller: initialData?.isBestSeller ?? false,
     sizes: initialData?.sizes || [],
     colors: initialData?.colors || [],
+    description: initialData?.description || "",
+    features: initialData?.features || [],
   });
 
   const handleSlugify = (name: string) => {
@@ -249,6 +251,101 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
                   className="rounded-2xl border-zinc-100 h-16 font-medium text-zinc-900 focus:ring-brand/10 shadow-sm"
                   required
                 />
+              </div>
+              <div className="md:col-span-2 space-y-3">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2">Product Narrative</label>
+                <textarea 
+                  placeholder="Tell the story of this creation..." 
+                  value={formData.description}
+                  onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
+                  className="w-full rounded-2xl border border-zinc-100 p-6 min-h-[160px] font-medium text-zinc-900 focus:ring-2 focus:ring-brand/10 focus:border-brand/20 transition-all shadow-sm outline-none resize-none"
+                  required
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Product Variants Section */}
+          <section className="bg-white p-8 sm:p-10 rounded-[40px] border border-zinc-100 shadow-sm space-y-8 transition-all hover:shadow-md">
+            <div className="flex items-center gap-3 border-b border-zinc-50 pb-6">
+              <div className="w-10 h-10 rounded-xl bg-zinc-50 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-brand" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-zinc-900">Product Variants</h2>
+                <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">Sizes & Color Palettes</p>
+              </div>
+            </div>
+
+            <div className="space-y-10">
+              {/* Size Selection Orchestration */}
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2">Available Sizes</label>
+                  <span className="text-[9px] font-bold text-brand uppercase tracking-tighter bg-brand/5 px-2 py-0.5 rounded-full">Intelligent Selection</span>
+                </div>
+                <div className="flex flex-wrap gap-2.5">
+                  {["XS", "S", "M", "L", "XL", "XXL", "3XL"].map((size) => {
+                    const isSelected = formData.sizes.includes(size);
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => {
+                          const newSizes = isSelected 
+                            ? formData.sizes.filter((s: string) => s !== size)
+                            : [...formData.sizes, size];
+                          setFormData(p => ({ ...p, sizes: newSizes }));
+                        }}
+                        className={cn(
+                          "min-w-[64px] h-14 rounded-2xl border font-bold text-sm transition-all duration-300 active:scale-95 shadow-sm flex items-center justify-center",
+                          isSelected 
+                            ? "bg-zinc-900 border-zinc-900 text-white shadow-xl shadow-zinc-200" 
+                            : "bg-white border-zinc-100 text-zinc-400 hover:border-zinc-200 hover:text-zinc-600"
+                        )}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Color Palette Orchestration */}
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2">Color Palette</label>
+                  <span className="text-[9px] font-bold text-brand uppercase tracking-tighter bg-brand/5 px-2 py-0.5 rounded-full">Curated Colors</span>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {["Black", "White", "Grey", "Navy", "Red", "Blue", "Green", "Yellow", "Orange", "Purple", "Brown"].map((color) => {
+                    const isSelected = formData.colors.includes(color);
+                    return (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => {
+                          const newColors = isSelected 
+                            ? formData.colors.filter((c: string) => c !== color)
+                            : [...formData.colors, color];
+                          setFormData(p => ({ ...p, colors: newColors }));
+                        }}
+                        className={cn(
+                          "px-5 h-14 rounded-2xl border font-bold text-xs uppercase tracking-tight transition-all duration-300 active:scale-95 shadow-sm flex items-center gap-3",
+                          isSelected 
+                            ? "bg-zinc-900 border-zinc-900 text-white shadow-xl shadow-zinc-200" 
+                            : "bg-white border-zinc-100 text-zinc-400 hover:border-zinc-200 hover:text-zinc-600"
+                        )}
+                      >
+                        <div 
+                          className="w-4 h-4 rounded-full border border-white/20" 
+                          style={{ backgroundColor: color.toLowerCase() }} 
+                        />
+                        {color}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </section>
