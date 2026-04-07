@@ -85,7 +85,7 @@ export default function CartPage() {
         <Link href="/checkout">
           <Button 
             disabled={items.length === 0}
-            className="w-full h-12 sm:h-14 rounded-xl bg-zinc-950 text-white hover:bg-zinc-800 font-bold uppercase tracking-widest text-[11px] transition-all active:scale-95 gap-3 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-12 sm:h-14 rounded-xl bg-zinc-900 text-white hover:bg-zinc-950 disabled:bg-zinc-300 disabled:hover:bg-zinc-300 font-bold uppercase tracking-widest text-[11px] transition-all active:scale-95 gap-3 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Checkout Now
             <ArrowRight className="w-4 h-4" />
@@ -119,7 +119,7 @@ export default function CartPage() {
         />
         <Button
           variant="ghost"
-          className="rounded-xl px-5 bg-zinc-950 text-white text-[11px] font-bold hover:bg-zinc-800 transition-all shadow-sm shrink-0"
+          className="rounded-xl px-5 bg-zinc-900 text-white text-[11px] font-bold hover:bg-zinc-950 transition-all shadow-sm shrink-0"
         >
           Apply
         </Button>
@@ -148,7 +148,7 @@ export default function CartPage() {
           </p>
           <div className="pt-4">
             <Link href="/">
-              <Button className="h-12 sm:h-14 px-8 rounded-xl bg-zinc-950 hover:bg-zinc-800 text-white font-bold uppercase tracking-widest text-[11px] transition-all active:scale-95 gap-3 shadow-sm">
+              <Button className="h-12 sm:h-14 px-8 rounded-xl bg-zinc-900 hover:bg-zinc-950 text-white font-bold uppercase tracking-widest text-[11px] transition-all active:scale-95 gap-3 shadow-sm">
                 Explore Collections
                 <ArrowRight className="w-4 h-4" />
               </Button>

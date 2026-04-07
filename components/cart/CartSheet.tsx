@@ -45,13 +45,13 @@ export function CartSheet() {
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-black text-zinc-950 tracking-tight uppercase">Collective is Empty</h3>
-                <p className="text-sm text-zinc-400 font-bold tracking-tight max-w-[200px]">
+                <p className="text-sm text-white font-bold tracking-tight max-w-[200px]">
                   Your curation awaits. Start exploring the latest drops.
                 </p>
               </div>
               <Button 
                 onClick={() => setIsOpen(false)}
-                className="rounded-full bg-zinc-950 px-8 py-6 font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform"
+                className="rounded-full bg-white text-zinc-950 px-8 py-6 font-black uppercase tracking-widest text-[10px] hover:bg-zinc-50 transition-colors border border-zinc-200"
               >
                 Start Exploring
               </Button>
