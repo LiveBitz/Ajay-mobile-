@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Heart, ShoppingBag, User, Menu, X, ChevronRight, LogIn, HelpCircle, PhoneCall, LogOut, Shield } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, Heart, ShoppingBag, User, Menu, X, ChevronRight, LogIn, HelpCircle, PhoneCall, LogOut, Shield, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -24,10 +25,15 @@ const navLinks = [
 ];
 
 export function Navbar() {
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const { totalItems, setIsOpen: setOpenCart } = useCart();
   const { items: wishlistItems } = useWishlist();
   const supabase = createClient();
@@ -56,6 +62,31 @@ export function Navbar() {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Search effect
+  useEffect(() => {
+    const performSearch = async () => {
+      if (!searchQuery.trim()) {
+        setSearchResults([]);
+        return;
+      }
+
+      setSearchLoading(true);
+      try {
+        const response = await fetch(`/api/products/search?q=${encodeURIComponent(searchQuery)}`);
+        const data = await response.json();
+        setSearchResults(data);
+      } catch (error) {
+        console.error("[SEARCH_ERROR]", error);
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(performSearch, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
 
   const handleLogout = async () => {
     await signOut();
@@ -178,11 +209,182 @@ export function Navbar() {
           ))}
         </div>
 
+        {/* Search Bar - Desktop */}
+        <div className="hidden md:flex flex-1 ml-8 mr-8 max-w-md relative group">
+          <div className="w-full relative">
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-100 border border-zinc-200 group-focus-within:border-zinc-400 group-focus-within:bg-white transition-all">
+              <Search className="w-4 h-4 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent outline-none text-sm font-medium text-zinc-900 placeholder:text-zinc-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="p-1 hover:bg-zinc-200 rounded-full transition-colors"
+                >
+                  <X className="w-4 h-4 text-zinc-400" />
+                </button>
+              )}
+            </div>
+
+            {/* Search Results Dropdown */}
+            {searchQuery && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-zinc-200 shadow-lg overflow-hidden z-40 max-h-[400px] overflow-y-auto">
+                {searchLoading && (
+                  <div className="p-6 flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
+                  </div>
+                )}
+
+                {!searchLoading && searchResults.length === 0 && (
+                  <div className="p-6 text-center">
+                    <p className="text-sm text-zinc-500 font-medium">No products found</p>
+                  </div>
+                )}
+
+                {!searchLoading && searchResults.length > 0 && (
+                  <div className="p-2 space-y-1">
+                    {searchResults.map((product) => (
+                      <button
+                        key={product.id}
+                        onClick={() => {
+                          router.push(`/product/${product.slug}`);
+                          setSearchQuery("");
+                        }}
+                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-50 transition-colors text-left"
+                      >
+                        <img 
+                          src={product.image} 
+                          alt={product.name}
+                          className="w-10 h-12 object-cover rounded bg-zinc-100 shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-zinc-900 truncate">{product.name}</p>
+                          <p className="text-xs text-zinc-500 capitalize">{product.category.name}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-sm font-bold text-zinc-900">₹{product.price.toLocaleString("en-IN")}</span>
+                            {product.discount > 0 && (
+                              <span className="text-[10px] text-rose-600 font-bold">{product.discount}% OFF</span>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Right Side Icons */}
         <div className="flex items-center gap-1 md:gap-4">
-          <Button variant="ghost" size="icon" className="hidden sm:flex rounded-full">
-            <Search className="w-5 h-5 text-zinc-700" />
-          </Button>
+          {/* Mobile Search Toggle */}
+          <div className="md:hidden relative w-full">
+            {!searchOpen ? (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full"
+                onClick={() => setSearchOpen(true)}
+              >
+                <Search className="w-5 h-5 text-zinc-700" />
+              </Button>
+            ) : (
+              <div className="fixed inset-0 z-40" onClick={() => setSearchOpen(false)} />
+            )}
+
+            {/* Mobile Search Expanded */}
+            {searchOpen && (
+              <div className="fixed inset-x-0 top-0 z-50 bg-white border-b border-zinc-200">
+                <div className="flex items-center gap-2 p-4 px-4">
+                  <button
+                    onClick={() => setSearchOpen(false)}
+                    className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5 text-zinc-700 rotate-180" />
+                  </button>
+                  
+                  <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-lg bg-zinc-100 border border-zinc-200">
+                    <Search className="w-4 h-4 text-zinc-400 shrink-0" />
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="flex-1 bg-transparent outline-none text-sm font-medium text-zinc-900 placeholder:text-zinc-400"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="p-1 hover:bg-zinc-200 rounded-full transition-colors shrink-0"
+                      >
+                        <X className="w-4 h-4 text-zinc-400" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mobile Search Results */}
+                <div className="max-h-[calc(100vh-80px)] overflow-y-auto">
+                  {searchLoading && (
+                    <div className="p-8 flex items-center justify-center">
+                      <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
+                    </div>
+                  )}
+
+                  {!searchLoading && searchQuery && searchResults.length === 0 && (
+                    <div className="p-8 text-center">
+                      <p className="text-sm text-zinc-500 font-medium">No products found</p>
+                    </div>
+                  )}
+
+                  {!searchLoading && searchQuery && searchResults.length > 0 && (
+                    <div className="p-3 space-y-2">
+                      {searchResults.map((product) => (
+                        <button
+                          key={product.id}
+                          onClick={() => {
+                            router.push(`/product/${product.slug}`);
+                            setSearchQuery("");
+                            setSearchOpen(false);
+                          }}
+                          className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-zinc-50 active:bg-zinc-100 transition-colors text-left border border-zinc-100"
+                        >
+                          <img 
+                            src={product.image} 
+                            alt={product.name}
+                            className="w-14 h-18 object-cover rounded-lg bg-zinc-100 shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-zinc-900 truncate">{product.name}</p>
+                            <p className="text-xs text-zinc-500 capitalize">{product.category.name}</p>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <span className="font-bold text-zinc-900">₹{product.price.toLocaleString("en-IN")}</span>
+                              {product.discount > 0 && (
+                                <span className="text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded">{product.discount}% OFF</span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {!searchQuery && (
+                    <div className="p-8 text-center">
+                      <p className="text-sm text-zinc-500 font-medium">Start typing to search...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <Link href="/wishlist">
             <Button variant="ghost" size="icon" className="hidden sm:flex rounded-full relative group">
               <Heart className="w-5 h-5 text-zinc-700 group-hover:scale-110 transition-transform" />
@@ -226,6 +428,7 @@ export function Navbar() {
           )}
         </div>
       </div>
+
       <CartSheet />
     </nav>
   );
