@@ -37,58 +37,66 @@ export function CategoryCatalog({ initialProducts, slug }: CategoryCatalogProps)
   };
 
   return (
-    <div className="container mx-auto py-8 lg:py-12 px-4 md:px-8 lg:px-16 space-y-8">
+    <div className="min-h-screen bg-white">
       {/* Header Section */}
-      <CatalogHeader 
-        slug={slug} 
-        count={filteredProducts.length} 
-        sortBy={sortBy} 
-        setSortBy={setSortBy} 
-      />
-
-      {/* Mobile Filter & Sort Bar (Sticky) */}
-      <div className="flex lg:hidden sticky top-[72px] md:top-[84px] z-30 -mx-4 md:-mx-8 border-b bg-white/90 backdrop-blur-md shadow-sm">
-        <FilterDrawer 
-          filters={filters} 
-          setFilters={setFilters} 
-          clearAll={clearAll} 
-          activeFilterCount={activeFilterCount}
-          counts={counts}
-          slug={slug}
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 pt-6 md:pt-8 pb-8">
+        <CatalogHeader 
+          slug={slug} 
+          count={filteredProducts.length} 
+          sortBy={sortBy} 
+          setSortBy={setSortBy} 
         />
-        <SortDropdown sortBy={sortBy} setSortBy={setSortBy} />
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-10">
-        {/* Desktop Filter Sidebar (Sticky) */}
-        <aside className="hidden lg:block w-72 shrink-0">
-          <div className="sticky top-[102px]">
-            <FilterSidebar 
-              filters={filters} 
-              setFilters={setFilters} 
-              clearAll={clearAll} 
-              counts={counts}
-              slug={slug}
-            />
-          </div>
-        </aside>
-
-        {/* Main Content Area */}
-        <div className="flex-1 space-y-8 min-w-0">
-          {/* Active Filters Row */}
-          <div className="min-h-[40px] flex items-center overflow-x-auto no-scrollbar py-2 -mx-2 px-2 lg:mx-0 lg:px-0">
-            <ActiveFilters 
-              filters={filters} 
-              setFilters={setFilters} 
-              clearAll={clearAll} 
-            />
-          </div>
-
-          {/* Product Grid Section */}
-          <ProductGrid 
-            products={filteredProducts as any} 
-            clearFilters={clearAll} 
+      {/* Mobile Filter & Sort Bar (Sticky) */}
+      <div className="lg:hidden sticky top-[72px] md:top-[84px] z-30 border-b bg-white/95 backdrop-blur-sm">
+        <div className="flex items-center">
+          <FilterDrawer 
+            filters={filters} 
+            setFilters={setFilters} 
+            clearAll={clearAll} 
+            activeFilterCount={activeFilterCount}
+            counts={counts}
+            slug={slug}
           />
+          <SortDropdown sortBy={sortBy} setSortBy={setSortBy} />
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 pb-20">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Desktop Filter Sidebar (Sticky) */}
+          <aside className="hidden lg:block w-80 shrink-0">
+            <div className="sticky top-[102px] max-h-[calc(100vh-140px)] overflow-y-auto">
+              <FilterSidebar 
+                filters={filters} 
+                setFilters={setFilters} 
+                clearAll={clearAll} 
+                counts={counts}
+                slug={slug}
+              />
+            </div>
+          </aside>
+
+          {/* Main Content Area */}
+          <div className="flex-1 min-w-0">
+            {/* Active Filters Row */}
+            {(filters.sizes.length > 0 || filters.colors.length > 0 || filters.subCategories.length > 0 || filters.discount > 0 || filters.priceRange[0] > 0 || filters.priceRange[1] < 10000) && (
+              <div className="mb-8 pb-6 border-b border-zinc-200">
+                <ActiveFilters 
+                  filters={filters} 
+                  setFilters={setFilters} 
+                  clearAll={clearAll} 
+                />
+              </div>
+            )}
+
+            {/* Product Grid Section */}
+            <ProductGrid 
+              products={filteredProducts as any} 
+              clearFilters={clearAll} 
+            />
+          </div>
         </div>
       </div>
     </div>

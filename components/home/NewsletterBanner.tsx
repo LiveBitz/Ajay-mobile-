@@ -19,36 +19,31 @@ export function NewsletterBanner({ banner }: NewsletterBannerProps) {
   const displayButtonText = banner.buttonText || "Subscribe";
 
   return (
-    <section className="py-20 px-4 md:px-8 lg:px-16 container mx-auto mb-10 overflow-hidden">
-      <div className="relative w-full overflow-hidden rounded-3xl bg-brand text-white p-8 md:p-16 lg:p-24 flex flex-col lg:flex-row items-center gap-12 group">
-        {/* Visual elements */}
-        <div className="absolute right-0 top-0 w-1/4 h-full bg-white/10 skew-x-12 transform -translate-x-1/2" />
-        <div className="absolute left-[-5%] bottom-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        
-        <div className="relative z-10 flex-1 space-y-6 text-center lg:text-left">
-          <div className="space-y-4">
-            <h2 className="text-3xl md:text-5xl font-bold font-heading tracking-tighter leading-tight whitespace-pre-line">
-              {displayTitle.split('\n')[0]} <br />
-              <span className="text-zinc-900/40">{displayTitle.split('\n')[1] || ""}</span>
-            </h2>
-            <p className="text-white/90 text-sm md:text-lg max-w-md font-medium uppercase tracking-wide mx-auto lg:mx-0">
+    <section className="py-16 md:py-20 px-4 md:px-6 lg:px-8 container mx-auto mb-8">
+      <div className="relative w-full overflow-hidden rounded-2xl bg-brand text-white p-8 md:p-12 lg:p-16 space-y-6 md:space-y-0 md:flex md:items-center md:justify-between gap-8">
+        <div className="flex-1 space-y-2">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight">
+            {displayTitle}
+          </h2>
+          {displaySubtitle && (
+            <p className="text-white/80 text-sm md:text-base font-medium">
               {displaySubtitle}
             </p>
-          </div>
+          )}
         </div>
         
-        <div className="relative z-10 w-full max-w-md bg-white/10 p-2 rounded-2xl md:rounded-full backdrop-blur-md border border-white/20 shadow-2xl">
+        <div className="w-full md:w-auto">
           <form className="flex flex-col sm:flex-row gap-2" onSubmit={(e) => e.preventDefault()}>
-            <div className="relative flex-1 group">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 group-focus-within:text-white" />
+            <div className="relative flex-1 sm:flex-none group">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
               <Input 
                 type="email" 
                 placeholder="Enter your email" 
-                className="bg-transparent border-none text-white placeholder:text-white/40 focus-visible:ring-0 pl-12 h-14 md:h-12"
+                className="bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:border-white/40 focus-visible:ring-0 pl-10 h-11 rounded-lg"
                 required
               />
             </div>
-            <Button className="bg-white text-zinc-950 hover:bg-zinc-100 px-8 h-12 rounded-full font-bold uppercase tracking-widest text-xs transition-all shadow-lg active:scale-95 shrink-0">
+            <Button className="bg-white text-brand hover:bg-zinc-100 px-6 h-11 rounded-lg font-semibold text-sm transition-all shrink-0">
               {displayButtonText}
             </Button>
           </form>

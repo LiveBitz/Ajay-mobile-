@@ -37,6 +37,8 @@ model Product {
   features      String[] @default([])
   isNew         Boolean  @default(false)
   isBestSeller  Boolean  @default(false)
+  wishlists     Wishlist[]
+  orderItems    OrderItem[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -53,4 +55,83 @@ model Banner {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+model Address {
+  id        String   @id @default(cuid())
+  userId    String   // Link to Supabase User ID
+  name      String
+  phone     String
+  street    String
+  city      String
+  state     String
+  zipCode   String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String   // Link to Supabase User ID
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String      // Link to Supabase User ID
+  orderNumber   String      @unique
+  
+  // Customer Info
+  customerName  String
+  customerEmail String
+  customerPhone String
+  
+  // Delivery Address
+  street        String
+  city          String
+  state         String
+  zipCode       String
+  
+  // Order Details
+  items         OrderItem[]
+  subtotal      Float
+  tax           Float       @default(0)
+  shipping      Float       @default(0)
+  total         Float
+  
+  // Status & Payment
+  status        String      @default("pending") // pending, confirmed, shipped, delivered, cancelled
+  paymentMethod String      @default("cod") // cod = Cash on Delivery
+  paymentStatus String      @default("pending") // pending, completed
+  
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@index([userId])
+  @@index([orderNumber])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  
+  quantity  Int
+  price     Float    // Price at time of purchase
+  size      String?
+  color     String?
+  
+  @@index([orderId])
+  @@index([productId])
 }

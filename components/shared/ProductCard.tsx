@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-
+import { useWishlist } from "@/context/WishlistContext";
+import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 interface ProductCardProps {
@@ -24,12 +25,51 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const { toast } = useToast();
 
   const categoryName = typeof product.category === 'object' 
     ? product.category?.name 
     : product.category;
+
+  const handleWishlistClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsAddingToWishlist(true);
+
+    try {
+      await toggleWishlist(String(product.id));
+      const wishlisted = isWishlisted(String(product.id));
+      
+      toast({
+        title: wishlisted ? "Added to Wishlist" : "Removed from Wishlist",
+        description: wishlisted 
+          ? `${product.name} has been added to your wishlist` 
+          : `${product.name} has been removed from your wishlist`,
+        duration: 2000,
+      });
+    } catch (error: any) {
+      const errorMsg = error.message || "Failed to update wishlist";
+      if (errorMsg.includes("login")) {
+        toast({
+          title: "Login Required",
+          description: "Please login to add items to your wishlist",
+          variant: "destructive",
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMsg,
+          variant: "destructive",
+          duration: 2000,
+        });
+      }
+    } finally {
+      setIsAddingToWishlist(false);
+    }
+  };
 
   return (
     <Card className="group relative overflow-hidden rounded-xl border-none shadow-none hover:shadow-xl transition-all duration-300 h-full flex flex-col">
@@ -44,17 +84,15 @@ export function ProductCard({ product }: ProductCardProps) {
           />
           {/* Wishlist Button Overlay */}
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              setIsWishlisted(!isWishlisted);
-            }}
-            className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm transition-colors hover:bg-white z-10"
-            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            onClick={handleWishlistClick}
+            disabled={isAddingToWishlist}
+            className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm transition-colors hover:bg-white z-10 disabled:opacity-50"
+            aria-label={isWishlisted(String(product.id)) ? "Remove from wishlist" : "Add to wishlist"}
           >
             <Heart
               className={cn(
                 "w-5 h-5 transition-colors",
-                isWishlisted ? "fill-brand stroke-brand" : "stroke-zinc-600"
+                isWishlisted(String(product.id)) ? "fill-brand stroke-brand" : "stroke-zinc-600"
               )}
             />
           </button>

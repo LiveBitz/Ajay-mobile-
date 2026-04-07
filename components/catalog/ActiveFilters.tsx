@@ -37,7 +37,7 @@ export function ActiveFilters({ filters, setFilters, clearAll }: ActiveFiltersPr
   if (!hasActiveFilters) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         {filters.sizes.map((s) => (
           <FilterChip key={`size-${s}`} label={`Size: ${s}`} onRemove={() => removeFilter("sizes", s)} />
@@ -51,18 +51,18 @@ export function ActiveFilters({ filters, setFilters, clearAll }: ActiveFiltersPr
         {filters.discount > 0 && (
           <FilterChip label={`${filters.discount}%+ Off`} onRemove={() => removeFilter("discount", 0)} />
         )}
-        {(filters.priceRange[0] > 0 || filters.priceRange[1] < 3000) && (
+        {(filters.priceRange[0] > 0 || filters.priceRange[1] < 10000) && (
           <FilterChip 
             label={`₹${filters.priceRange[0]} - ₹${filters.priceRange[1]}`} 
-            onRemove={() => removeFilter("priceRange", [0, 3000])} 
+            onRemove={() => removeFilter("priceRange", [0, 10000])} 
           />
         )}
       </div>
       <button
         onClick={clearAll}
-        className="text-xs font-bold text-brand hover:underline underline-offset-4 uppercase tracking-widest px-2"
+        className="text-xs font-semibold text-brand hover:text-brand/80 transition-colors"
       >
-        Clear All
+        Clear All Filters
       </button>
     </div>
   );
@@ -71,13 +71,12 @@ export function ActiveFilters({ filters, setFilters, clearAll }: ActiveFiltersPr
 function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
     <Badge
-      variant="secondary"
-      className="rounded-full bg-white border border-zinc-200 text-zinc-900 px-3 py-1.5 flex items-center gap-2 hover:bg-zinc-50 group hover:border-brand transition-all shadow-sm"
+      className="rounded-full bg-zinc-100 text-zinc-900 px-3 py-1 flex items-center gap-2 hover:bg-zinc-200 group transition-all border-0"
     >
-      <span className="text-xs font-semibold">{label}</span>
+      <span className="text-xs font-medium">{label}</span>
       <button 
         onClick={onRemove} 
-        className="p-0.5 rounded-full hover:bg-brand hover:text-white transition-colors"
+        className="p-0.5 rounded hover:bg-zinc-300 transition-colors ml-1"
       >
         <X className="w-3 h-3" />
       </button>

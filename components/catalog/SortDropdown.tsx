@@ -1,6 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -8,9 +10,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Check, ArrowUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface SortDropdownProps {
   sortBy: string;
@@ -22,38 +21,45 @@ const sortOptions = [
   { label: "Price: Low to High", value: "price-asc" },
   { label: "Price: High to Low", value: "price-desc" },
   { label: "Newest First", value: "newest" },
-  { label: "Discount: High to Low", value: "discount" },
+  { label: "Best Discount", value: "discount" },
 ];
 
 export function SortDropdown({ sortBy, setSortBy }: SortDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const currentSort = sortOptions.find(o => o.value === sortBy);
+
+  const handleSortSelect = (value: string) => {
+    setSortBy(value);
+    setOpen(false);
+  };
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" className="flex-1 rounded-none border-x-0 border-y py-6 h-auto gap-2 text-zinc-700 font-bold bg-white/50 backdrop-blur-sm">
-          <ArrowUpDown className="w-4 h-4" />
-          Sort
+        <Button className="flex-1 rounded-xl py-4 h-auto text-black font-semibold bg-white hover:bg-zinc-50 border border-zinc-200 flex flex-col items-start gap-1.5 justify-start px-4 transition-all duration-200 hover:shadow-md">
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="w-4 h-4 text-gray-600" />
+            <span className="text-xs font-medium text-gray-600">Sort</span>
+          </div>
+          <span className="text-base font-bold text-black">{currentSort?.label || "Relevance"}</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="rounded-t-[2.5rem] p-0 overflow-hidden">
-        <SheetHeader className="p-6 border-b">
-          <SheetTitle className="text-center font-bold tracking-tight">Sort By</SheetTitle>
+      <SheetContent side="bottom" className="rounded-t-3xl p-0 bg-black">
+        <SheetHeader className="px-6 pt-6 pb-3 border-b border-slate-800">
+          <SheetTitle className="text-xl font-bold text-white">Sort Products</SheetTitle>
         </SheetHeader>
-        <div className="flex flex-col">
+        <div className="py-4 px-6 space-y-2 max-h-[60vh] overflow-y-auto">
           {sortOptions.map((option) => (
             <button
               key={option.value}
-              onClick={() => {
-                setSortBy(option.value);
-              }}
-              className={cn(
-                "flex items-center justify-between p-6 text-left border-b last:border-0 transition-colors",
+              onClick={() => handleSortSelect(option.value)}
+              className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${
                 sortBy === option.value
-                  ? "bg-brand text-white"
-                  : "bg-white text-zinc-900 group-hover:bg-zinc-50"
-              )}
+                  ? "bg-white text-black"
+                  : "bg-slate-900 text-white border border-slate-700 hover:bg-slate-800"
+              }`}
             >
-              <span className="font-semibold">{option.label}</span>
-              {sortBy === option.value && <Check className="w-5 h-5" />}
+              {option.label}
             </button>
           ))}
         </div>

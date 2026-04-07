@@ -82,10 +82,15 @@ export default function CartPage() {
       </div>
 
       <div className="space-y-3">
-        <Button className="w-full h-12 sm:h-14 rounded-xl bg-zinc-950 text-white hover:bg-zinc-800 font-bold uppercase tracking-widest text-[11px] transition-all active:scale-95 gap-3 shadow-sm">
-          Checkout Now
-          <ArrowRight className="w-4 h-4" />
-        </Button>
+        <Link href="/checkout">
+          <Button 
+            disabled={items.length === 0}
+            className="w-full h-12 sm:h-14 rounded-xl bg-zinc-950 text-white hover:bg-zinc-800 font-bold uppercase tracking-widest text-[11px] transition-all active:scale-95 gap-3 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Checkout Now
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </Link>
 
         <div className="flex items-center justify-center gap-4 pt-1 opacity-30 grayscale">
           <ShieldCheck className="w-4 h-4" />

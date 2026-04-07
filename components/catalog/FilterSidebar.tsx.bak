@@ -200,6 +200,8 @@ export function FilterSidebar({ filters, setFilters, clearAll, counts, className
                   </div>
                 )}
               </section>
+              <Separator className="opacity-50" />
+            </>
           )}
 
           {/* Colors */}
@@ -250,6 +252,8 @@ export function FilterSidebar({ filters, setFilters, clearAll, counts, className
                   </div>
                 )}
               </section>
+              <Separator className="opacity-50" />
+            </>
           )}
 
           {/* Discount */}

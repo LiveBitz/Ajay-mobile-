@@ -10,10 +10,9 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { FilterSidebar } from "./FilterSidebar";
 import { Filters } from "@/hooks/useProductFilter";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface FilterDrawerProps {
@@ -56,89 +55,58 @@ export function FilterDrawer({
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
-          variant="outline"
-          className="flex-1 rounded-none border-y py-6 h-auto gap-2 text-zinc-700 font-bold bg-white/50 backdrop-blur-sm relative"
+          className="flex-1 rounded-xl py-4 h-auto text-black font-semibold bg-white hover:bg-zinc-50 border border-zinc-200 flex flex-col items-start gap-1.5 justify-start px-4 transition-all duration-200 hover:shadow-md"
         >
-          <SlidersHorizontal className="w-4 h-4" />
-          Filter
-          {activeFilterCount > 0 && (
-            <Badge className="ml-1 bg-brand text-white border-none h-5 w-5 flex items-center justify-center p-0 text-[10px] font-bold">
-              {activeFilterCount}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-gray-600" />
+            <span className="text-xs font-medium text-gray-600">Filters</span>
+          </div>
+          <span className="text-base font-bold text-black">{activeFilterCount > 0 ? `${activeFilterCount} active` : "All products"}</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[90dvh] rounded-t-[2.5rem] p-0 flex flex-col overflow-hidden border-none shadow-2xl">
-        <SheetHeader className="p-6 pb-2 border-b shrink-0 bg-white">
-          <div className="w-12 h-1 bg-zinc-100 rounded-full mx-auto mb-6 shrink-0" />
-          <SheetTitle className="text-xl font-bold font-heading tracking-tight flex items-center justify-between">
-            Refine Results
+      <SheetContent side="bottom" className="h-[85dvh] rounded-t-3xl p-0 flex flex-col overflow-hidden border-none bg-white">
+        <SheetHeader className="p-6 pb-3 border-b shrink-0 bg-white">
+          <SheetTitle className="text-xl font-bold tracking-tight flex items-center justify-between text-zinc-900">
+            Filters
             {hasActiveFilters && (
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={clearAll}
-                className="text-brand font-bold text-xs uppercase tracking-widest p-0 h-auto hover:bg-transparent"
+                className="text-xs font-semibold text-brand hover:text-brand/80 hover:bg-brand/5 p-2 h-auto rounded-lg"
               >
                 Clear All
               </Button>
             )}
           </SheetTitle>
         </SheetHeader>
-
-        {/* Smart Active Selection Row */}
-        {hasActiveFilters && (
-          <div className="px-6 py-3 bg-zinc-50 border-b shrink-0">
-            <ScrollArea className="w-full">
-              <div className="flex items-center gap-2 pb-2">
-                <span className="text-[10px] font-bold uppercase tracking-tight text-zinc-400 mr-1 shrink-0">Active:</span>
-                {filters.sizes.map((s) => (
-                  <Badge key={s} variant="secondary" className="bg-white border-zinc-200 text-zinc-700 gap-1.5 pr-1 pl-2 font-bold py-1 lowercase shadow-sm">
-                    {s} <X className="w-3 h-3 cursor-pointer hover:text-brand" onClick={() => removeFilter("sizes", s)} />
-                  </Badge>
-                ))}
-                {filters.colors.map((c) => (
-                  <Badge key={c} variant="secondary" className="bg-white border-zinc-200 text-zinc-700 gap-1.5 pr-1 pl-2 font-bold py-1 lowercase shadow-sm">
-                    {c} <X className="w-3 h-3 cursor-pointer hover:text-brand" onClick={() => removeFilter("colors", c)} />
-                  </Badge>
-                ))}
-                {filters.subCategories.map((cat) => (
-                  <Badge key={cat} variant="secondary" className="bg-white border-zinc-200 text-zinc-700 gap-1.5 pr-1 pl-2 font-bold py-1 lowercase shadow-sm">
-                    {cat} <X className="w-3 h-3 cursor-pointer hover:text-brand" onClick={() => removeFilter("subCategories", cat)} />
-                  </Badge>
-                ))}
-                {(filters.priceRange[0] > 0 || filters.priceRange[1] < 3000) && (
-                  <Badge variant="secondary" className="bg-white border-zinc-200 text-zinc-700 gap-1.5 pr-1 pl-2 font-bold py-1 lowercase shadow-sm">
-                    ₹{filters.priceRange[0]}-₹{filters.priceRange[1]} <X className="w-3 h-3 cursor-pointer hover:text-brand" onClick={() => removeFilter("priceRange")} />
-                  </Badge>
-                )}
-                {filters.discount > 0 && (
-                  <Badge variant="secondary" className="bg-white border-zinc-200 text-zinc-700 gap-1.5 pr-1 pl-2 font-bold py-1 lowercase shadow-sm">
-                    {filters.discount}%+ <X className="w-3 h-3 cursor-pointer hover:text-brand" onClick={() => removeFilter("discount")} />
-                  </Badge>
-                )}
-              </div>
-            </ScrollArea>
-          </div>
-        )}
         
-        <div className="flex-1 overflow-hidden bg-white">
-          <FilterSidebar 
-            filters={filters} 
-            setFilters={setFilters} 
-            clearAll={clearAll} 
-            counts={counts}
-            slug={slug}
-            className="border-0 shadow-none rounded-none h-full"
-          />
+        <div className="flex-1 overflow-y-auto bg-white">
+          <ScrollArea className="h-full">
+            <FilterSidebar 
+              filters={filters} 
+              setFilters={setFilters} 
+              clearAll={clearAll} 
+              counts={counts}
+              slug={slug}
+              className="border-0 shadow-none rounded-none"
+            />
+          </ScrollArea>
         </div>
 
-        <div className="p-6 pt-4 border-t bg-white shrink-0">
+        <div className="p-6 pt-4 border-t bg-white shrink-0 flex gap-3">
           <Button 
-            className="w-full h-14 rounded-2xl bg-zinc-950 hover:bg-zinc-900 text-white font-bold text-lg shadow-xl shadow-zinc-200 transition-all active:scale-[0.98]" 
+            variant="outline"
+            className="flex-1 h-12 rounded-xl border-zinc-200 text-zinc-900 font-semibold hover:bg-zinc-50" 
             onClick={() => setOpen(false)}
           >
-            Show Results {activeFilterCount > 0 && `(${activeFilterCount})`}
+            Done
+          </Button>
+          <Button 
+            className="flex-1 h-12 rounded-xl bg-black hover:bg-zinc-900 text-white font-semibold transition-all active:scale-[0.98]" 
+            onClick={() => setOpen(false)}
+          >
+            Show Results
           </Button>
         </div>
       </SheetContent>

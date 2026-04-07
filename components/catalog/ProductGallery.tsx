@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Heart } from "lucide-react";
 
 interface ProductGalleryProps {
   mainImage: string;
@@ -75,11 +74,6 @@ export function ProductGallery({
               </Badge>
             )}
           </div>
-
-          {/* Wishlist Trigger */}
-          <button className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/90 backdrop-blur-xl flex items-center justify-center text-zinc-600 shadow-lg hover:bg-white transition-all active:scale-90 border border-white/50 group/heart">
-            <Heart className="w-5 h-5 stroke-brand transition-transform group-hover/heart:scale-110" />
-          </button>
         </div>
 
         {/* Mobile Horizontal Thumbnails */}

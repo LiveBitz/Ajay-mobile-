@@ -17,18 +17,20 @@ export async function BestSellers() {
   if (bestsellerProducts.length === 0) return null;
 
   return (
-    <section id="best-sellers" className="py-20 container mx-auto">
-      <div className="px-4 md:px-8 lg:px-16 mb-8">
-        <SectionHeading 
-          title="Best Sellers" 
-          subtitle="The most loved pieces by our community. Grab yours before they are gone." 
-        />
-      </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8 lg:gap-10 px-4 md:px-8 lg:px-16">
-        {bestsellerProducts.map((product) => (
-          <ProductCard key={product.id} product={product as any} />
-        ))}
+    <section id="best-sellers" className="py-16 md:py-20 bg-zinc-50 border-t border-zinc-200">
+      <div className="container mx-auto">
+        <div className="px-4 md:px-6 lg:px-8 mb-10">
+          <SectionHeading 
+            title="Best Sellers" 
+            subtitle="The most loved pieces from our collection." 
+          />
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 px-4 md:px-6 lg:px-8">
+          {bestsellerProducts.map((product) => (
+            <ProductCard key={product.id} product={product as any} />
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { ShoppingBag, Heart, Check, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -20,9 +22,12 @@ interface ProductSelectionProps {
 
 export function ProductSelection({ product }: ProductSelectionProps) {
   const { addItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const { toast } = useToast();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [showError, setShowError] = useState(false);
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
 
   const hasSizes = product.sizes && product.sizes.length > 0;
   const hasColors = product.colors && product.colors.length > 0;
@@ -48,6 +53,42 @@ export function ProductSelection({ product }: ProductSelectionProps) {
     });
     
     setShowError(false);
+  };
+
+  const handleWishlistClick = async () => {
+    setIsAddingToWishlist(true);
+
+    try {
+      await toggleWishlist(product.id);
+      const wishlisted = isWishlisted(product.id);
+      
+      toast({
+        title: wishlisted ? "Added to Wishlist" : "Removed from Wishlist",
+        description: wishlisted 
+          ? `${product.name} has been added to your wishlist` 
+          : `${product.name} has been removed from your wishlist`,
+        duration: 2000,
+      });
+    } catch (error: any) {
+      const errorMsg = error.message || "Failed to update wishlist";
+      if (errorMsg.includes("login")) {
+        toast({
+          title: "Login Required",
+          description: "Please login to add items to your wishlist",
+          variant: "destructive",
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMsg,
+          variant: "destructive",
+          duration: 2000,
+        });
+      }
+    } finally {
+      setIsAddingToWishlist(false);
+    }
   };
 
   return (
@@ -180,18 +221,27 @@ export function ProductSelection({ product }: ProductSelectionProps) {
             Add to Collective
           </Button>
           <Button
-            variant="outline"
-            className="h-16 w-16 rounded-full border-zinc-100 hover:border-rose-100 hover:bg-rose-50/50 hover:text-rose-500 transition-all duration-300 active:scale-90 flex items-center justify-center p-0 shrink-0"
+            onClick={handleWishlistClick}
+            disabled={isAddingToWishlist}
+            className={cn(
+              "h-16 w-16 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center p-0 shrink-0",
+              isWishlisted(product.id)
+                ? "border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-500 border"
+                : "border-zinc-100 hover:border-rose-100 hover:bg-rose-50/50 hover:text-rose-500 border"
+            )}
           >
-            <Heart className="w-5 h-5" />
+            <Heart className={cn(
+              "w-5 h-5 transition-colors",
+              isWishlisted(product.id) ? "fill-rose-500" : ""
+            )} />
           </Button>
         </div>
         
         <Button
-          variant="outline"
-          className="w-full h-14 rounded-full border-zinc-100 text-zinc-900 font-bold text-xs uppercase tracking-widest hover:bg-zinc-50 transition-all duration-300 active:scale-95"
+          onClick={handleAddToCart}
+          className="w-full h-14 rounded-full bg-brand hover:bg-brand/90 text-white font-black text-sm uppercase tracking-[0.15em] transition-all duration-300 active:scale-95"
         >
-          Express Procurement (Buy Now)
+          Buy Now
         </Button>
       </div>
     </div>

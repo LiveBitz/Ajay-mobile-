@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 import { CartSheet } from "@/components/cart/CartSheet";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/lib/actions/auth-actions";
@@ -28,6 +29,7 @@ export function Navbar() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { totalItems, setIsOpen: setOpenCart } = useCart();
+  const { items: wishlistItems } = useWishlist();
   const supabase = createClient();
 
   useEffect(() => {
@@ -111,6 +113,12 @@ export function Navbar() {
                 <div className="p-4 py-2">
                   <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[2px] ml-2">Account & Help</span>
                   <div className="mt-2 flex flex-col">
+                    {user && (
+                      <Link href="/wishlist" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-4 hover:bg-zinc-50 transition-colors">
+                        <Heart className="w-5 h-5 text-zinc-500" />
+                        <span className="font-bold text-zinc-800">My Wishlist</span>
+                      </Link>
+                    )}
                     {!user ? (
                       <Link href="/login" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-4 hover:bg-zinc-50 transition-colors">
                         <LogIn className="w-5 h-5 text-zinc-500" />
@@ -118,10 +126,6 @@ export function Navbar() {
                       </Link>
                     ) : (
                       <>
-                        <Link href="/admin" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-4 hover:bg-zinc-50 transition-colors">
-                          <Shield className="w-5 h-5 text-zinc-500" />
-                          <span className="font-bold text-zinc-800">Admin Console</span>
-                        </Link>
                         <button onClick={handleLogout} className="flex items-center gap-3 w-full p-4 hover:bg-zinc-50 transition-colors text-left">
                           <LogOut className="w-5 h-5 text-red-500" />
                           <span className="font-bold text-red-600">Secure Logout</span>
@@ -179,9 +183,16 @@ export function Navbar() {
           <Button variant="ghost" size="icon" className="hidden sm:flex rounded-full">
             <Search className="w-5 h-5 text-zinc-700" />
           </Button>
-          <Button variant="ghost" size="icon" className="hidden sm:flex rounded-full">
-            <Heart className="w-5 h-5 text-zinc-700" />
-          </Button>
+          <Link href="/wishlist">
+            <Button variant="ghost" size="icon" className="hidden sm:flex rounded-full relative group">
+              <Heart className="w-5 h-5 text-zinc-700 group-hover:scale-110 transition-transform" />
+              {wishlistItems.length > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] font-black bg-brand text-white hover:bg-brand border-2 border-white">
+                  {wishlistItems.length}
+                </Badge>
+              )}
+            </Button>
+          </Link>
           <Button 
             variant="ghost" 
             size="icon" 

@@ -15,6 +15,7 @@ const dmSans = DM_Sans({
 });
 
 import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
@@ -34,12 +35,14 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-white text-zinc-950">
         <CartProvider>
-          <Navbar />
-          <main className="flex-1 pt-[72px] md:pt-[84px] lg:pt-[92px]">
-            {children}
-          </main>
-          <Footer />
-          <Toaster />
+          <WishlistProvider>
+            <Navbar />
+            <main className="flex-1 pt-[72px] md:pt-[84px] lg:pt-[92px]">
+              {children}
+            </main>
+            <Footer />
+            <Toaster />
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>

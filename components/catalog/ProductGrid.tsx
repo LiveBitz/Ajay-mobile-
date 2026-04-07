@@ -41,19 +41,19 @@ export function ProductGrid({ products, isLoading, clearFilters }: ProductGridPr
 
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center space-y-6">
-        <div className="p-8 rounded-full bg-zinc-50 flex items-center justify-center">
-          <PackageSearch className="w-16 h-16 text-zinc-300" />
+      <div className="flex flex-col items-center justify-center py-20 md:py-32 text-center space-y-6">
+        <div className="p-6 md:p-8 rounded-2xl bg-zinc-50">
+          <PackageSearch className="w-12 h-12 md:w-16 md:h-16 text-zinc-300 mx-auto" />
         </div>
-        <div className="space-y-2">
-          <h3 className="text-xl font-bold font-heading">No products found</h3>
-          <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-            Try adjusting your filters or search terms to find what you're looking for.
+        <div className="space-y-3">
+          <h3 className="text-lg md:text-xl font-bold text-zinc-900">No products found</h3>
+          <p className="text-zinc-600 text-sm md:text-base max-w-sm mx-auto">
+            Try adjusting your filters to find what you're looking for.
           </p>
         </div>
         <Button 
           variant="outline" 
-          className="rounded-full font-bold uppercase tracking-widest text-xs h-12 px-8 border-zinc-200 hover:bg-zinc-50"
+          className="rounded-lg font-semibold text-sm h-10 px-6 border-zinc-200 hover:bg-zinc-50 hover:border-brand/20"
           onClick={clearFilters}
         >
           Clear All Filters
@@ -64,7 +64,7 @@ export function ProductGrid({ products, isLoading, clearFilters }: ProductGridPr
 
   return (
     <div className="space-y-12">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 transition-opacity duration-300">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
         {visibleProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
@@ -75,17 +75,17 @@ export function ProductGrid({ products, isLoading, clearFilters }: ProductGridPr
           <Button
             variant="outline"
             size="lg"
-            className="w-full md:w-auto min-w-[200px] rounded-full font-bold uppercase tracking-widest text-xs h-14 border-zinc-200 transition-all hover:bg-zinc-50 hover:border-zinc-300 active:scale-95"
+            className="w-full md:w-auto min-w-[240px] rounded-lg font-semibold text-sm h-11 border-zinc-200 hover:bg-zinc-50 hover:border-brand/20 transition-all active:scale-95"
             onClick={handleLoadMore}
             disabled={isMoreLoading}
           >
             {isMoreLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Loading...
+                Loading more...
               </>
             ) : (
-              "Load More Products"
+              `Load More Products (${products.length - displayCount} remaining)`
             )}
           </Button>
         </div>
@@ -96,16 +96,16 @@ export function ProductGrid({ products, isLoading, clearFilters }: ProductGridPr
 
 function ProductCardSkeleton() {
   return (
-    <div className="space-y-4">
-      <Skeleton className="aspect-square w-full rounded-xl" />
-      <div className="space-y-2 px-1">
+    <div className="space-y-3">
+      <Skeleton className="aspect-square w-full rounded-lg" />
+      <div className="space-y-2">
         <Skeleton className="h-4 w-3/4" />
-        <div className="flex gap-2">
-          <Skeleton className="h-6 w-1/4 rounded-full" />
-          <Skeleton className="h-6 w-1/4 rounded-full" />
+        <Skeleton className="h-3 w-1/2" />
+        <div className="flex gap-2 pt-2">
+          <Skeleton className="h-5 w-12 rounded-full" />
+          <Skeleton className="h-5 w-12 rounded-full" />
         </div>
       </div>
-      <Skeleton className="h-10 w-full rounded-full" />
     </div>
   );
 }
