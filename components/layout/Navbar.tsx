@@ -201,39 +201,14 @@ export function Navbar() {
               <div className="w-4 h-4 border-2 border-zinc-200 border-t-zinc-800 rounded-full animate-spin" />
             </div>
           ) : user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full bg-zinc-50 border border-zinc-100">
-                  <User className="w-5 h-5 text-brand" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 rounded-2xl border-zinc-100 shadow-xl p-1.5 mt-2">
-                <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                  Curator Session
-                </DropdownMenuLabel>
-                <div className="px-3 py-2">
-                  <p className="text-sm font-bold text-zinc-900 truncate">{user.email}</p>
-                </div>
-                <DropdownMenuSeparator className="bg-zinc-50" />
-                <DropdownMenuItem asChild>
-                  <Link href="/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer focus:bg-zinc-50 transition-colors">
-                    <Shield className="w-4 h-4 text-zinc-500" />
-                    <span className="text-xs font-bold text-zinc-700">Admin Console</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-zinc-50" />
-                <DropdownMenuItem 
-                  onClick={handleLogout}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer focus:bg-red-50 text-red-600 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="text-xs font-black uppercase tracking-widest">Secure Logout</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Link href="/profile">
+              <Button variant="ghost" size="icon" className="rounded-full bg-zinc-50 border border-zinc-100 transition-all hover:bg-zinc-100 hover:scale-105 active:scale-95">
+                <User className="w-5 h-5 text-brand" />
+              </Button>
+            </Link>
           ) : (
             <Link href="/login">
-              <Button variant="ghost" size="icon" className="rounded-full">
+              <Button variant="ghost" size="icon" className="rounded-full transition-all hover:bg-zinc-100 hover:scale-105 active:scale-95">
                 <LogIn className="w-5 h-5 text-zinc-700" />
               </Button>
             </Link>
