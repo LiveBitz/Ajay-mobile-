@@ -227,12 +227,12 @@ export function ProductSelection({ product }: ProductSelectionProps) {
               "h-16 w-16 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center p-0 shrink-0",
               isWishlisted(product.id)
                 ? "border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-500 border"
-                : "border-zinc-100 hover:border-rose-100 hover:bg-rose-50/50 hover:text-rose-500 border"
+                : "border-zinc-100 bg-white hover:border-zinc-200 hover:bg-zinc-50 hover:text-rose-400 border text-zinc-300"
             )}
           >
             <Heart className={cn(
-              "w-5 h-5 transition-colors",
-              isWishlisted(product.id) ? "fill-rose-500" : ""
+              "w-5 h-5 transition-colors stroke-black",
+              isWishlisted(product.id) && "fill-rose-500 stroke-rose-500"
             )} />
           </Button>
         </div>
