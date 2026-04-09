@@ -17,7 +17,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { status } = body;
+    const { status, paymentStatus } = body;
 
     if (!status) {
       return NextResponse.json(
@@ -34,9 +34,37 @@ export async function PATCH(
       );
     }
 
+    const validPaymentStatuses = ["pending", "completed", "rejected"];
+    if (paymentStatus && !validPaymentStatuses.includes(paymentStatus)) {
+      return NextResponse.json(
+        { error: "Invalid payment status" },
+        { status: 400 }
+      );
+    }
+
+    // Get current order before update
+    const currentOrder = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    if (!currentOrder) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // Update order
     const order = await prisma.order.update({
       where: { id },
-      data: { status },
+      data: {
+        status,
+        ...(paymentStatus && { paymentStatus }),
+      },
       include: {
         items: {
           include: {

@@ -5,10 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Truck, MapPin, Package } from "lucide-react";
+import { CheckCircle, Truck, MapPin, Package, MessageCircle, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { redirectToWhatsApp } from "@/lib/whatsapp-order";
+import { useToast } from "@/hooks/use-toast";
 
 interface OrderData {
   id: string;
@@ -50,46 +52,140 @@ export default function OrderConfirmationPage() {
   const [order, setOrder] = useState<OrderData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
+  const [pollingActive, setPollingActive] = useState(true);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        const supabase = createClient();
-        const { data: userData, error: userError } =
-          await supabase.auth.getUser();
+  // Fetch order function
+  const fetchOrder = async (showError = false) => {
+    try {
+      const supabase = createClient();
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
 
-        if (userError || !userData.user) {
-          router.push("/login");
-          return;
-        }
-
-        const response = await fetch(
-          `/api/orders?orderId=${orderId}`
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch order");
-        }
-
-        const data = await response.json();
-
-        // Check if order belongs to current user
-        if (data.userId !== userData.user.id) {
-          throw new Error("Unauthorized");
-        }
-
-        setOrder(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load order");
-      } finally {
-        setIsLoading(false);
+      if (userError || !userData.user) {
+        router.push("/login");
+        return;
       }
-    };
 
+      const response = await fetch(
+        `/api/orders?orderId=${orderId}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch order");
+      }
+
+      const data = await response.json();
+
+      // Check if order belongs to current user
+      if (data.userId !== userData.user.id) {
+        throw new Error("Unauthorized");
+      }
+
+      setOrder(data);
+      setError(null);
+
+      // Stop polling if order is no longer pending
+      if (data.paymentStatus === "completed" || data.status === "confirmed") {
+        setPollingActive(false);
+        if (data.paymentStatus === "completed") {
+          toast({
+            title: "Order Confirmed!",
+            description: "Your order has been confirmed by our team.",
+            duration: 5000,
+          });
+        }
+      }
+    } catch (err: any) {
+      if (showError) {
+        setError(err.message || "Failed to load order");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Initial fetch on mount
+  useEffect(() => {
     if (orderId) {
-      fetchOrder();
+      fetchOrder(true);
     }
   }, [orderId, router]);
+
+  // Real-time polling for order updates
+  useEffect(() => {
+    if (!orderId || !pollingActive) return;
+
+    const pollInterval = setInterval(() => {
+      fetchOrder(false);
+    }, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [orderId, pollingActive]);
+
+  const handleResendWhatsApp = async () => {
+    if (!order) return;
+
+    setIsResending(true);
+
+    try {
+      // Format order details for WhatsApp
+      const orderDetails = {
+        items: order.items.map((item) => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        subtotal: order.subtotal,
+        tax: order.tax,
+        shipping: order.shipping,
+        total: order.total,
+        customerName: order.customerName,
+        customerEmail: order.customerEmail,
+        customerPhone: order.customerPhone,
+        deliveryAddress: {
+          street: order.street,
+          city: order.city,
+          state: order.state,
+          zipCode: order.zipCode,
+        },
+      };
+
+      // Get admin WhatsApp number from environment
+      const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_PHONE;
+
+      if (!adminPhone) {
+        toast({
+          title: "Configuration Error",
+          description: "WhatsApp number is not configured",
+          variant: "destructive",
+        });
+        setIsResending(false);
+        return;
+      }
+
+      // Show ready message
+      toast({
+        title: "Opening WhatsApp",
+        description: "Your order details are ready to send",
+        duration: 2000,
+      });
+
+      // Redirect to WhatsApp with pre-filled message
+      setTimeout(() => {
+        redirectToWhatsApp(adminPhone, orderDetails);
+      }, 500);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to open WhatsApp",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -266,6 +362,56 @@ export default function OrderConfirmationPage() {
           </div>
         </Card>
 
+        {/* WhatsApp Reminder Section - Show only for pending WhatsApp orders */}
+        {order.paymentMethod === "whatsapp" && 
+         order.paymentStatus === "pending" && 
+         order.status === "pending" && (
+          <Card className="p-6 border-2 border-green-200 rounded-2xl mb-8 bg-green-50">
+            <div className="flex gap-4">
+              <AlertCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-black text-green-900 mb-2 uppercase tracking-tight">
+                  Important: Send Your Order on WhatsApp
+                </h3>
+                <p className="text-sm text-green-800 mb-4 leading-relaxed">
+                  Your order has been created successfully! Now you need to send the order details to our WhatsApp to confirm with our team. Click the button below to open WhatsApp with your pre-filled order details.
+                </p>
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleResendWhatsApp}
+                    disabled={isResending}
+                    className="w-full sm:w-auto h-12 rounded-full bg-green-600 hover:bg-green-700 text-white font-black text-sm uppercase tracking-[0.15em] transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    {isResending ? "Opening..." : "Send Order on WhatsApp"}
+                  </Button>
+                  <p className="text-xs text-green-700 mt-2">
+                    ⚠️ If you didn't send the message yet, please click above. If you already sent it, you can proceed to continue shopping.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Confirmation Message - Show when order is confirmed */}
+        {order.paymentMethod === "whatsapp" && 
+         order.paymentStatus === "completed" && (
+          <Card className="p-6 border-2 border-green-200 rounded-2xl mb-8 bg-green-50 animate-in fade-in slide-in-from-bottom-4">
+            <div className="flex gap-4">
+              <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-black text-green-900 mb-2 uppercase tracking-tight">
+                  Order Confirmed!
+                </h3>
+                <p className="text-sm text-green-800">
+                  Thank you! Our team has confirmed your order. We will prepare and ship it within 1-2 business days.
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Next Steps */}
         <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 mb-8">
           <div className="flex gap-4">
@@ -273,7 +419,10 @@ export default function OrderConfirmationPage() {
             <div>
               <h3 className="font-bold text-blue-900 mb-2">What's Next?</h3>
               <p className="text-sm text-blue-800">
-                You will receive a confirmation email shortly with tracking details. Our team will prepare and ship your order within 1-2 business days.
+                {order.paymentMethod === "whatsapp" 
+                  ? "After you send your order on WhatsApp, our team will confirm the payment and details. We'll then prepare and ship your order within 1-2 business days."
+                  : "You will receive a confirmation email shortly with tracking details. Our team will prepare and ship your order within 1-2 business days."
+                }
               </p>
             </div>
           </div>

@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Truck, Lock, Check, MapPin } from "lucide-react";
+import { ArrowLeft, Truck, Lock, Check, MapPin, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { redirectToWhatsApp } from "@/lib/whatsapp-order";
 
 interface Address {
   id?: string;
@@ -92,7 +93,7 @@ export default function CheckoutPage() {
     setAddress({ ...address, [field]: value });
   };
 
-  const handleSubmitOrder = async () => {
+  const handlePlaceOrderViaWhatsApp = async () => {
     // Validation
     if (
       !address.name ||
@@ -113,6 +114,7 @@ export default function CheckoutPage() {
     setIsLoading(true);
 
     try {
+      // Step 1: Create order in backend (silently)
       const orderItems = items.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,
@@ -120,7 +122,7 @@ export default function CheckoutPage() {
         color: item.color,
       }));
 
-      const response = await fetch("/api/orders", {
+      const orderResponse = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -134,30 +136,67 @@ export default function CheckoutPage() {
         }),
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to create order");
+      if (!orderResponse.ok) {
+        const errorData = await orderResponse.json();
+        throw new Error(errorData.error || "Failed to create order");
       }
 
-      const data = await response.json();
+      const orderData = await orderResponse.json();
+      const createdOrder = orderData.order;
 
-      toast({
-        title: "Order Confirmed!",
-        description: `Order ${data.order.orderNumber} has been placed successfully`,
-        duration: 3000,
-      });
+      // Step 2: Format order details for WhatsApp
+      const orderDetails = {
+        items: items.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        subtotal: totalPrice,
+        tax: 0,
+        shipping: 0,
+        total: totalPrice,
+        customerName: address.name,
+        customerEmail: userEmail,
+        customerPhone: address.phone,
+        deliveryAddress: {
+          street: address.street,
+          city: address.city,
+          state: address.state,
+          zipCode: address.zipCode,
+        },
+      };
 
-      // Clear cart and redirect
+      // Get admin WhatsApp number from environment
+      const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_PHONE;
+
+      if (!adminPhone) {
+        toast({
+          title: "Configuration Error",
+          description: "WhatsApp number is not configured",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 3: Clear cart
       clearCart();
-      router.push(`/order-confirmation/${data.order.id}`);
+
+      // Step 4: Redirect to WhatsApp immediately (no delays)
+      redirectToWhatsApp(adminPhone, orderDetails);
+
+      // Step 5: Navigate to order confirmation
+      // Short delay to ensure WhatsApp redirect occurs first
+      setTimeout(() => {
+        router.push(`/order-confirmation/${createdOrder.id}`);
+      }, 300);
     } catch (error: any) {
+      setIsLoading(false);
       toast({
         title: "Error",
         description: error.message || "Failed to place order",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -381,21 +420,21 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center gap-4 p-4 bg-zinc-50 rounded-xl border border-zinc-100">
+                <div className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-200">
                   <input
                     type="radio"
-                    id="cod"
+                    id="whatsapp"
                     name="payment"
                     defaultChecked
                     disabled
                     className="w-5 h-5"
                   />
-                  <label htmlFor="cod" className="flex-1 cursor-pointer">
+                  <label htmlFor="whatsapp" className="flex-1 cursor-pointer">
                     <p className="font-bold text-sm text-zinc-950">
-                      Cash on Delivery (COD)
+                      Order via WhatsApp
                     </p>
                     <p className="text-xs text-zinc-500 mt-1">
-                      Pay when your order arrives
+                      Direct communication with our team for payment confirmation
                     </p>
                   </label>
                 </div>
@@ -471,17 +510,20 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <Button
-                onClick={handleSubmitOrder}
-                disabled={isLoading || items.length === 0}
-                className="w-full h-14 rounded-full bg-zinc-950 hover:bg-zinc-800 text-white font-black text-sm uppercase tracking-[0.15em] transition-all duration-300 active:scale-95"
-              >
-                {isLoading ? "Processing..." : "Place Order (COD)"}
-              </Button>
+              <div className="space-y-3">
+                {/* WhatsApp Button - Only Payment Option */}
+                <Button
+                  onClick={handlePlaceOrderViaWhatsApp}
+                  disabled={isLoading || items.length === 0}
+                  className="w-full h-14 rounded-full bg-green-600 hover:bg-green-700 text-white font-black text-sm uppercase tracking-[0.15em] transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  {isLoading ? "Processing..." : "Order via WhatsApp"}
+                </Button>
+              </div>
 
               <p className="text-center text-xs text-zinc-500 leading-relaxed">
-                By placing this order, you agree to our Terms & Conditions and
-                confirm you will pay on delivery
+                Connect directly with our team for instant order confirmation and payment arrangement.
               </p>
             </Card>
           </div>

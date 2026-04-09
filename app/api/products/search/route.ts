@@ -13,13 +13,18 @@ export async function GET(request: NextRequest) {
 
     const products = await prisma.product.findMany({
       where: {
-        OR: [
-          { name: { contains: searchTerm, mode: "insensitive" } },
-          { description: { contains: searchTerm, mode: "insensitive" } },
-          { features: { hasSome: [searchTerm] } },
-          { category: { name: { contains: searchTerm, mode: "insensitive" } } },
-          { subCategory: { contains: searchTerm, mode: "insensitive" } },
-        ],
+        AND: [
+          {
+            OR: [
+              { name: { contains: searchTerm, mode: "insensitive" } },
+              { description: { contains: searchTerm, mode: "insensitive" } },
+              { features: { hasSome: [searchTerm] } },
+              { category: { name: { contains: searchTerm, mode: "insensitive" } } },
+              { subCategory: { contains: searchTerm, mode: "insensitive" } },
+            ],
+          },
+          { stock: { gt: 0 } } // Only return products with stock > 0
+        ]
       },
       select: {
         id: true,
@@ -29,6 +34,7 @@ export async function GET(request: NextRequest) {
         originalPrice: true,
         discount: true,
         image: true,
+        stock: true,
         category: {
           select: {
             slug: true,

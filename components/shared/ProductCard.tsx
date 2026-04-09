@@ -21,6 +21,8 @@ interface ProductCardProps {
     originalPrice: number;
     discount: number;
     image: string;
+    stock?: number;
+    sizes?: string[];
   };
 }
 
@@ -29,6 +31,24 @@ export function ProductCard({ product }: ProductCardProps) {
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { toast } = useToast();
+
+  // Calculate total stock from size variants (format: "S:10", "M:15", etc.)
+  const getTotalStock = (): number => {
+    if (Array.isArray(product.sizes)) {
+      return product.sizes.reduce((total, sizeStr) => {
+        if (typeof sizeStr === "string" && sizeStr.includes(":")) {
+          const [_, quantity] = sizeStr.split(":");
+          return total + (parseInt(quantity) || 0);
+        }
+        return total;
+      }, 0);
+    }
+    // Fallback to legacy stock field
+    return product.stock || 0;
+  };
+
+  const totalStock = getTotalStock();
+  const isOutOfStock = totalStock === 0;
 
   const categoryName = typeof product.category === 'object' 
     ? product.category?.name 
@@ -108,6 +128,13 @@ export function ProductCard({ product }: ProductCardProps) {
               {product.discount}% OFF
             </Badge>
           )}
+
+          {/* Out of Stock Overlay */}
+          {isOutOfStock && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+              <span className="text-white font-bold text-sm">OUT OF STOCK</span>
+            </div>
+          )}
         </Link>
       </CardContent>
       
@@ -126,11 +153,15 @@ export function ProductCard({ product }: ProductCardProps) {
         
         <Link href={`/product/${product.slug}`} className="w-full">
           <Button 
-            variant="outline" 
-            className="w-full rounded-xl border-zinc-200 group-hover:bg-brand group-hover:text-white group-hover:border-brand transition-all duration-300 gap-2 h-10 font-bold text-xs uppercase tracking-widest"
+            disabled={isOutOfStock}
+            variant={isOutOfStock ? "secondary" : "outline"} 
+            className={cn(
+              "w-full rounded-xl border-zinc-200 gap-2 h-10 font-bold text-xs uppercase tracking-widest transition-all duration-300",
+              !isOutOfStock && "group-hover:bg-brand group-hover:text-white group-hover:border-brand"
+            )}
           >
             <ShoppingBag className="w-4 h-4" />
-            Add to Cart
+            {isOutOfStock ? "Out of Stock" : "Add to Cart"}
           </Button>
         </Link>
       </CardFooter>

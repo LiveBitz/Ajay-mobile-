@@ -70,6 +70,7 @@ export function ProductForm({
     price: initialData?.price?.toString() || "",
     originalPrice: initialData?.originalPrice?.toString() || "",
     discount: initialData?.discount?.toString() || "0",
+    stock: initialData?.stock?.toString() || "10",
     categoryId: initialData?.categoryId || preSelectedCategoryId || "",
     subCategory: initialData?.subCategory || "",
     image: initialData?.image || "",
@@ -1052,7 +1053,7 @@ export function ProductForm({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
                     Selling Price (₹)
@@ -1108,6 +1109,21 @@ export function ProductForm({
                       setFormData((p) => ({ ...p, discount: e.target.value }))
                     }
                     className="rounded-2xl border-zinc-100 h-13 sm:h-14 font-bold text-zinc-600 bg-brand/5 border-brand/10 shadow-sm text-center"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+                    Available Stock
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="10"
+                    value={formData.stock || ""}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, stock: e.target.value }))
+                    }
+                    className="rounded-2xl border-zinc-100 h-13 sm:h-14 font-bold text-zinc-600 bg-emerald-50/50 border-emerald-100/50 shadow-sm text-center"
                     required
                   />
                 </div>

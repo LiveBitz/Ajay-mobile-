@@ -17,8 +17,29 @@ export function ProductGrid({ products, isLoading, clearFilters }: ProductGridPr
   const [displayCount, setDisplayCount] = useState(8);
   const [isMoreLoading, setIsMoreLoading] = useState(false);
 
-  const visibleProducts = products.slice(0, displayCount);
-  const hasMore = displayCount < products.length;
+  // Calculate total stock from size variants and filter available products
+  const getProductTotalStock = (product: any): number => {
+    if (typeof product.sizes === 'string' && product.sizes.includes(':')) {
+      // Single size with stock: "S:10"
+      return parseInt(product.sizes.split(':')[1]) || 0;
+    }
+    if (Array.isArray(product.sizes)) {
+      // Multiple sizes: ["S:10", "M:15", "L:12"]
+      return product.sizes.reduce((total: number, sizeStr: string) => {
+        if (typeof sizeStr === "string" && sizeStr.includes(":")) {
+          const [_, quantity] = sizeStr.split(":");
+          return total + (parseInt(quantity) || 0);
+        }
+        return total;
+      }, 0);
+    }
+    // Fallback to legacy stock field
+    return product.stock || 0;
+  };
+
+  const availableProducts = products.filter(p => getProductTotalStock(p) > 0);
+  const visibleProducts = availableProducts.slice(0, displayCount);
+  const hasMore = displayCount < availableProducts.length;
 
   const handleLoadMore = () => {
     setIsMoreLoading(true);
@@ -47,17 +68,24 @@ export function ProductGrid({ products, isLoading, clearFilters }: ProductGridPr
         </div>
         <div className="space-y-3">
           <h3 className="text-lg md:text-xl font-bold text-zinc-900">No products found</h3>
-          <p className="text-zinc-600 text-sm md:text-base max-w-sm mx-auto">
-            Try adjusting your filters to find what you're looking for.
-          </p>
+          <p className="text-zinc-600 text-sm md:text-base max-w-sm mx-auto">No products available</p>
+          <Button onClick={clearFilters} variant="outline" className="mt-4">Clear Filters</Button>
         </div>
-        <Button 
-          variant="outline" 
-          className="rounded-lg font-semibold text-sm h-10 px-6 border-zinc-200 hover:bg-zinc-50 hover:border-brand/20"
-          onClick={clearFilters}
-        >
-          Clear All Filters
-        </Button>
+      </div>
+    );
+  }
+
+  if (availableProducts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 md:py-32 text-center space-y-6">
+        <div className="p-6 md:p-8 rounded-2xl bg-yellow-50">
+          <PackageSearch className="w-12 h-12 md:w-16 md:h-16 text-yellow-300 mx-auto" />
+        </div>
+        <div className="space-y-3">
+          <h3 className="text-lg md:text-xl font-bold text-zinc-900">Out of Stock</h3>
+          <p className="text-zinc-600 text-sm md:text-base max-w-sm mx-auto">All items matching your criteria are currently out of stock</p>
+          <Button onClick={clearFilters} variant="outline" className="mt-4">View All Available Products</Button>
+        </div>
       </div>
     );
   }

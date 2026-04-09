@@ -7,7 +7,10 @@ import { cn } from "@/lib/utils";
 
 async function getNewArrivals() {
   return await prisma.product.findMany({
-    where: { isNew: true },
+    where: { 
+      isNew: true,
+      stock: { gt: 0 } // Only show products with stock > 0
+    },
     take: 8,
     orderBy: { createdAt: 'desc' }
   });

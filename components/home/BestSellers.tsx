@@ -5,7 +5,10 @@ import { SectionHeading } from "@/components/shared/SectionHeading";
 
 async function getBestSellers() {
   return await prisma.product.findMany({
-    where: { isBestSeller: true },
+    where: { 
+      isBestSeller: true,
+      stock: { gt: 0 } // Only show products with stock > 0
+    },
     take: 8,
     orderBy: { createdAt: 'desc' }
   });

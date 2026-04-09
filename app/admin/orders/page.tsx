@@ -389,26 +389,42 @@ export default function AdminOrdersPage() {
                       Update Status
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {["pending", "confirmed", "shipped", "delivered", "cancelled"].map((status) => (
-                        <Button
-                          key={status}
-                          onClick={() => updateOrderStatus(order.id, status)}
-                          variant={
-                            order.status === status
-                              ? "default"
-                              : "outline"
+                      {["pending", "confirmed", "shipped", "delivered", "cancelled"].map((status) => {
+                        const getStatusStyles = (s: string, isActive: boolean) => {
+                          const baseClasses = "rounded-full text-xs uppercase tracking-widest font-bold";
+                          
+                          if (!isActive) {
+                            return `${baseClasses} border-zinc-100 text-zinc-600 hover:bg-zinc-50`;
                           }
-                          size="sm"
-                          className={cn(
-                            "rounded-full text-xs uppercase tracking-widest font-bold",
-                            order.status === status
-                              ? "bg-zinc-950 hover:bg-zinc-800"
-                              : "border-zinc-100 hover:bg-zinc-50"
-                          )}
-                        >
-                          {status}
-                        </Button>
-                      ))}
+                          
+                          switch (s) {
+                            case "pending":
+                              return `${baseClasses} bg-yellow-500 hover:bg-yellow-600 text-white border-transparent`;
+                            case "confirmed":
+                              return `${baseClasses} bg-blue-500 hover:bg-blue-600 text-white border-transparent`;
+                            case "shipped":
+                              return `${baseClasses} bg-purple-500 hover:bg-purple-600 text-white border-transparent`;
+                            case "delivered":
+                              return `${baseClasses} bg-green-500 hover:bg-green-600 text-white border-transparent`;
+                            case "cancelled":
+                              return `${baseClasses} bg-red-500 hover:bg-red-600 text-white border-transparent`;
+                            default:
+                              return `${baseClasses} bg-zinc-500 hover:bg-zinc-600 text-white border-transparent`;
+                          }
+                        };
+
+                        return (
+                          <Button
+                            key={status}
+                            onClick={() => updateOrderStatus(order.id, status)}
+                            variant={order.status === status ? "default" : "outline"}
+                            size="sm"
+                            className={getStatusStyles(status, order.status === status)}
+                          >
+                            {status}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -420,5 +436,3 @@ export default function AdminOrdersPage() {
     </div>
   );
 }
-
-import { cn } from "@/lib/utils";

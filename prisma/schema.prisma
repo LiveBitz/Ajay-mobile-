@@ -29,6 +29,7 @@ model Product {
   price         Float
   originalPrice Float
   discount      Int      @default(0)
+  stock         Int      @default(0) // Stock quantity - 0 means out of stock
   sizes         String[] // Supported in PostgreSQL
   colors        String[] 
   image         String

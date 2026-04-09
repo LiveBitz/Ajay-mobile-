@@ -21,6 +21,8 @@ import { Loader2, TrendingUp, Package, ShoppingCart, ChevronLeft, ChevronRight, 
 interface DashboardData {
   month: number;
   year: number;
+  timePeriod?: string;
+  dateRange?: { start: string; end: string };
   stats: {
     totalProducts: number;
     totalCategories: number;
@@ -63,24 +65,31 @@ export default function DashboardContent() {
   const [error, setError] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [timePeriod, setTimePeriod] = useState<"week" | "month" | "year">("month");
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
       setIsRefreshing(true);
-      console.log(`[Dashboard] Fetching data for ${MONTHS[selectedMonth]} ${selectedYear}`);
+      const monthParam = selectedMonth;
+      const yearParam = selectedYear;
+      console.log(`[Dashboard] Fetching data for ${timePeriod} view with params:`, { monthParam, yearParam, timePeriod });
       const response = await fetch(
-        `/api/admin/dashboard?month=${selectedMonth}&year=${selectedYear}`
+        `/api/admin/dashboard?month=${monthParam}&year=${yearParam}&timePeriod=${timePeriod}`
       );
-      if (!response.ok) throw new Error("Failed to fetch dashboard data");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`API Error ${response.status}: ${errorData.error || 'Unknown error'}`);
+      }
       const dashboardData = await response.json();
       console.log("[Dashboard] Data fetched:", dashboardData);
       setData(dashboardData);
       setLastUpdated(new Date());
       setError(null);
     } catch (err) {
-      setError("Unable to load dashboard data");
+      const errorMsg = err instanceof Error ? err.message : "Unknown error";
+      setError(`Unable to load dashboard data: ${errorMsg}`);
       console.error("[Dashboard] Fetch error:", err);
     } finally {
       setIsRefreshing(false);
@@ -104,7 +113,7 @@ export default function DashboardContent() {
       console.log("[Dashboard] Cleaning up interval");
       clearInterval(intervalId);
     };
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, timePeriod]);
 
   const handlePreviousMonth = () => {
     if (selectedMonth === 0) {
@@ -175,6 +184,27 @@ export default function DashboardContent() {
     },
   ];
 
+  // Helper function to get date range display text
+  const getDateRangeText = () => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    switch(timePeriod) {
+      case "week": {
+        const weekStart = new Date(today);
+        const weekEnd = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        weekEnd.setDate(weekStart.getDate() + 6);
+        return `${weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${weekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+      }
+      case "year":
+        return `${today.getFullYear()}`;
+      case "month":
+      default:
+        return `${MONTHS[selectedMonth]} ${selectedYear}`;
+    }
+  };
+
   const statusData = data
     ? Object.entries(data.ordersByStatus).map(([status, count]) => ({
         name: status.charAt(0).toUpperCase() + status.slice(1),
@@ -185,41 +215,66 @@ export default function DashboardContent() {
 
   return (
     <div className="space-y-8">
-      {/* Month Selector with Live Indicator */}
-      <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-        <button
-          onClick={handlePreviousMonth}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          aria-label="Previous month"
-        >
-          <ChevronLeft className="w-5 h-5 text-gray-600" />
-        </button>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex flex-col items-center">
-            <h3 className="text-xl font-bold text-gray-900">
-              {MONTHS[selectedMonth]} {selectedYear}
-            </h3>
-            <p className="text-xs text-gray-500 mt-1">Updated {formatLastUpdated()}</p>
+      {/* Enhanced Header with Time Period Selector */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
+        {/* Time Period Buttons */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Dashboard Analytics</h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">Updated {formatLastUpdated()}</p>
+          </div>
+          <div className="flex gap-2 bg-gray-100 p-1 rounded-lg w-full sm:w-auto">
+            {(["week", "month", "year"] as const).map((period) => (
+              <button
+                key={period}
+                onClick={() => setTimePeriod(period)}
+                className={`px-3 sm:px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+                  timePeriod === period
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-transparent text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {period.charAt(0).toUpperCase() + period.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
-        
-        <button
-          onClick={fetchDashboardData}
-          disabled={isRefreshing}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Refresh data"
-        >
-          <RefreshCw className={`w-5 h-5 text-gray-600 ${isRefreshing ? 'animate-spin' : ''}`} />
-        </button>
 
-        <button
-          onClick={handleNextMonth}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          aria-label="Next month"
-        >
-          <ChevronRight className="w-5 h-5 text-gray-600" />
-        </button>
+        {/* Month/Year Navigation - Only show for Month and Year views */}
+        {(timePeriod === "month" || timePeriod === "year") && (
+          <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-transparent rounded-lg p-4 border border-blue-100">
+            <button
+              onClick={handlePreviousMonth}
+              className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
+              aria-label="Previous period"
+            >
+              <ChevronLeft className="w-5 h-5 text-blue-600" />
+            </button>
+            
+            <div className="flex flex-col items-center">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+                {getDateRangeText()}
+              </h3>
+            </div>
+            
+            <button
+              onClick={handleNextMonth}
+              className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
+              aria-label="Next period"
+            >
+              <ChevronRight className="w-5 h-5 text-blue-600" />
+            </button>
+          </div>
+        )}
+
+        {/* Current Period Display for Week */}
+        {timePeriod === "week" && (
+          <div className="text-center bg-gradient-to-r from-green-50 to-transparent rounded-lg p-4 border border-green-100">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+              {getDateRangeText()}
+            </h3>
+          </div>
+        )}
       </div>
 
       {loading && !data ? (
@@ -248,57 +303,252 @@ export default function DashboardContent() {
           </div>
 
           {/* Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Revenue Chart - spans 2 columns */}
-            <div className="lg:col-span-2 bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">
-                Revenue Trend - {MONTHS[selectedMonth]} {selectedYear}
-              </h2>
+            <div className="lg:col-span-2 bg-white border border-gray-200 rounded-lg p-4 sm:p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
+              {/* Header with Title and Stats */}
+              <div className="mb-4 sm:mb-6 lg:mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                  <div>
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-900 uppercase tracking-tight">
+                      Revenue Trend
+                    </h2>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                      {timePeriod === "week" && "This Week's Performance"}
+                      {timePeriod === "month" && `${MONTHS[selectedMonth]} ${selectedYear}`}
+                      {timePeriod === "year" && `Year ${selectedYear} Overview`}
+                    </p>
+                  </div>
+                  <div className="flex gap-3 flex-wrap">
+                    {data?.revenueChart && data.revenueChart.length > 0 && (
+                      <>
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg px-3 py-2 border border-blue-200">
+                          <p className="text-xs text-blue-600 font-medium">
+                            {timePeriod === "week" && "Weekly"}
+                            {timePeriod === "month" && "Monthly"}
+                            {timePeriod === "year" && "Yearly"} Total
+                          </p>
+                          <p className="text-sm sm:text-base font-bold text-blue-900">
+                            ₹{data.revenueChart.reduce((sum, d) => sum + d.revenue, 0).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg px-3 py-2 border border-green-200">
+                          <p className="text-xs text-green-600 font-medium">
+                            {timePeriod === "week" && "Daily Avg"} 
+                            {timePeriod === "month" && "Daily Avg"}
+                            {timePeriod === "year" && "Daily Avg"}
+                          </p>
+                          <p className="text-sm sm:text-base font-bold text-green-900">
+                            ₹{Math.round(data.revenueChart.reduce((sum, d) => sum + d.revenue, 0) / data.revenueChart.length).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg px-3 py-2 border border-purple-200">
+                          <p className="text-xs text-purple-600 font-medium">Peak Revenue</p>
+                          <p className="text-sm sm:text-base font-bold text-purple-900">
+                            ₹{Math.max(...data.revenueChart.map(d => d.revenue)).toLocaleString()}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {data?.revenueChart && data.revenueChart.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart 
-                    data={data.revenueChart}
-                    key={`revenue-${JSON.stringify(data.revenueChart.map(d => d.revenue).join(','))}`}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="#9ca3af"
-                      style={{ fontSize: "12px" }}
-                    />
-                    <YAxis 
-                      stroke="#9ca3af"
-                      style={{ fontSize: "12px" }}
-                      label={{ value: "Revenue (₹)", angle: -90, position: "insideLeft" }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#fff",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        padding: "8px",
-                      }}
-                      formatter={(value) => {
-                        const numValue = typeof value === 'number' ? value : 0;
-                        return [`₹${numValue.toLocaleString()}`, "Revenue"];
-                      }}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="revenue"
-                      stroke="#3b82f6"
-                      dot={{ fill: "#3b82f6", r: 4 }}
-                      activeDot={{ r: 6 }}
-                      strokeWidth={2}
-                      name="Revenue"
-                      isAnimationActive={true}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div className="w-full">
+                  {/* Mobile View */}
+                  <div className="sm:hidden">
+                    <div className="overflow-x-auto -mx-4 px-4">
+                      <div style={{ minWidth: timePeriod === "year" ? "280px" : "300px" }}>
+                        <ResponsiveContainer width={timePeriod === "year" ? 280 : 300} height={240}>
+                          <LineChart 
+                            data={data.revenueChart}
+                            key={`revenue-mobile-${JSON.stringify(data.revenueChart.map(d => d.revenue).join(','))}`}
+                            margin={timePeriod === "year" ? { top: 10, right: 10, left: 10, bottom: 50 } : { top: 10, right: 10, left: 10, bottom: 40 }}
+                          >
+                            <defs>
+                              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis 
+                              dataKey="date" 
+                              stroke="#d1d5db"
+                              tick={{ fontSize: 10, fill: "#6b7280" }}
+                              interval={timePeriod === "year" ? 0 : Math.ceil(data.revenueChart.length / 5) - 1}
+                              angle={timePeriod === "year" ? -45 : 0}
+                              height={timePeriod === "year" ? 60 : 40}
+                            />
+                            <YAxis 
+                              stroke="#d1d5db"
+                              tick={{ fontSize: 10, fill: "#6b7280" }}
+                              width={35}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "#fff",
+                                border: "2px solid #3b82f6",
+                                borderRadius: "8px",
+                                padding: "10px",
+                                fontSize: "11px",
+                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                              }}
+                              formatter={(value: any) => {
+                                const numValue = typeof value === 'number' ? value : 0;
+                                return [`₹${numValue.toLocaleString()}`, "Revenue"];
+                              }}
+                              labelFormatter={(label) => `Date: ${label}`}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="revenue"
+                              stroke="#3b82f6"
+                              strokeWidth={2}
+                              dot={{ fill: "#3b82f6", r: 3 }}
+                              activeDot={{ r: 5 }}
+                              fillOpacity={1}
+                              fill="url(#colorRevenue)"
+                              isAnimationActive={true}
+                              name="Revenue"
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tablet View */}
+                  <div className="hidden sm:block lg:hidden">
+                    <div className="overflow-x-auto -mx-6 px-6">
+                      <div style={{ minWidth: timePeriod === "year" ? "400px" : "500px" }}>
+                        <ResponsiveContainer width={timePeriod === "year" ? 400 : 500} height={300}>
+                          <LineChart 
+                            data={data.revenueChart}
+                            key={`revenue-tablet-${JSON.stringify(data.revenueChart.map(d => d.revenue).join(','))}`}
+                            margin={timePeriod === "year" ? { top: 15, right: 20, left: 50, bottom: 70 } : { top: 15, right: 20, left: 50, bottom: 50 }}
+                          >
+                            <defs>
+                              <linearGradient id="colorRevenueTb" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                            <XAxis 
+                              dataKey="date" 
+                              stroke="#9ca3af"
+                              tick={{ fontSize: 11, fill: "#6b7280" }}
+                              interval={timePeriod === "year" ? 0 : Math.ceil(data.revenueChart.length / 6) - 1}
+                              angle={timePeriod === "year" ? -45 : 0}
+                              height={timePeriod === "year" ? 70 : 50}
+                            />
+                            <YAxis 
+                              stroke="#9ca3af"
+                              tick={{ fontSize: 11, fill: "#6b7280" }}
+                              label={{ value: "Revenue (₹)", angle: -90, position: "insideLeft", fontSize: 11 }}
+                              width={45}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "#fff",
+                                border: "2px solid #3b82f6",
+                                borderRadius: "8px",
+                                padding: "12px",
+                                fontSize: "12px",
+                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                              }}
+                              formatter={(value: any) => {
+                                const numValue = typeof value === 'number' ? value : 0;
+                                return [`₹${numValue.toLocaleString()}`, "Revenue"];
+                              }}
+                              labelFormatter={(label) => `Date: ${label}`}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="revenue"
+                              stroke="#3b82f6"
+                              strokeWidth={2.5}
+                              dot={{ fill: "#3b82f6", r: 4 }}
+                              activeDot={{ r: 6 }}
+                              fillOpacity={1}
+                              fill="url(#colorRevenueTb)"
+                              isAnimationActive={true}
+                              name="Revenue"
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Desktop View */}
+                  <div className="hidden lg:block">
+                    <ResponsiveContainer width="100%" height={380}>
+                      <LineChart 
+                        data={data.revenueChart}
+                        key={`revenue-desktop-${JSON.stringify(data.revenueChart.map(d => d.revenue).join(','))}`}
+                        margin={timePeriod === "year" ? { top: 20, right: 30, left: 70, bottom: 80 } : { top: 20, right: 30, left: 70, bottom: 60 }}
+                      >
+                        <defs>
+                          <linearGradient id="colorRevenueDesktop" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={true} />
+                        <XAxis 
+                          dataKey="date" 
+                          stroke="#9ca3af"
+                          tick={{ fontSize: 12, fill: "#6b7280", fontWeight: 500 }}
+                          interval={timePeriod === "year" ? 0 : Math.ceil(data.revenueChart.length / 8) - 1}
+                          angle={timePeriod === "year" ? -45 : 0}
+                          height={timePeriod === "year" ? 80 : 60}
+                        />
+                        <YAxis 
+                          stroke="#9ca3af"
+                          tick={{ fontSize: 12, fill: "#6b7280" }}
+                          label={{ value: "Revenue (₹)", angle: -90, position: "insideLeft", fontSize: 12, offset: 15 }}
+                          width={60}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#fff",
+                            border: "2px solid #3b82f6",
+                            borderRadius: "10px",
+                            padding: "14px",
+                            fontSize: "13px",
+                            boxShadow: "0 6px 16px rgba(0, 0, 0, 0.12)",
+                          }}
+                          formatter={(value: any) => {
+                            const numValue = typeof value === 'number' ? value : 0;
+                            return [`₹${numValue.toLocaleString()}`, timePeriod === "year" ? "Monthly Revenue" : "Daily Revenue"];
+                          }}
+                          labelFormatter={(label) => `${timePeriod === "year" ? "Month" : "Date"}: ${label}`}
+                          cursor={{ stroke: "#3b82f6", strokeWidth: 2 }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="revenue"
+                          stroke="#3b82f6"
+                          strokeWidth={3}
+                          dot={{ fill: "#3b82f6", r: timePeriod === "year" ? 6 : 5 }}
+                          activeDot={{ r: timePeriod === "year" ? 8 : 7, fill: "#1e40af" }}
+                          fillOpacity={1}
+                          fill="url(#colorRevenueDesktop)"
+                          isAnimationActive={true}
+                          name={timePeriod === "year" ? "Monthly Revenue" : "Daily Revenue"}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               ) : (
-                <div className="flex items-center justify-center h-64 text-gray-400">
-                  No revenue data for this month
+                <div className="flex flex-col items-center justify-center h-56 sm:h-72 lg:h-96 text-gray-400 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-100">
+                  <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-gray-300 mb-3" />
+                  <p className="text-xs sm:text-sm lg:text-base font-semibold text-gray-600">No revenue data</p>
+                  <p className="text-[10px] sm:text-xs text-gray-400 mt-1 px-4 text-center">Revenue data will appear as orders are processed</p>
                 </div>
               )}
             </div>
@@ -334,166 +584,62 @@ export default function DashboardContent() {
 
           {/* Top Products and Recent Orders */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-            {/* Top Products Chart */}
+            {/* Top Products - Professional Table View */}
             <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
               <div className="mb-4 sm:mb-6">
                 <h2 className="text-lg sm:text-xl lg:text-xl font-bold text-gray-900">Top Products by Orders</h2>
-                <p className="text-xs sm:text-sm text-gray-500 mt-1">Units sold this month</p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">Best performing products this month</p>
               </div>
               {data?.topProducts && data.topProducts.length > 0 ? (
-                <div className="w-full">
-                  {/* Mobile View (sm: below) */}
-                  <div className="sm:hidden w-full overflow-x-auto -mx-4 px-4">
-                    <div style={{ minWidth: "320px" }}>
-                      <ResponsiveContainer width={320} height={240}>
-                        <BarChart 
-                          data={data.topProducts}
-                          key={`products-mobile-${JSON.stringify(data.topProducts.map(d => d.quantity).join(','))}`}
-                          margin={{ top: 8, right: 12, left: 20, bottom: 65 }}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs sm:text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200 bg-gray-50">
+                        <th className="px-3 py-3 text-left font-bold text-gray-900 uppercase tracking-wider">Rank</th>
+                        <th className="px-3 py-3 text-left font-bold text-gray-900 uppercase tracking-wider">Product Name</th>
+                        <th className="px-3 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">Orders</th>
+                        <th className="px-3 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">Revenue</th>
+                        <th className="px-3 py-3 text-right font-bold text-gray-900 uppercase tracking-wider">Avg Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.topProducts.map((product, index) => (
+                        <tr 
+                          key={index} 
+                          className="border-b border-gray-100 hover:bg-green-50 transition-colors"
                         >
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis 
-                            dataKey="name" 
-                            stroke="#d1d5db"
-                            angle={-60}
-                            textAnchor="end"
-                            height={80}
-                            tick={{ fontSize: 8, fill: "#6b7280", fontWeight: 500 }}
-                            interval={0}
-                          />
-                          <YAxis 
-                            stroke="#d1d5db"
-                            tick={{ fontSize: 9, fill: "#6b7280" }}
-                            label={{ value: "Units", angle: -90, position: "insideLeft", fontSize: 8 }}
-                            width={30}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "#fff",
-                              border: "1px solid #e5e7eb",
-                              borderRadius: "6px",
-                              padding: "6px 8px",
-                              fontSize: "10px",
-                              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08)"
-                            }}
-                            formatter={(value) => [value, "Units"]}
-                            cursor={{ fill: "rgba(16, 185, 129, 0.1)" }}
-                          />
-                          <Bar 
-                            dataKey="quantity" 
-                            fill="#10b981" 
-                            radius={[5, 5, 0, 0]}
-                            isAnimationActive={true}
-                            animationDuration={500}
-                            maxBarSize={22}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-
-                  {/* Tablet View (sm: to lg:) */}
-                  <div className="hidden sm:block lg:hidden w-full overflow-x-auto -mx-6 px-6">
-                    <div style={{ minWidth: "450px" }}>
-                      <ResponsiveContainer width={450} height={290}>
-                        <BarChart 
-                          data={data.topProducts}
-                          key={`products-tablet-${JSON.stringify(data.topProducts.map(d => d.quantity).join(','))}`}
-                          margin={{ top: 10, right: 15, left: 35, bottom: 95 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                          <XAxis 
-                            dataKey="name" 
-                            stroke="#9ca3af"
-                            angle={-50}
-                            textAnchor="end"
-                            height={100}
-                            tick={{ fontSize: 10, fill: "#6b7280", fontWeight: 500 }}
-                            interval={0}
-                          />
-                          <YAxis 
-                            stroke="#9ca3af"
-                            tick={{ fontSize: 10, fill: "#6b7280" }}
-                            label={{ value: "Units Sold", angle: -90, position: "insideLeft", fontSize: 10 }}
-                            width={40}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "#fff",
-                              border: "1px solid #e5e7eb",
-                              borderRadius: "7px",
-                              padding: "8px",
-                              fontSize: "11px",
-                              boxShadow: "0 3px 6px rgba(0, 0, 0, 0.1)"
-                            }}
-                            formatter={(value) => [value, "Units"]}
-                            cursor={{ fill: "rgba(16, 185, 129, 0.1)" }}
-                          />
-                          <Legend wrapperStyle={{ paddingTop: "10px", fontSize: "11px" }} />
-                          <Bar 
-                            dataKey="quantity" 
-                            fill="#10b981" 
-                            radius={[6, 6, 0, 0]}
-                            isAnimationActive={true}
-                            animationDuration={600}
-                            maxBarSize={35}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-
-                  {/* Desktop View (lg:+) */}
-                  <div className="hidden lg:block w-full">
-                    <ResponsiveContainer width="100%" height={360}>
-                      <BarChart 
-                        data={data.topProducts}
-                        key={`products-desktop-${JSON.stringify(data.topProducts.map(d => d.quantity).join(','))}`}
-                        margin={{ top: 12, right: 25, left: 50, bottom: 110 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={true} />
-                        <XAxis 
-                          dataKey="name" 
-                          stroke="#9ca3af"
-                          angle={-45}
-                          textAnchor="end"
-                          height={125}
-                          tick={{ fontSize: 12, fill: "#6b7280", fontWeight: 500 }}
-                          interval={0}
-                        />
-                        <YAxis 
-                          stroke="#9ca3af"
-                          tick={{ fontSize: 12, fill: "#6b7280" }}
-                          label={{ value: "Units Sold", angle: -90, position: "insideLeft", fontSize: 12, offset: 10 }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#fff",
-                            border: "1px solid #e5e7eb",
-                            borderRadius: "8px",
-                            padding: "10px 12px",
-                            fontSize: "12px",
-                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.12)"
-                          }}
-                          formatter={(value) => [value, "Units"]}
-                          labelFormatter={(label) => `Product: ${label}`}
-                          cursor={{ fill: "rgba(16, 185, 129, 0.08)" }}
-                        />
-                        <Legend 
-                          wrapperStyle={{ paddingTop: "16px", fontSize: "12px" }}
-                          height={30}
-                        />
-                        <Bar 
-                          dataKey="quantity" 
-                          fill="#10b981" 
-                          radius={[8, 8, 0, 0]}
-                          isAnimationActive={true}
-                          animationDuration={700}
-                          maxBarSize={55}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                          <td className="px-3 py-3">
+                            <div className="flex items-center justify-center">
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white text-xs font-bold">
+                                {index + 1}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-green-600 text-lg">•</span>
+                              <span className="font-semibold text-gray-900">{product.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-right">
+                            <span className="inline-block px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-bold">
+                              {product.quantity}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-right">
+                            <span className="inline-block px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-bold">
+                              ₹{product.value.toLocaleString()}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-right">
+                            <span className="font-semibold text-gray-900">
+                              ₹{Math.round(product.value / product.quantity).toLocaleString()}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-56 sm:h-72 lg:h-96 text-gray-400 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-100">

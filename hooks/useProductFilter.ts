@@ -12,6 +12,7 @@ export type Product = {
   price: number;
   originalPrice: number;
   discount: number;
+  stock: number;
   sizes: string[];
   colors: string[];
   image: string;
@@ -35,12 +36,22 @@ const normalizeArray = (val: any): string[] => {
       const parsed = JSON.parse(val);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
-      // If it's a plain string that can't be parsed as JSON, treat it as empty or single item?
-      // Usually it's either an array or a JSON string of an array.
       return [];
     }
   }
   return [];
+};
+
+// Calculate total stock from size variants (format: "S:10", "M:15", etc.)
+const getTotalStock = (sizes: string[]): number => {
+  if (!Array.isArray(sizes)) return 0;
+  return sizes.reduce((total, sizeStr) => {
+    if (typeof sizeStr === "string" && sizeStr.includes(":")) {
+      const [_, quantity] = sizeStr.split(":");
+      return total + (parseInt(quantity) || 0);
+    }
+    return total;
+  }, 0);
 };
 
 export function useProductFilter(products: Product[], slug: string) {
@@ -60,12 +71,22 @@ export function useProductFilter(products: Product[], slug: string) {
     
     const targetSlug = String(slug).toLowerCase();
     
-    if (targetSlug === "sale") return products.filter((p) => p.discount > 0);
-    if (targetSlug === "new-arrivals") return products.filter((p) => p.isNew);
+    let filtered = products;
+    if (targetSlug === "sale") filtered = products.filter((p) => p.discount > 0);
+    else if (targetSlug === "new-arrivals") filtered = products.filter((p) => p.isNew);
+    else {
+      filtered = products.filter((p) => {
+        const categorySlug = p.category?.slug?.toLowerCase();
+        return (categorySlug && categorySlug === targetSlug) || p.categoryId === slug;
+      });
+    }
     
-    return products.filter((p) => {
-      const categorySlug = p.category?.slug?.toLowerCase();
-      return (categorySlug && categorySlug === targetSlug) || p.categoryId === slug;
+    // Filter out products with no available stock (sum of all size variants)
+    return filtered.filter((p) => {
+      const totalStock = getTotalStock(normalizeArray(p.sizes));
+      const legacyStock = (p as any).stock || 0;
+      // Show if either has stock: total from variants OR legacy stock field
+      return totalStock > 0 || legacyStock > 0;
     });
   }, [products, slug]);
 

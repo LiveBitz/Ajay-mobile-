@@ -38,6 +38,7 @@ async function main() {
         price: p.price,
         originalPrice: p.originalPrice,
         discount: p.discount,
+        stock: p.stock || 0,
         sizes: p.sizes,
         colors: p.colors,
         image: p.image,
