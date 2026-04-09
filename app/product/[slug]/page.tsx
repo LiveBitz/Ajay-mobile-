@@ -7,7 +7,6 @@ import {
   ShieldCheck,
   Truck,
   RotateCcw,
-  Star,
   ChevronRight,
   Package,
   BadgeCheck,
@@ -95,7 +94,7 @@ export default async function ProductDetailsPage({
 
               {/* Product Identity */}
               <div className="space-y-4">
-                {/* Category + Rating row */}
+                {/* Category */}
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge
                     variant="outline"
@@ -103,23 +102,6 @@ export default async function ProductDetailsPage({
                   >
                     {product.subCategory || product.category.name}
                   </Badge>
-
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex items-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          className="w-3 h-3 fill-amber-400 stroke-amber-400"
-                        />
-                      ))}
-                    </div>
-                    <span className="text-[11px] font-semibold text-zinc-500">
-                      4.9
-                    </span>
-                    <span className="text-[11px] text-zinc-300 font-medium">
-                      · 120 Reviews
-                    </span>
-                  </div>
                 </div>
 
                 {/* Product Name */}
