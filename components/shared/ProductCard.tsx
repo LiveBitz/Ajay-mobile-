@@ -39,10 +39,6 @@ export function ProductCard({ product }: ProductCardProps) {
   const totalStock = getTotalStock(product.sizes);
   const isOutOfStock = totalStock === 0;
 
-  const categoryName = typeof product.category === 'object' 
-    ? product.category?.name 
-    : product.category;
-
   const handleWishlistClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsAddingToWishlist(true);
@@ -107,11 +103,6 @@ export function ProductCard({ product }: ProductCardProps) {
               )}
             />
           </button>
-          
-          {/* Category Badge */}
-          <Badge className="absolute top-3 left-3 bg-white text-zinc-950 hover:bg-white font-medium px-3 py-1 rounded-full shadow-sm z-10">
-            {categoryName}
-          </Badge>
 
           {/* Discount Badge */}
           {product.discount > 0 && (
@@ -119,20 +110,6 @@ export function ProductCard({ product }: ProductCardProps) {
               {product.discount}% OFF
             </Badge>
           )}
-
-          {/* Status Badges (New Arrival / Best Seller) */}
-          <div className="absolute bottom-3 right-3 flex flex-col gap-2 z-10">
-            {product.isNew && (
-              <Badge className="bg-blue-500 text-white hover:bg-blue-500 font-bold px-2.5 py-0.5 rounded-full shadow-sm text-[10px]">
-                🆕 NEW
-              </Badge>
-            )}
-            {product.isBestSeller && !product.isNew && (
-              <Badge className="bg-amber-500 text-white hover:bg-amber-500 font-bold px-2.5 py-0.5 rounded-full shadow-sm text-[10px]">
-                ⭐ BESTSELLER
-              </Badge>
-            )}
-          </div>
 
           {/* Out of Stock Overlay */}
           {isOutOfStock && (
