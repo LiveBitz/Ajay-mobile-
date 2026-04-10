@@ -79,7 +79,12 @@ export function Footer() {
       </div>
       
       <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-8 border-t border-zinc-200 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-        <p>© {currentYear} SOULED Clothing Store. All rights reserved.</p>
+        <div className="flex flex-col gap-2 md:gap-0 md:flex-row md:items-center md:gap-6">
+          <p>© {currentYear} SOULED Clothing Store. All rights reserved.</p>
+          <p className="text-xs text-zinc-400 font-medium">
+            Designed & developed by <span className="font-semibold text-zinc-600">Himanshu Meena</span> & <span className="font-semibold text-zinc-600">Ashibur Rehman</span>
+          </p>
+        </div>
         <div className="flex gap-4">
           <span className="font-semibold uppercase tracking-widest text-[10px]">VISA</span>
           <span className="font-semibold uppercase tracking-widest text-[10px]">MASTERCARD</span>
