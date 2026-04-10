@@ -229,11 +229,102 @@ export function ProductForm({
     }
   };
 
+  // Validation function
+  const validateForm = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+
+    // Product name validation
+    if (!formData.name || formData.name.trim().length === 0) {
+      errors.push("Product name is required");
+    } else if (formData.name.length > 255) {
+      errors.push("Product name must be less than 255 characters");
+    }
+
+    // Slug validation
+    if (!formData.slug || formData.slug.trim().length === 0) {
+      errors.push("Product slug is required");
+    }
+
+    // Category validation
+    if (!formData.categoryId) {
+      errors.push("Please select a category");
+    }
+
+    // Price validation
+    if (!formData.price || isNaN(parseFloat(formData.price))) {
+      errors.push("Valid price is required");
+    } else if (parseFloat(formData.price) < 0) {
+      errors.push("Price cannot be negative");
+    }
+
+    // Original price validation
+    if (!formData.originalPrice || isNaN(parseFloat(formData.originalPrice))) {
+      errors.push("Valid original price is required");
+    } else if (parseFloat(formData.originalPrice) < 0) {
+      errors.push("Original price cannot be negative");
+    }
+
+    // Price must be less than or equal to original price
+    if (
+      parseFloat(formData.price) > parseFloat(formData.originalPrice)
+    ) {
+      errors.push("Price must be less than or equal to original price");
+    }
+
+    // Image validation
+    if (!formData.image) {
+      errors.push("Main product image is required");
+    }
+
+    // Sizes validation
+    if (formData.sizes.length === 0) {
+      errors.push("At least one size must be selected");
+    }
+
+    // Colors validation
+    if (formData.colors.length === 0) {
+      errors.push("At least one color must be selected");
+    }
+
+    // Inventory validation - check if matrix has at least some values
+    const hasInventory = Object.values(sizeColorStock).some((qty) => qty > 0);
+    if (!hasInventory) {
+      errors.push("Please add inventory for at least one size-color combination");
+    }
+
+    // Check for negative inventory
+    Object.entries(sizeColorStock).forEach(([key, qty]) => {
+      if (qty < 0) {
+        errors.push(`Inventory for ${key} cannot be negative`);
+      }
+    });
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      // Validate before submitting
+      const validation = validateForm();
+      if (!validation.isValid) {
+        validation.errors.forEach((error) => {
+          toast({
+            title: "Validation Error",
+            description: error,
+            variant: "destructive",
+            duration: 3000,
+          });
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       // Convert sizeColorStock back to storage format: ["S-White:5", "S-Black:3", ...]
       const storageSizes = Object.entries(sizeColorStock)
         .filter(([_, quantity]) => quantity > 0)

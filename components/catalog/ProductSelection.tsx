@@ -8,6 +8,11 @@ import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { 
+  getTotalStock, 
+  extractBaseSizes, 
+  getAvailableColorsForSize 
+} from "@/lib/inventory";
 
 interface ProductSelectionProps {
   product: {
@@ -29,40 +34,28 @@ export function ProductSelection({ product }: ProductSelectionProps) {
   const [showError, setShowError] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
 
-  // Helper: Extract base sizes from inventory data (new format: "S-Purple:5")
-  const extractBaseSizes = (sizes: string[]) => {
-    const baseSizes = new Set<string>();
-    sizes.forEach((entry: string) => {
-      if (entry.includes("-")) {
-        // New format: "S-Purple:5" → extract "S"
-        const baseSize = entry.split("-")[0];
-        baseSizes.add(baseSize);
-      }
-    });
-    return Array.from(baseSizes);
-  };
-
-  // Helper: Get available colors for a specific size
-  const getAvailableColorsForSize = (size: string) => {
-    const colors = new Set<string>();
-    product.sizes.forEach((entry: string) => {
-      if (entry.includes("-") && entry.startsWith(size + "-")) {
-        // New format: "S-Purple:5" → extract "Purple"
-        const color = entry.split("-")[1].split(":")[0];
-        colors.add(color);
-      }
-    });
-    return Array.from(colors);
-  };
-
-  // Use all colors if no size selected, otherwise only colors available for that size
+  // Use shared utility for consistent extraction
   const cleanSizes = useMemo(() => extractBaseSizes(product.sizes), [product.sizes]);
   const hasSizes = cleanSizes.length > 0;
   
-  const availableColors = selectedSize 
-    ? getAvailableColorsForSize(selectedSize)
-    : product.colors;
-  
+  // Get available colors: if size selected, filter by size; otherwise show all
+  const availableColors = useMemo(() => {
+    if (!selectedSize) {
+      // No size selected: show all colors from product.colors
+      return product.colors;
+    }
+    
+    // Size selected: get colors for that specific size
+    const colorsForSize = getAvailableColorsForSize(product.sizes, selectedSize);
+    
+    // If no colors found for this size (old format data), fall back to all colors
+    if (colorsForSize.length === 0) {
+      return product.colors;
+    }
+    
+    return colorsForSize;
+  }, [selectedSize, product.sizes, product.colors]);
+
   const hasColors = availableColors.length > 0;
 
   const handleAddToCart = () => {
@@ -71,7 +64,6 @@ export function ProductSelection({ product }: ProductSelectionProps) {
 
     if (isSizeMissing || isColorMissing) {
       setShowError(true);
-      // Reset error after 3s
       setTimeout(() => setShowError(false), 3000);
       return;
     }

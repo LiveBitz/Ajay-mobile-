@@ -9,6 +9,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
+import { getTotalStock } from "@/lib/inventory";
 import Link from "next/link";
 
 interface ProductCardProps {
@@ -23,6 +24,8 @@ interface ProductCardProps {
     image: string;
     stock?: number;
     sizes?: string[];
+    isNew?: boolean;
+    isBestSeller?: boolean;
   };
 }
 
@@ -32,22 +35,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { toast } = useToast();
 
-  // Calculate total stock from size variants (format: "S:10", "M:15", etc.)
-  const getTotalStock = (): number => {
-    if (Array.isArray(product.sizes)) {
-      return product.sizes.reduce((total, sizeStr) => {
-        if (typeof sizeStr === "string" && sizeStr.includes(":")) {
-          const [_, quantity] = sizeStr.split(":");
-          return total + (parseInt(quantity) || 0);
-        }
-        return total;
-      }, 0);
-    }
-    // Fallback to legacy stock field
-    return product.stock || 0;
-  };
-
-  const totalStock = getTotalStock();
+  // Calculate total stock using shared utility
+  const totalStock = getTotalStock(product.sizes);
   const isOutOfStock = totalStock === 0;
 
   const categoryName = typeof product.category === 'object' 
@@ -101,6 +90,8 @@ export function ProductCard({ product }: ProductCardProps) {
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-110"
             onError={() => setImgError(true)}
+            quality={75}
+            loading="lazy"
           />
           {/* Wishlist Button Overlay */}
           <button
@@ -128,6 +119,20 @@ export function ProductCard({ product }: ProductCardProps) {
               {product.discount}% OFF
             </Badge>
           )}
+
+          {/* Status Badges (New Arrival / Best Seller) */}
+          <div className="absolute bottom-3 right-3 flex flex-col gap-2 z-10">
+            {product.isNew && (
+              <Badge className="bg-blue-500 text-white hover:bg-blue-500 font-bold px-2.5 py-0.5 rounded-full shadow-sm text-[10px]">
+                🆕 NEW
+              </Badge>
+            )}
+            {product.isBestSeller && !product.isNew && (
+              <Badge className="bg-amber-500 text-white hover:bg-amber-500 font-bold px-2.5 py-0.5 rounded-full shadow-sm text-[10px]">
+                ⭐ BESTSELLER
+              </Badge>
+            )}
+          </div>
 
           {/* Out of Stock Overlay */}
           {isOutOfStock && (

@@ -44,6 +44,7 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-103"
                     priority
+                    quality={85}
                   />
                   
                   <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent flex items-center px-6 md:px-12 lg:px-20">

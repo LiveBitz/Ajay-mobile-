@@ -74,7 +74,6 @@ export default function DashboardContent() {
       setIsRefreshing(true);
       const monthParam = selectedMonth;
       const yearParam = selectedYear;
-      console.log(`[Dashboard] Fetching data for ${timePeriod} view with params:`, { monthParam, yearParam, timePeriod });
       const response = await fetch(
         `/api/admin/dashboard?month=${monthParam}&year=${yearParam}&timePeriod=${timePeriod}`
       );
@@ -83,7 +82,6 @@ export default function DashboardContent() {
         throw new Error(`API Error ${response.status}: ${errorData.error || 'Unknown error'}`);
       }
       const dashboardData = await response.json();
-      console.log("[Dashboard] Data fetched:", dashboardData);
       setData(dashboardData);
       setLastUpdated(new Date());
       setError(null);
@@ -99,18 +97,15 @@ export default function DashboardContent() {
 
   // Initial fetch and setup auto-refresh
   useEffect(() => {
-    console.log("[Dashboard] Component mounted, starting auto-refresh");
     fetchDashboardData();
 
     // Set up auto-refresh interval
     const intervalId = setInterval(() => {
-      console.log("[Dashboard] Auto-refresh tick");
       fetchDashboardData();
     }, REFRESH_INTERVAL);
 
     // Cleanup interval on unmount
     return () => {
-      console.log("[Dashboard] Cleaning up interval");
       clearInterval(intervalId);
     };
   }, [selectedMonth, selectedYear, timePeriod]);
@@ -559,7 +554,7 @@ export default function DashboardContent() {
               {statusData && statusData.length > 0 ? (
                 <div className="space-y-4">
                   {statusData.map((item, index) => (
-                    <div key={index} className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
+                    <div key={item.name} className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
                       <div 
                         className="w-3 h-3 rounded-full flex-shrink-0" 
                         style={{ backgroundColor: item.fill }}
@@ -605,7 +600,7 @@ export default function DashboardContent() {
                     <tbody>
                       {data.topProducts.map((product, index) => (
                         <tr 
-                          key={index} 
+                          key={product.name} 
                           className="border-b border-gray-100 hover:bg-green-50 transition-colors"
                         >
                           <td className="px-3 py-3">

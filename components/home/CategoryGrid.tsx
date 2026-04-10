@@ -30,6 +30,8 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                 alt={category.name}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
+                quality={75}
+                loading="lazy"
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end p-4 md:p-5">

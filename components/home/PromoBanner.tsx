@@ -24,7 +24,7 @@ export function PromoBanner({ banner }: PromoBannerProps) {
             src={displayImage}
             alt="Promotion"
             fill
-            className="object-cover opacity-30 transition-transform duration-700 group-hover:scale-103"
+            className="object-cover opacity-60 transition-transform duration-700 group-hover:scale-103"
           />
           <div className="relative z-10 p-6 md:p-10 lg:p-16 max-w-2xl space-y-4">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black leading-tight tracking-tight">

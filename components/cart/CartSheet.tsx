@@ -63,7 +63,7 @@ export function CartSheet() {
                   <div key={item.id} className="group relative flex gap-5 animate-in fade-in slide-in-from-right-4 duration-500">
                     {/* Item Image */}
                     <div className="relative w-24 h-32 rounded-2xl overflow-hidden bg-zinc-50 border border-zinc-100 shrink-0">
-                      <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                      <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" quality={75} loading="lazy" />
                     </div>
 
                     {/* Item Details */}

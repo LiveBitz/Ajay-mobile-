@@ -18,11 +18,37 @@ import { cn } from "@/lib/utils";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { ProductSelection } from "@/components/catalog/ProductSelection";
 
+// Phase 7: Cache product pages for 1 hour with ISR
+export const revalidate = 3600;
+
 async function getProduct(slug: string) {
+  // ✅ PHASE 1: Selective field queries - only fetch needed fields
   return await prisma.product.findUnique({
     where: { slug },
-    include: {
-      category: true,
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      subCategory: true,
+      description: true,
+      price: true,
+      originalPrice: true,
+      discount: true,
+      image: true,
+      images: true,
+      sizes: true,
+      colors: true,
+      isNew: true,
+      isBestSeller: true,
+      stock: true,
+      features: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
     },
   });
 }

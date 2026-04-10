@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
 
 // Get all orders (admin only)
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.getUser();
@@ -12,13 +12,29 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin (you can add proper admin check here based on your setup)
-    // For now, we'll fetch all orders assuming the route is protected by middleware
-
+    // Phase 7: Extract pagination parameters from query string
+    const searchParams = request.nextUrl.searchParams;
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("limit") || "50");
+    
+    const take = pageSize;
+    const skip = (page - 1) * pageSize;
+    
     const orders = await prisma.order.findMany({
-      include: {
+      select: {
+        id: true,
+        orderNumber: true,
+        customerName: true,
+        customerEmail: true,
+        total: true,
+        status: true,
+        createdAt: true,
         items: {
-          include: {
+          select: {
+            id: true,
+            quantity: true,
+            size: true,
+            price: true,
             product: {
               select: {
                 id: true,
@@ -30,9 +46,13 @@ export async function GET() {
         },
       },
       orderBy: { createdAt: "desc" },
+      take,
+      skip,
     });
 
-    return NextResponse.json(orders);
+    const response = NextResponse.json(orders);
+    response.headers.set("Cache-Control", "private, max-age=60");
+    return response;
   } catch (error: any) {
     console.error("Error fetching orders:", error);
     return NextResponse.json(

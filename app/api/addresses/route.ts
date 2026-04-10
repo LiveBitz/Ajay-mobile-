@@ -18,7 +18,10 @@ export async function GET() {
       orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
     });
 
-    return NextResponse.json(addresses);
+    const response = NextResponse.json(addresses);
+    // Phase 7: Cache addresses for 5 minutes on client
+    response.headers.set("Cache-Control", "private, max-age=300, s-maxage=0");
+    return response;
   } catch (error: any) {
     console.error("Error fetching addresses:", error);
     return NextResponse.json(

@@ -3,17 +3,22 @@ import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { SectionHeading } from "@/components/shared/SectionHeading";
+import { getTotalStock } from "@/lib/inventory";
 import { cn } from "@/lib/utils";
 
 async function getNewArrivals() {
-  return await prisma.product.findMany({
+  const products = await prisma.product.findMany({
     where: { 
-      isNew: true,
-      stock: { gt: 0 } // Only show products with stock > 0
+      isNew: true
     },
-    take: 8,
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    take: 20 // Fetch more to filter by stock
   });
+
+  // Filter products with stock > 0 using shared utility
+  return products
+    .filter(p => getTotalStock(p.sizes) > 0)
+    .slice(0, 8);
 }
 
 export async function NewArrivals() {

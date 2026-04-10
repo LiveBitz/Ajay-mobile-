@@ -7,6 +7,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // ✅ PHASE 1: Connection pool - requires DATABASE_DIRECT_URL env var for pooling
+  // This allows 20 concurrent connections instead of default 2-5
 }
 
 model Category {
@@ -17,6 +19,9 @@ model Category {
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  // ✅ PHASE 1: Index for category page queries (/category/[slug])
+  @@index([slug])
 }
 
 model Product {
@@ -42,6 +47,15 @@ model Product {
   orderItems    OrderItem[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  // ✅ Performance Indexes
+  @@index([categoryId])      // For filtering by category
+  @@index([isNew])          // For "New Arrivals" section
+  @@index([isBestSeller])   // For "Best Sellers" section
+  @@index([slug])           // PHASE 1: Product detail page queries (/product/[slug])
+  @@index([createdAt])      // PHASE 1: Sorting by creation date (new arrivals)
+  @@index([name])           // PHASE 2 FIX: Index for search queries on product name
+  @@index([stock])          // For filtering products with stock
 }
 
 model Banner {
@@ -119,6 +133,10 @@ model Order {
   
   @@index([userId])
   @@index([orderNumber])
+  @@index([status])        // ✅ For filtering orders by status
+  @@index([userId, createdAt])  // ✅ For user's order history with sorting
+  @@index([status, createdAt])  // ✅ PHASE 6: For dashboard status breakdown queries
+  @@index([createdAt])     // ✅ PHASE 6: For time-based filtering
 }
 
 model OrderItem {
@@ -135,4 +153,5 @@ model OrderItem {
   
   @@index([orderId])
   @@index([productId])
+  @@index([productId, orderId])  // ✅ PHASE 6: Composite for grouping top products
 }

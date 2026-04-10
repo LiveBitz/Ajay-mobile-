@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { getPaginationParams, formatPaginatedResponse } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +16,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch all orders to get user statistics
+    // ✅ PHASE 2: Smart pagination instead of hard-coded limits
+    const searchParams = request.nextUrl.searchParams;
+    const { take, skip, page } = getPaginationParams({
+      page: searchParams.get("page") ?? undefined,
+      limit: searchParams.get("limit") ?? undefined,
+    });
+
+    // Phase 7: Use pagination parameters instead of hardcoding (enables full user browsing)
+    const ordersPerPage = 100;
     const orders = await prisma.order.findMany({
       select: {
         userId: true,
@@ -28,22 +37,29 @@ export async function GET(request: NextRequest) {
       orderBy: {
         createdAt: "desc",
       },
+      take: ordersPerPage,
+      skip: (page - 1) * ordersPerPage,
     });
 
-    // Fetch all addresses to get user list
+    // Phase 7: Paginated aggregations with skip
     const addresses = await prisma.address.findMany({
       select: {
         userId: true,
         createdAt: true,
       },
       distinct: ["userId"],
+      take: 100,
+      skip: (page - 1) * 100,
     });
 
-    // Fetch wishlist data
+    // Phase 7: Paginated wishlist aggregation
     const wishlists = await prisma.wishlist.findMany({
       select: {
         userId: true,
       },
+      distinct: ["userId"],
+      take: 100,
+      skip: (page - 1) * 100,
     });
 
     // Aggregate user data

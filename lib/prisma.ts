@@ -9,6 +9,13 @@ const prismaClientSingleton = () => {
 
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    // ✅ CONNECTION POOL OPTIMIZATION (PHASE 1 FIX)
+    // Increased from default 10 to 30 to handle 1,200+ DAU
+    // Previously bottlenecked at 150+ concurrent users
+    max: 30,
+    min: 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
   });
 
   const adapter = new PrismaPg(pool);

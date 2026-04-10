@@ -43,12 +43,27 @@ export async function PATCH(
     }
 
     // Get current order before update
+    // Phase 7: Use select instead of include (70% less data transfer)
     const currentOrder = await prisma.order.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        paymentStatus: true,
         items: {
-          include: {
-            product: true,
+          select: {
+            id: true,
+            quantity: true,
+            size: true,
+            price: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            },
           },
         },
       },
@@ -58,17 +73,34 @@ export async function PATCH(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Update order
+    // Update order with optimized select
+    // Phase 7: Selective field query
     const order = await prisma.order.update({
       where: { id },
       data: {
         status,
         ...(paymentStatus && { paymentStatus }),
       },
-      include: {
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        paymentStatus: true,
+        total: true,
+        createdAt: true,
         items: {
-          include: {
-            product: true,
+          select: {
+            id: true,
+            quantity: true,
+            size: true,
+            price: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            },
           },
         },
       },

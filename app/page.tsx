@@ -8,6 +8,9 @@ import { NewsletterBanner } from "@/components/home/NewsletterBanner";
 import { getBanners } from "@/lib/actions/banner-actions";
 import { getCategories } from "@/lib/actions/category-actions";
 
+// ✅ PHASE 2: Static regeneration - revalidate home page every 30 minutes
+export const revalidate = 1800;
+
 export default async function Home() {
   const heroBanners = await getBanners("HERO");
   const promoBanners = await getBanners("PROMO");

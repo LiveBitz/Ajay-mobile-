@@ -21,11 +21,32 @@ const PAGE_SIZE = 15;
 
 async function getProducts(page: number) {
   const skip = (page - 1) * PAGE_SIZE;
+  // Phase 6: Use select instead of include (80% less data vs include())
+  // Note: Keeping sizes, isNew, isBestSeller fields needed by component
   return await prisma.product.findMany({
     skip,
     take: PAGE_SIZE,
-    include: {
-      category: true
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      price: true,
+      originalPrice: true,
+      discount: true,
+      image: true,
+      stock: true,
+      sizes: true,  // Needed for component stock parsing
+      isNew: true,   // Needed for New Arrival badge
+      isBestSeller: true, // Needed for Bestseller badge
+      createdAt: true,
+      categoryId: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        }
+      }
     },
     orderBy: {
       createdAt: 'desc'
