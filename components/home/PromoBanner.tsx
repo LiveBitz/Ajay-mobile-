@@ -17,7 +17,8 @@ export function PromoBanner({ banner }: PromoBannerProps) {
   const displayLink = banner.link || "/";
 
   return (
-    <section className="py-16 md:py-20 px-4 md:px-6 lg:px-8 container mx-auto">
+    <section className="py-12 md:py-16 lg:py-20 bg-[#FFE4EB]">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8">
       <Link href={displayLink} className="block group">
         <div className="relative w-full overflow-hidden rounded-2xl bg-zinc-900 text-white min-h-[350px] md:min-h-[450px] flex items-center">
           <Image
@@ -37,7 +38,8 @@ export function PromoBanner({ banner }: PromoBannerProps) {
             )}
           </div>
         </div>
-      </Link>
+        </Link>
+      </div>
     </section>
   );
 }

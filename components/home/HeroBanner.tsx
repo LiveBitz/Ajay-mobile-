@@ -26,7 +26,7 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
   if (banners.length === 0) return null;
 
   return (
-    <section className="relative w-full overflow-hidden bg-white">
+    <section className="relative w-full overflow-hidden bg-[#FFE4EB]">
       <Carousel
         plugins={[plugin.current]}
         className="w-full"

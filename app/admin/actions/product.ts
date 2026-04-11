@@ -263,6 +263,74 @@ export async function deleteProduct(id: string) {
   }
 }
 
+export async function toggleBestSeller(id: string) {
+  try {
+    // ✅ VERIFY ADMIN AUTH FIRST
+    const authCheck = await verifyAdminAuth();
+    if (!authCheck.isValid) {
+      return { success: false, error: authCheck.error || "Unauthorized" };
+    }
+
+    // Get current state
+    const product = await prisma.product.findUnique({
+      where: { id },
+      select: { isBestSeller: true }
+    });
+
+    if (!product) {
+      return { success: false, error: "Product not found" };
+    }
+
+    // Toggle the state
+    const updated = await prisma.product.update({
+      where: { id },
+      data: { isBestSeller: !product.isBestSeller }
+    });
+
+    revalidatePath("/admin/products");
+    revalidatePath("/");
+    
+    return { success: true, isBestSeller: updated.isBestSeller };
+  } catch (error) {
+    console.error("Failed to toggle bestseller:", error);
+    return { success: false, error: "Database error" };
+  }
+}
+
+export async function toggleNewArrival(id: string) {
+  try {
+    // ✅ VERIFY ADMIN AUTH FIRST
+    const authCheck = await verifyAdminAuth();
+    if (!authCheck.isValid) {
+      return { success: false, error: authCheck.error || "Unauthorized" };
+    }
+
+    // Get current state
+    const product = await prisma.product.findUnique({
+      where: { id },
+      select: { isNew: true }
+    });
+
+    if (!product) {
+      return { success: false, error: "Product not found" };
+    }
+
+    // Toggle the state
+    const updated = await prisma.product.update({
+      where: { id },
+      data: { isNew: !product.isNew }
+    });
+
+    revalidatePath("/admin/products");
+    revalidatePath("/");
+    
+    return { success: true, isNew: updated.isNew };
+  } catch (error) {
+    console.error("Failed to toggle new arrival:", error);
+    return { success: false, error: "Database error" };
+  }
+}
+
 export async function seedCategories() {
   const categories = [
     { name: "Men", slug: "men", image: "https://picsum.photos/seed/cat-men/600/600" },

@@ -27,18 +27,20 @@ export async function NewArrivals() {
   if (featuredProducts.length === 0) return null;
 
   return (
-    <section id="new-arrivals" className="py-16 md:py-20 container mx-auto">
-      <div className="px-4 md:px-6 lg:px-8 mb-10">
-        <SectionHeading 
-          title="Latest Launches" 
-          subtitle="Check out the newest smartphone releases with cutting-edge technology."
-        />
-      </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 px-4 md:px-6 lg:px-8">
-        {featuredProducts.map((product) => (
-          <ProductCard key={product.id} product={product as any} />
-        ))}
+    <section id="new-arrivals" className="py-12 md:py-16 lg:py-20 bg-[#FFE4EB]">
+      <div className="container mx-auto">
+        <div className="px-4 md:px-6 lg:px-8 mb-8 md:mb-10">
+          <SectionHeading 
+            title="Latest Launches" 
+            subtitle="Check out the newest smartphone releases with cutting-edge technology."
+          />
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 px-4 md:px-6 lg:px-8">
+          {featuredProducts.map((product) => (
+            <ProductCard key={product.id} product={product as any} />
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -3,10 +3,15 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Heart, ShoppingBag, User, Menu, X, ChevronRight, LogIn, HelpCircle, PhoneCall, LogOut, Shield, Loader2, MapPin } from "lucide-react";
+import {
+  Search, Heart, ShoppingBag, User, Menu, X,
+  ChevronRight, LogIn, HelpCircle, PhoneCall,
+  LogOut, Loader2, MapPin,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
@@ -14,397 +19,354 @@ import { useWishlist } from "@/context/WishlistContext";
 import { CartSheet } from "@/components/cart/CartSheet";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/lib/actions/auth-actions";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-// Mobile phone brand navigation links
-const navLinks = [
-  { name: "Home", href: "/", icon: "🏠" },
-  { name: "Apple", href: "/category/apple", icon: "🍎" },
-  { name: "Samsung", href: "/category/samsung", icon: "📱" },
-  { name: "OnePlus", href: "/category/oneplus", icon: "⚡" },
-  { name: "Xiaomi", href: "/category/xiaomi", icon: "🔧" },
-  { name: "Realme", href: "/category/realme", icon: "🎮" },
-  { name: "Poco", href: "/category/poco", icon: "💰" },
-];
+
 
 export function Navbar() {
   const router = useRouter();
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [location, setLocation] = useState<{ city: string; postalCode: string } | null>(null);
-  const [locationLoading, setLocationLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [isScrolled,     setIsScrolled]     = useState(false);
+  const [isOpen,         setIsOpen]         = useState(false);
+  const [user,           setUser]           = useState<any>(null);
+  const [loading,        setLoading]        = useState(true);
+  const [searchOpen,     setSearchOpen]     = useState(false);
+  const [searchQuery,    setSearchQuery]    = useState("");
+  const [searchResults,  setSearchResults]  = useState<any[]>([]);
+  const [searchLoading,  setSearchLoading]  = useState(false);
+  const [location,       setLocation]       = useState<{ city: string; postalCode: string } | null>(null);
+  const [locationLoading,setLocationLoading]= useState(false);
+
   const { totalItems, setIsOpen: setOpenCart } = useCart();
-  const { items: wishlistItems } = useWishlist();
+  const { items: wishlistItems }               = useWishlist();
   const supabase = createClient();
 
-  // Reverse geocode coordinates to get city and postal code
-  const reverseGeocode = async (latitude: number, longitude: number) => {
+  // Hydration fix - ensure component is mounted before rendering client-specific features
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  /* ── Geocoding ── */
+  const reverseGeocode = async (lat: number, lon: number) => {
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
-        {
-          headers: {
-            "Accept": "application/json",
-            "User-Agent": "SouledStore-Mobile-App/1.0"
-          }
-        }
+      const res  = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`,
+        { headers: { "Accept": "application/json", "User-Agent": "Nexus-App/1.0" } }
       );
-
-      if (!response.ok) {
-        throw new Error(`Geocoding API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      const city = 
-        data.address?.city || 
-        data.address?.town || 
-        data.address?.village ||
-        data.address?.city_district ||
-        data.address?.district ||
-        data.address?.county ||
-        data.name ||
-        "Your Location";
-
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data = await res.json();
+      const city =
+        data.address?.city || data.address?.town || data.address?.village ||
+        data.address?.city_district || data.address?.district ||
+        data.address?.county || data.name || "Your Location";
       const postalCode = data.address?.postcode || "";
-
-      const locationData = { city, postalCode };
-      
-      // Cache the location
-      localStorage.setItem("userLocation", JSON.stringify(locationData));
+      const loc = { city, postalCode };
+      localStorage.setItem("userLocation",     JSON.stringify(loc));
       localStorage.setItem("userLocationTime", Date.now().toString());
-      
-      setLocation(locationData);
-      console.log("[LOCATION_FETCHED]", { city, postalCode, latitude, longitude });
-      
-      return locationData;
-    } catch (error) {
-      console.error("[GEOCODING_ERROR]", error);
-      const fallbackLocation = { city: "Your Location", postalCode: "" };
-      setLocation(fallbackLocation);
-      return fallbackLocation;
+      setLocation(loc);
+      return loc;
+    } catch {
+      const fallback = { city: "Your Location", postalCode: "" };
+      setLocation(fallback);
+      return fallback;
     }
   };
 
-  // Request location permission from user
-  const requestLocationPermission = () => {
-    if (!navigator.geolocation) {
-      setLocation({ city: "Location Not Available", postalCode: "" });
-      return;
-    }
-
+  const requestLocation = () => {
+    if (!navigator.geolocation) { setLocation({ city: "Not Available", postalCode: "" }); return; }
     setLocationLoading(true);
-
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        await reverseGeocode(latitude, longitude);
+      async ({ coords }) => { await reverseGeocode(coords.latitude, coords.longitude); setLocationLoading(false); },
+      (err) => {
+        const msgs: Record<number, string> = { 1: "Enable Location", 2: "Unavailable", 3: "Timed Out" };
+        setLocation({ city: msgs[err.code] ?? "Location Error", postalCode: "" });
         setLocationLoading(false);
       },
-      (error) => {
-        console.warn("[GEOLOCATION_ERROR]", error.code, error.message);
-        
-        if (error.code === 1) {
-          setLocation({ city: "Enable Location", postalCode: "" });
-        } else if (error.code === 2) {
-          setLocation({ city: "Location Unavailable", postalCode: "" });
-        } else if (error.code === 3) {
-          setLocation({ city: "Detection Timeout", postalCode: "" });
-        }
-        setLocationLoading(false);
-      },
-      {
-        enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 300000
-      }
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
     );
   };
 
-  // Initialize - check for cached location, or request it
   useEffect(() => {
-    const cachedLocation = localStorage.getItem("userLocation");
-    const cacheTime = localStorage.getItem("userLocationTime");
-    const now = Date.now();
-
-    if (cachedLocation && cacheTime && now - parseInt(cacheTime) < 24 * 60 * 60 * 1000) {
-      const parsedLocation = JSON.parse(cachedLocation);
-      setLocation(parsedLocation);
+    const cached = localStorage.getItem("userLocation");
+    const time   = localStorage.getItem("userLocationTime");
+    if (cached && time && Date.now() - parseInt(time) < 86400000) {
+      setLocation(JSON.parse(cached));
     } else {
-      // Request location on first visit (browser will show native popup)
-      setTimeout(() => requestLocationPermission(), 1000);
+      setTimeout(requestLocation, 1000);
     }
   }, []);
 
-  // Handle location refresh
   const handleRefreshLocation = () => {
-    setLocationLoading(true);
     localStorage.removeItem("userLocation");
     localStorage.removeItem("userLocationTime");
-    requestLocationPermission();
+    requestLocation();
   };
 
-  // Auth effect - fetch user and subscribe to changes
+  /* ── Auth ── */
   useEffect(() => {
-    const fetchUser = async () => {
+    (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-    };
-    fetchUser();
-
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      subscription.unsubscribe();
-    };
+      setUser(user); setLoading(false);
+    })();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null));
+    const onScroll = () => setIsScrolled(window.scrollY > 0);
+    window.addEventListener("scroll", onScroll);
+    return () => { window.removeEventListener("scroll", onScroll); subscription.unsubscribe(); };
   }, []);
 
-  // Search effect
+  /* ── Search ── */
   useEffect(() => {
-    const performSearch = async () => {
-      if (!searchQuery.trim()) {
-        setSearchResults([]);
-        return;
-      }
-
+    const timer = setTimeout(async () => {
+      if (!searchQuery.trim()) { setSearchResults([]); return; }
       setSearchLoading(true);
       try {
-        const response = await fetch(`/api/products/search?q=${encodeURIComponent(searchQuery)}`);
-        const data = await response.json();
-        setSearchResults(data);
-      } catch (error) {
-        console.error("[SEARCH_ERROR]", error);
-        setSearchResults([]);
-      } finally {
-        setSearchLoading(false);
-      }
-    };
-
-    const debounceTimer = setTimeout(performSearch, 300);
-    return () => clearTimeout(debounceTimer);
+        const res  = await fetch(`/api/products/search?q=${encodeURIComponent(searchQuery)}`);
+        setSearchResults(await res.json());
+      } catch { setSearchResults([]); }
+      finally  { setSearchLoading(false); }
+    }, 300);
+    return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const handleLogout = async () => {
-    await signOut();
-  };
+  const handleLogout = async () => { await signOut(); };
+
+  /* ── Shared badge style ── */
+  const badgeCls =
+    "absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 " +
+    "min-w-[18px] h-[18px] flex items-center justify-center px-1 " +
+    "text-[10px] font-black rounded-full border-2 border-white z-20 " +
+    "bg-rose-500 text-white shadow-sm shadow-rose-400/40 pointer-events-none";
 
   return (
     <nav
+      suppressHydrationWarning
       className={cn(
         "fixed top-0 left-0 w-full z-50 transition-all duration-300 border-b",
         isScrolled
-          ? "bg-white/80 backdrop-blur-md py-3 shadow-sm border-zinc-200"
-          : "bg-white py-4 border-transparent"
+          ? "bg-white/95 backdrop-blur-lg shadow-lg shadow-black/5 border-zinc-100 py-2"
+          : "bg-white border-zinc-100/50 py-3 sm:py-3.5 md:py-4 lg:py-4"
       )}
     >
-      <div className="container mx-auto px-4 md:px-8 lg:px-16 flex items-center justify-between">
-        {/* Mobile Menu */}
-        <div className="flex items-center md:hidden">
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="mr-2 rounded-full hover:bg-zinc-100">
-                <Menu className="w-6 h-6 text-zinc-950" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[85vw] max-w-[320px] p-0 flex flex-col bg-white border-r">
-              <SheetHeader className="p-6 border-b">
-                <SheetTitle className="text-2xl font-bold tracking-tighter text-zinc-950 flex items-center justify-between">
-                  MENU
-                </SheetTitle>
+      {/* ─── Main row ─── */}
+      <div className="w-full px-3 sm:px-4 md:px-8 lg:px-12 xl:px-20 flex items-center justify-between gap-2 sm:gap-3 md:gap-4 lg:gap-6">
+
+        {/* ── Left: Hamburger + Logo (mobile) ── */}
+        <div className="flex items-center gap-1.5 md:gap-0 shrink-0">
+          {/* Hamburger (mobile only) */}
+          <div className="flex items-center md:hidden">
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-zinc-100">
+                  <Menu className="w-6 h-6 text-zinc-800" />
+                </Button>
+              </SheetTrigger>
+
+            <SheetContent side="left" className="w-[80vw] max-w-[300px] p-0 flex flex-col bg-white border-r">
+              <SheetHeader className="p-5 border-b">
+                <SheetTitle className="text-xl font-black tracking-tighter text-zinc-950">MENU</SheetTitle>
               </SheetHeader>
-              
+
               <div className="flex-1 overflow-y-auto">
-                {/* Location Section */}
-                <div className="p-4 py-2">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[2px] ml-2">Your Delivery Location</span>
-                  <button 
+                {/* Location */}
+                <div className="p-4">
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">
+                    Delivery Location
+                  </p>
+                  <button
                     onClick={handleRefreshLocation}
                     disabled={locationLoading}
-                    className="mt-3 w-full p-4 rounded-xl bg-gradient-to-r from-brand/10 to-transparent border border-brand/20 hover:border-brand/40 hover:from-brand/15 transition-all flex items-center gap-3 cursor-pointer disabled:opacity-50"
+                    className="w-full p-3.5 rounded-xl bg-brand/5 border border-brand/20
+                               hover:border-brand/40 hover:bg-brand/10 transition-all
+                               flex items-center gap-3 disabled:opacity-50"
                   >
                     <MapPin className="w-5 h-5 text-brand shrink-0" />
                     <div className="flex-1 text-left min-w-0">
                       {locationLoading ? (
                         <div className="flex items-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin text-brand" />
-                          <span className="text-sm font-semibold text-zinc-600">Detecting location...</span>
+                          <span className="text-sm font-semibold text-zinc-500">Detecting…</span>
                         </div>
                       ) : (
-                        <div>
-                          <p className="text-sm font-bold text-zinc-900">{location?.city}</p>
-                          {location?.postalCode ? (
-                            <p className="text-xs text-zinc-500">{location.postalCode}</p>
-                          ) : (
-                            <p className="text-xs text-zinc-400">Postal code not found</p>
-                          )}
-                        </div>
+                        <>
+                          <p className="text-sm font-bold text-zinc-900 truncate">{location?.city ?? "—"}</p>
+                          <p className="text-xs text-zinc-400">{location?.postalCode || "Tap to refresh"}</p>
+                        </>
                       )}
                     </div>
                   </button>
                 </div>
 
-                <div className="px-6 py-2">
-                  <Separator className="bg-zinc-100" />
-                </div>
+                <div className="px-5"><Separator className="bg-zinc-100" /></div>
 
-                {/* More Info */}
-                <div className="p-4 py-2">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[2px] ml-2">Account & Help</span>
-                  <div className="mt-2 flex flex-col">
+                {/* Account */}
+                <div className="p-4">
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">
+                    Account & Help
+                  </p>
+                  <div className="flex flex-col">
                     {user && (
-                      <Link href="/wishlist" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-4 hover:bg-zinc-50 transition-colors">
-                        <Heart className="w-5 h-5 text-zinc-500" />
-                        <span className="font-bold text-zinc-800">My Wishlist</span>
+                      <Link href="/wishlist" onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-50 transition-colors">
+                        <Heart className="w-5 h-5 text-zinc-400" />
+                        <span className="font-semibold text-zinc-800 text-sm">My Wishlist</span>
                       </Link>
                     )}
                     {!user ? (
-                      <Link href="/login" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-4 hover:bg-zinc-50 transition-colors">
-                        <LogIn className="w-5 h-5 text-zinc-500" />
-                        <span className="font-bold text-zinc-800">Login / Signup</span>
+                      <Link href="/login" onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-50 transition-colors">
+                        <LogIn className="w-5 h-5 text-zinc-400" />
+                        <span className="font-semibold text-zinc-800 text-sm">Login / Signup</span>
                       </Link>
                     ) : (
-                      <>
-                        <button onClick={handleLogout} className="flex items-center gap-3 w-full p-4 hover:bg-zinc-50 transition-colors text-left">
-                          <LogOut className="w-5 h-5 text-red-500" />
-                          <span className="font-bold text-red-600">Secure Logout</span>
-                        </button>
-                      </>
+                      <button onClick={handleLogout}
+                        className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-red-50 transition-colors text-left">
+                        <LogOut className="w-5 h-5 text-red-400" />
+                        <span className="font-semibold text-red-600 text-sm">Secure Logout</span>
+                      </button>
                     )}
-                    <Link href="/track-order" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-4 hover:bg-zinc-50 transition-colors">
-                      <HelpCircle className="w-5 h-5 text-zinc-500" />
-                      <span className="font-bold text-zinc-800">Track Order</span>
+                    <Link href="/track-order" onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-50 transition-colors">
+                      <HelpCircle className="w-5 h-5 text-zinc-400" />
+                      <span className="font-semibold text-zinc-800 text-sm">Track Order</span>
                     </Link>
-                    <Link href="/contact" onClick={() => setIsOpen(false)} className="flex items-center gap-3 w-full p-4 hover:bg-zinc-50 transition-colors">
-                      <PhoneCall className="w-5 h-5 text-zinc-500" />
-                      <span className="font-bold text-zinc-800">Contact Us</span>
+                    <Link href="/contact" onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-50 transition-colors">
+                      <PhoneCall className="w-5 h-5 text-zinc-400" />
+                      <span className="font-semibold text-zinc-800 text-sm">Contact Us</span>
                     </Link>
                   </div>
                 </div>
               </div>
 
-              {/* Bottom Footer Section */}
-              <div className="p-6 border-t bg-zinc-50 flex flex-col gap-4">
+              {/* Drawer footer */}
+              <div className="p-5 border-t bg-zinc-50 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-zinc-500">Language</span>
-                  <span className="text-sm font-bold text-zinc-950">English (IN)</span>
+                  <span className="text-xs font-bold text-zinc-400">Language</span>
+                  <span className="text-xs font-bold text-zinc-800">English (IN)</span>
                 </div>
-                <div className="text-[10px] text-zinc-400 font-medium">
-                  © 2026 SOULED Minimal. All Rights Reserved.
-                </div>
+                <p className="text-[10px] text-zinc-400">© 2026 NEXUS. All Rights Reserved.</p>
               </div>
             </SheetContent>
           </Sheet>
+          </div>
+
+          {/* Logo – shown on mobile, hidden on desktop, appears next to hamburger */}
+          <Link href="/" className="flex items-center shrink-0 md:hidden">
+            <div className="flex items-center gap-1.5">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand to-brand/70 flex items-center justify-center shadow-sm shadow-brand/30">
+                <span className="text-white font-black text-xs">N</span>
+              </div>
+            </div>
+          </Link>
         </div>
 
-        {/* Logo */}
-        <Link href="/" className="flex items-center">
-          <span className="text-2xl md:text-3xl font-bold tracking-tighter text-brand">
-            SOULED
-          </span>
+        {/* ── Logo (desktop only) ── */}
+        <Link href="/" className="hidden md:flex items-center shrink-0 group">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-gradient-to-br from-brand to-brand/70 flex items-center justify-center shadow-md shadow-brand/20 group-hover:shadow-lg group-hover:shadow-brand/30 transition-all">
+              <span className="text-white font-black text-sm md:text-base">N</span>
+            </div>
+            <span className="text-lg md:text-xl lg:text-2xl font-black tracking-tight text-zinc-950 group-hover:text-brand transition-colors">
+              NEXUS
+            </span>
+          </div>
         </Link>
 
-        {/* Desktop Location Display */}
-        <div className="hidden md:flex items-center gap-2 ml-8">
+        {/* ── Location pill (desktop only) ── */}
+        <div className="hidden lg:flex items-center shrink-0 ml-2">
           {locationLoading ? (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-50 border border-zinc-200">
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-zinc-50 border border-zinc-200">
               <Loader2 className="w-4 h-4 animate-spin text-brand" />
-              <span className="text-sm font-medium text-zinc-600">Detecting...</span>
+              <span className="text-sm font-semibold text-zinc-500">Detecting…</span>
             </div>
           ) : (
-            <button 
+            <button
               onClick={handleRefreshLocation}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-200 hover:border-brand hover:bg-brand/5 transition-all group"
               title="Click to refresh location"
+              className="group flex items-center gap-3 px-4 py-3 rounded-lg border border-zinc-200
+                         bg-white hover:bg-brand/5 hover:border-brand/30 transition-all duration-200 shadow-sm hover:shadow-md"
             >
-              <MapPin className="w-5 h-5 text-brand group-hover:scale-110 transition-transform" />
+              <MapPin className="w-5 h-5 text-brand/70 group-hover:text-brand transition-colors shrink-0" />
               <div className="text-left">
-                <p className="text-xs font-semibold text-zinc-500">Deliver to</p>
-                <p className="text-sm font-bold text-zinc-900">
-                  {location?.city} 
-                  {location?.postalCode && <span className="text-xs text-zinc-500 ml-1">{location.postalCode}</span>}
+                <p className="text-[11px] font-semibold text-zinc-400 leading-none uppercase">Deliver to</p>
+                <p className="text-sm font-bold text-zinc-900 leading-tight mt-0.5">
+                  {location?.city ?? "—"}
+                  {location?.postalCode && (
+                    <span className="text-xs font-normal text-zinc-400 ml-2">{location.postalCode}</span>
+                  )}
                 </p>
               </div>
             </button>
           )}
         </div>
 
-        {/* Search Bar - Desktop */}
-        <div className="hidden md:flex flex-1 ml-8 mr-8 max-w-md relative group">
+        {/* ── Search bar (desktop) ── */}
+        <div className="hidden md:flex flex-1 mx-4 lg:mx-6 max-w-2xl max-h-10 relative group">
           <div className="w-full relative">
-            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-100 border border-zinc-200 group-focus-within:border-zinc-400 group-focus-within:bg-white transition-all">
-              <Search className="w-4 h-4 text-zinc-400" />
+            <div
+              className="flex items-center gap-3 px-4 py-3 rounded-lg
+                         bg-zinc-50/80 border border-zinc-200
+                         group-focus-within:border-brand/50 group-focus-within:bg-white
+                         group-focus-within:shadow-lg group-focus-within:shadow-brand/10
+                         transition-all duration-200 h-full"
+            >
+              <Search className="w-5 h-5 text-zinc-400 group-focus-within:text-brand transition-colors shrink-0" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search smartphones, laptops…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent outline-none text-sm font-medium text-zinc-900 placeholder:text-zinc-400"
+                className="flex-1 bg-transparent outline-none text-sm font-medium
+                           text-zinc-900 placeholder:text-zinc-400"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="p-1 hover:bg-zinc-200 rounded-full transition-colors"
+                  className="p-1 hover:bg-zinc-200/60 rounded-full transition-colors shrink-0"
                 >
                   <X className="w-4 h-4 text-zinc-400" />
                 </button>
               )}
             </div>
 
-            {/* Search Results Dropdown */}
+            {/* Search dropdown */}
             {searchQuery && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-zinc-200 shadow-lg overflow-hidden z-40 max-h-[400px] overflow-y-auto">
+              <div
+                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl
+                           border border-zinc-200 shadow-xl shadow-black/8
+                           overflow-hidden z-40 max-h-[380px] overflow-y-auto"
+              >
                 {searchLoading && (
                   <div className="p-6 flex items-center justify-center">
-                    <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
+                    <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
                   </div>
                 )}
-
                 {!searchLoading && searchResults.length === 0 && (
                   <div className="p-6 text-center">
-                    <p className="text-sm text-zinc-500 font-medium">No products found</p>
+                    <p className="text-sm text-zinc-400 font-medium">No products found</p>
                   </div>
                 )}
-
                 {!searchLoading && searchResults.length > 0 && (
-                  <div className="p-2 space-y-1">
+                  <div className="p-2 space-y-0.5">
                     {searchResults.map((product) => (
                       <button
                         key={product.id}
-                        onClick={() => {
-                          router.push(`/product/${product.slug}`);
-                          setSearchQuery("");
-                        }}
-                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-50 transition-colors text-left"
+                        onClick={() => { router.push(`/product/${product.slug}`); setSearchQuery(""); }}
+                        className="w-full flex items-center gap-3 p-3 rounded-lg
+                                   hover:bg-zinc-50 transition-colors text-left"
                       >
-                        <img 
-                          src={product.image} 
-                          alt={product.name}
-                          className="w-10 h-12 object-cover rounded bg-zinc-100 shrink-0"
+                        <img
+                          src={product.image} alt={product.name}
+                          className="w-10 h-12 object-cover rounded-lg bg-zinc-100 shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-zinc-900 truncate">{product.name}</p>
-                          <p className="text-xs text-zinc-500 capitalize">{product.category.name}</p>
+                          <p className="text-xs text-zinc-400 capitalize">{product.category.name}</p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-sm font-bold text-zinc-900">₹{product.price.toLocaleString("en-IN")}</span>
+                            <span className="text-sm font-bold text-zinc-900">
+                              ₹{product.price.toLocaleString("en-IN")}
+                            </span>
                             {product.discount > 0 && (
-                              <span className="text-[10px] text-rose-600 font-bold">{product.discount}% OFF</span>
+                              <span className="text-[10px] font-bold text-rose-600">{product.discount}% OFF</span>
                             )}
                           </div>
                         </div>
@@ -417,148 +379,163 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Right Side Icons */}
-        <div className="flex items-center gap-1 md:gap-4">
-          {/* Mobile Search Toggle */}
-          <div className="md:hidden relative w-full">
-            {!searchOpen ? (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-full"
-                onClick={() => setSearchOpen(true)}
-              >
-                <Search className="w-5 h-5 text-zinc-700" />
-              </Button>
-            ) : (
-              <div className="fixed inset-0 z-40" onClick={() => setSearchOpen(false)} />
-            )}
+        {/* ── Right‑side icons ── */}
+        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 lg:gap-4 shrink-0 ml-2">
 
-            {/* Mobile Search Expanded */}
+          {/* Mobile search toggle */}
+          <div className="md:hidden">
+            <Button
+              variant="ghost" size="icon"
+              className="rounded-full hover:bg-zinc-100 h-10 w-10"
+              onClick={() => setSearchOpen(true)}
+            >
+              <Search className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-700" />
+            </Button>
+
+            {/* Full-screen mobile search */}
             {searchOpen && (
-              <div className="fixed inset-x-0 top-0 z-50 bg-white border-b border-zinc-200">
-                <div className="flex items-center gap-2 p-4 px-4">
-                  <button
-                    onClick={() => setSearchOpen(false)}
-                    className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
-                  >
-                    <ChevronRight className="w-5 h-5 text-zinc-700 rotate-180" />
-                  </button>
-                  
-                  <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-lg bg-zinc-100 border border-zinc-200">
-                    <Search className="w-4 h-4 text-zinc-400 shrink-0" />
-                    <input
-                      autoFocus
-                      type="text"
-                      placeholder="Search products..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="flex-1 bg-transparent outline-none text-sm font-medium text-zinc-900 placeholder:text-zinc-400"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => setSearchQuery("")}
-                        className="p-1 hover:bg-zinc-200 rounded-full transition-colors shrink-0"
-                      >
-                        <X className="w-4 h-4 text-zinc-400" />
-                      </button>
+              <>
+                <div className="fixed inset-0 z-40 bg-black/20" onClick={() => { setSearchOpen(false); setSearchQuery(""); }} />
+                <div className="fixed inset-x-0 top-0 z-50 bg-white border-b border-zinc-200 shadow-lg">
+                  <div className="flex items-center gap-2 p-3 px-4">
+                    <button
+                      onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
+                      className="p-2 hover:bg-zinc-100 rounded-full transition-colors shrink-0"
+                    >
+                      <ChevronRight className="w-5 h-5 text-zinc-700 rotate-180" />
+                    </button>
+                    <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-zinc-100 border border-zinc-200">
+                      <Search className="w-4 h-4 text-zinc-400 shrink-0" />
+                      <input
+                        autoFocus
+                        type="text"
+                        placeholder="Search products…"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="flex-1 bg-transparent outline-none text-sm font-medium
+                                   text-zinc-900 placeholder:text-zinc-400"
+                      />
+                      {searchQuery && (
+                        <button onClick={() => setSearchQuery("")} className="p-1 hover:bg-zinc-200 rounded-full shrink-0">
+                          <X className="w-4 h-4 text-zinc-400" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="max-h-[calc(100vh-72px)] overflow-y-auto">
+                    {searchLoading && (
+                      <div className="p-8 flex items-center justify-center">
+                        <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
+                      </div>
+                    )}
+                    {!searchLoading && searchQuery && searchResults.length === 0 && (
+                      <div className="p-8 text-center">
+                        <p className="text-sm text-zinc-400 font-medium">No products found</p>
+                      </div>
+                    )}
+                    {!searchLoading && searchQuery && searchResults.length > 0 && (
+                      <div className="p-3 space-y-2">
+                        {searchResults.map((product) => (
+                          <button
+                            key={product.id}
+                            onClick={() => {
+                              router.push(`/product/${product.slug}`);
+                              setSearchQuery(""); setSearchOpen(false);
+                            }}
+                            className="w-full flex items-center gap-4 p-4 rounded-xl
+                                       hover:bg-zinc-50 active:bg-zinc-100 transition-colors
+                                       text-left border border-zinc-100"
+                          >
+                            <img
+                              src={product.image} alt={product.name}
+                              className="w-14 h-16 object-cover rounded-xl bg-zinc-100 shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-zinc-900 truncate">{product.name}</p>
+                              <p className="text-xs text-zinc-400 capitalize mt-0.5">{product.category.name}</p>
+                              <div className="flex items-center gap-2 mt-1.5">
+                                <span className="font-bold text-zinc-900">
+                                  ₹{product.price.toLocaleString("en-IN")}
+                                </span>
+                                {product.discount > 0 && (
+                                  <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">
+                                    {product.discount}% OFF
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {!searchQuery && (
+                      <div className="p-8 text-center">
+                        <p className="text-sm text-zinc-400 font-medium">Start typing to search…</p>
+                      </div>
                     )}
                   </div>
                 </div>
-
-                {/* Mobile Search Results */}
-                <div className="max-h-[calc(100vh-80px)] overflow-y-auto">
-                  {searchLoading && (
-                    <div className="p-8 flex items-center justify-center">
-                      <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
-                    </div>
-                  )}
-
-                  {!searchLoading && searchQuery && searchResults.length === 0 && (
-                    <div className="p-8 text-center">
-                      <p className="text-sm text-zinc-500 font-medium">No products found</p>
-                    </div>
-                  )}
-
-                  {!searchLoading && searchQuery && searchResults.length > 0 && (
-                    <div className="p-3 space-y-2">
-                      {searchResults.map((product) => (
-                        <button
-                          key={product.id}
-                          onClick={() => {
-                            router.push(`/product/${product.slug}`);
-                            setSearchQuery("");
-                            setSearchOpen(false);
-                          }}
-                          className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-zinc-50 active:bg-zinc-100 transition-colors text-left border border-zinc-100"
-                        >
-                          <img 
-                            src={product.image} 
-                            alt={product.name}
-                            className="w-14 h-18 object-cover rounded-lg bg-zinc-100 shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-zinc-900 truncate">{product.name}</p>
-                            <p className="text-xs text-zinc-500 capitalize">{product.category.name}</p>
-                            <div className="flex items-center gap-2 mt-1.5">
-                              <span className="font-bold text-zinc-900">₹{product.price.toLocaleString("en-IN")}</span>
-                              {product.discount > 0 && (
-                                <span className="text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded">{product.discount}% OFF</span>
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {!searchQuery && (
-                    <div className="p-8 text-center">
-                      <p className="text-sm text-zinc-500 font-medium">Start typing to search...</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+              </>
             )}
           </div>
-          <Link href="/wishlist">
-            <Button variant="ghost" size="icon" className="hidden sm:flex rounded-full relative group">
-              <Heart className="w-5 h-5 text-zinc-700 group-hover:scale-110 transition-transform" />
-              {wishlistItems.length > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] font-black bg-brand text-white hover:bg-brand border-2 border-white">
-                  {wishlistItems.length}
-                </Badge>
-              )}
-            </Button>
-          </Link>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full relative group"
-            onClick={() => setOpenCart(true)}
-          >
-            <ShoppingBag className="w-5 h-5 text-zinc-700 group-hover:scale-110 transition-transform" />
-            {totalItems > 0 && (
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] font-black bg-zinc-950 text-white hover:bg-zinc-950 border-2 border-white">
-                {totalItems}
-              </Badge>
-            )}
-          </Button>
 
+          {/* Wishlist */}
+          <div className="relative inline-flex overflow-visible">
+            <Button
+              variant="ghost" size="icon"
+              className="rounded-full group hover:bg-red-50 transition-all h-11 w-11 md:h-10 md:w-10"
+              onClick={() => {
+                setSearchOpen(false);
+                setSearchQuery("");
+                router.push("/wishlist");
+              }}
+            >
+              <Heart className="w-5 h-5 md:w-4.5 md:h-4.5 text-zinc-600 group-hover:text-rose-500 group-hover:scale-110 transition-all" />
+            </Button>
+            {wishlistItems.length > 0 && (
+              <span className={badgeCls}>{wishlistItems.length > 99 ? "99+" : wishlistItems.length}</span>
+            )}
+          </div>
+
+          {/* Cart */}
+          <div className="relative inline-flex overflow-visible">
+            <Button
+              variant="ghost" size="icon"
+              className="rounded-full group hover:bg-brand/5 transition-all h-11 w-11 md:h-10 md:w-10"
+              onClick={() => setOpenCart(true)}
+            >
+              <ShoppingBag className="w-5 h-5 md:w-4.5 md:h-4.5 text-zinc-600 group-hover:text-brand group-hover:scale-110 transition-all" />
+            </Button>
+            {totalItems > 0 && (
+              <span className={badgeCls}>
+                {totalItems > 99 ? "99+" : totalItems}
+              </span>
+            )}
+          </div>
+
+          {/* User */}
           {loading ? (
-            <div className="w-10 h-10 flex items-center justify-center">
-              <div className="w-4 h-4 border-2 border-zinc-200 border-t-zinc-800 rounded-full animate-spin" />
+            <div className="h-11 w-11 md:h-10 md:w-10 flex items-center justify-center">
+              <div className="w-4 h-4 md:w-3.5 md:h-3.5 border-2 border-zinc-200 border-t-zinc-700 rounded-full animate-spin" />
             </div>
           ) : user ? (
             <Link href="/profile">
-              <Button variant="ghost" size="icon" className="rounded-full bg-zinc-50 border border-zinc-100 transition-all hover:bg-zinc-100 hover:scale-105 active:scale-95">
-                <User className="w-5 h-5 text-brand" />
+              <Button
+                variant="ghost" size="icon"
+                className="rounded-full bg-zinc-50 border border-zinc-200
+                           hover:bg-brand/10 hover:border-brand/30 hover:scale-105 active:scale-95 transition-all h-11 w-11 md:h-10 md:w-10 shadow-sm hover:shadow-md"
+              >
+                <User className="w-5 h-5 md:w-4.5 md:h-4.5 text-brand" />
               </Button>
             </Link>
           ) : (
             <Link href="/login">
-              <Button variant="ghost" size="icon" className="rounded-full transition-all hover:bg-zinc-100 hover:scale-105 active:scale-95">
-                <LogIn className="w-5 h-5 text-zinc-700" />
+              <Button
+                variant="ghost" size="icon"
+                className="rounded-full hover:bg-zinc-100 hover:scale-105 active:scale-95 transition-all h-11 w-11 md:h-10 md:w-10"
+              >
+                <LogIn className="w-5 h-5 md:w-4.5 md:h-4.5 text-zinc-700" />
               </Button>
             </Link>
           )}

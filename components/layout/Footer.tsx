@@ -11,7 +11,7 @@ export function Footer() {
         {/* Column 1: Brand */}
         <div className="flex flex-col gap-6">
           <Link href="/" className="text-3xl font-bold tracking-tighter text-brand">
-            SOULED
+            NEXUS
           </Link>
           <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
             Premium streetwear and casual clothing for the urban adventurer.
@@ -40,7 +40,7 @@ export function Footer() {
           <div className="flex flex-col gap-4 text-sm text-muted-foreground">
             <div className="flex gap-3 items-start">
               <Mail className="w-5 h-5 text-zinc-700 shrink-0" />
-              <a href="mailto:support@souled.store" className="hover:text-brand transition-colors">support@souled.store</a>
+              <a href="mailto:support@nexus.store" className="hover:text-brand transition-colors">support@nexus.store</a>
             </div>
             <div className="flex gap-3 items-start">
               <Phone className="w-5 h-5 text-zinc-700 shrink-0" />
@@ -56,7 +56,7 @@ export function Footer() {
       
       {/* Footer Bottom */}
       <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-8 border-t border-zinc-200 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-        <p>© {currentYear} SOULED. All rights reserved.</p>
+        <p>© {currentYear} NEXUS. All rights reserved.</p>
         <p className="text-xs text-zinc-400 font-medium">
           Built by <span className="font-semibold text-zinc-600">Himanshu Meena</span> & <span className="font-semibold text-zinc-600">Ashibur Rehman</span>
         </p>

@@ -1,7 +1,7 @@
+"use client";
+
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { SectionHeading } from "@/components/shared/SectionHeading";
 import { Category } from "@prisma/client";
 
 interface CategoryGridProps {
@@ -9,44 +9,69 @@ interface CategoryGridProps {
 }
 
 export function CategoryGrid({ categories }: CategoryGridProps) {
-  if (categories.length === 0) return null;
+  if (!categories || categories.length === 0) return null;
 
   return (
-    <section id="categories" className="py-16 md:py-20 px-4 md:px-6 lg:px-8 container mx-auto">
-      <SectionHeading 
-        title="Explore by Brand" 
-        subtitle="Discover the latest and greatest mobile phones from top brands worldwide." 
-      />
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
-        {categories.map((category) => (
-          <Link
-            key={category.id}
-            href={`/category/${category.name.toLowerCase()}`}
-            className="group relative aspect-square overflow-hidden rounded-xl bg-zinc-100 border border-zinc-200 transition-all duration-300 hover:border-brand/30 hover:shadow-lg"
+    <section className="py-12 md:py-16 lg:py-20 bg-gradient-to-r from-pink-100 via-pink-50 to-pink-100">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8">
+        {/* Carousel Container */}
+        <div>
+          {/* Carousel Content */}
+          <div
+            className="flex gap-4 md:gap-6 lg:gap-8 overflow-x-auto scroll-smooth pb-2 scrollbar-hide"
+            style={{ scrollBehavior: "smooth" }}
           >
-            {category.image && (
-              <Image
-                src={category.image}
-                alt={category.name}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                quality={75}
-                loading="lazy"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end p-4 md:p-5">
-              <div className="space-y-1">
-                <h3 className="text-white text-base md:text-lg font-bold tracking-tight">
-                  {category.name}
-                </h3>
-                <p className="text-white/60 text-xs md:text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  Shop Collection
-                </p>
-              </div>
-            </div>
-          </Link>
-        ))}
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                href={`/category/${category.slug}`}
+                className="flex-shrink-0 group cursor-pointer"
+              >
+                <div className="flex flex-col items-center gap-2 md:gap-3">
+                  {/* Category Icon Container */}
+                  <div className="relative h-20 w-20 md:h-24 md:w-24 lg:h-28 lg:w-28 rounded-full overflow-hidden bg-gradient-to-br from-zinc-50 to-zinc-100 border border-zinc-200 group-hover:border-brand transition-all duration-300 shadow-sm group-hover:shadow-md flex items-center justify-center flex-shrink-0">
+                    {category.image ? (
+                      <img
+                        src={category.image}
+                        alt={category.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : null}
+                    {!category.image && (
+                      <div className="text-zinc-400 text-center px-2">
+                        <span className="text-xs md:text-sm font-semibold">
+                          {category.name.split(" ")[0]}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Category Name */}
+                  <div className="text-center">
+                    <p className="text-xs md:text-sm lg:text-base font-semibold text-zinc-900 group-hover:text-brand transition-colors duration-300 line-clamp-2 w-20 md:w-24 lg:w-28">
+                      {category.name}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
+
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </section>
   );
 }

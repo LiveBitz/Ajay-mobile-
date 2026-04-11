@@ -15,6 +15,7 @@ import prisma from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
 import { AddProductButton } from "@/components/admin/AddProductButton";
+import { ProductQuickToggle } from "@/components/admin/ProductQuickToggle";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 15;
@@ -280,6 +281,12 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
                         {/* Actions */}
                         <td className="py-5 px-6">
                           <div className="flex items-center justify-end gap-2">
+                            <ProductQuickToggle
+                              productId={p.id}
+                              productName={p.name}
+                              initialIsBestSeller={p.isBestSeller}
+                              initialIsNew={p.isNew}
+                            />
                             <Link href={`/admin/products/${p.id}/edit`}>
                               <Button
                                 variant="ghost"
@@ -428,15 +435,23 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 pt-3 border-t border-zinc-50 mt-auto">
-                    <Link href={`/admin/products/${p.id}/edit`} className="flex-1">
-                      <Button
-                        variant="outline"
-                        className="w-full h-11 rounded-xl border-zinc-100 font-extrabold text-zinc-900 shadow-sm gap-2 active:scale-95 text-sm"
-                      >
-                        <Edit className="w-3.5 h-3.5 text-zinc-400" />
-                        Edit
-                      </Button>
-                    </Link>
+                    <div className="flex-1 flex items-center gap-2">
+                      <ProductQuickToggle
+                        productId={p.id}
+                        productName={p.name}
+                        initialIsBestSeller={p.isBestSeller}
+                        initialIsNew={p.isNew}
+                      />
+                      <Link href={`/admin/products/${p.id}/edit`} className="flex-1">
+                        <Button
+                          variant="outline"
+                          className="w-full h-11 rounded-xl border-zinc-100 font-extrabold text-zinc-900 shadow-sm gap-2 active:scale-95 text-sm"
+                        >
+                          <Edit className="w-3.5 h-3.5 text-zinc-400" />
+                          Edit
+                        </Button>
+                      </Link>
+                    </div>
                     <DeleteProductButton id={p.id} name={p.name} />
                   </div>
                 </div>

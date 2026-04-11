@@ -17,11 +17,14 @@ model Category {
   slug      String    @unique
   image     String?
   products  Product[]
+  isFeatured Boolean @default(false)
+  featuredOrder Int @default(999)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
   // ✅ PHASE 1: Index for category page queries (/category/[slug])
   @@index([slug])
+  @@index([isFeatured])
 }
 
 model Product {

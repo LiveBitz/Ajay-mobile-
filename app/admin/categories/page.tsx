@@ -12,9 +12,11 @@ import {
   RefreshCw,
   Plus,
   Trash2,
-  X
+  X,
+  Star
 } from "lucide-react";
 import { getCategories, updateCategoryImage, createCategory, deleteCategory } from "@/lib/actions/category-actions";
+import { toggleCategoryFeatured, updateCategoryFeaturedOrder } from "@/lib/actions/featured-category-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -119,6 +121,28 @@ export default function CategoriesAdminPage() {
       });
     }
     setDeletingId(null);
+  };
+
+  const handleToggleFeatured = async (id: string) => {
+    const result = await toggleCategoryFeatured(id);
+    
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: result.message,
+      });
+      setCategories(prev =>
+        prev.map(c =>
+          c.id === id ? { ...c, isFeatured: result.isFeatured } : c
+        )
+      );
+    } else {
+      toast({
+        title: "Error",
+        description: result.message,
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -244,6 +268,7 @@ export default function CategoriesAdminPage() {
             isDeleting={deletingId === cat.id}
             onUpdate={handleUpdateImage}
             onDelete={handleDeleteCategory}
+            onToggleFeatured={handleToggleFeatured}
           />
         ))}
       </div>
@@ -267,7 +292,7 @@ export default function CategoriesAdminPage() {
   );
 }
 
-function CategoryCard({ category, onUpdate, onDelete, isUpdating, isDeleting }: { category: any, onUpdate: (id: string, url: string) => void, onDelete: (id: string, name: string) => void, isUpdating: boolean, isDeleting: boolean }) {
+function CategoryCard({ category, onUpdate, onDelete, onToggleFeatured, isUpdating, isDeleting }: { category: any, onUpdate: (id: string, url: string) => void, onDelete: (id: string, name: string) => void, onToggleFeatured: (id: string) => void, isUpdating: boolean, isDeleting: boolean }) {
   const [tempUrl, setTempUrl] = useState(category.image || "");
   const [isModified, setIsModified] = useState(false);
 
@@ -379,6 +404,20 @@ function CategoryCard({ category, onUpdate, onDelete, isUpdating, isDeleting }: 
                  Delete Category
                </>
              )}
+           </Button>
+
+           {/* Featured Toggle Button */}
+           <Button
+             onClick={() => onToggleFeatured(category.id)}
+             className={cn(
+               "h-11 rounded-2xl font-bold text-xs uppercase tracking-widest gap-2 transition-all active:scale-95",
+               category.isFeatured
+                 ? "bg-amber-100 hover:bg-amber-200 text-amber-700 border border-amber-200"
+                 : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-200"
+             )}
+           >
+             <Star className={cn("w-4 h-4", category.isFeatured && "fill-current")} />
+             {category.isFeatured ? "Featured" : "Not Featured"}
            </Button>
         </div>
       </div>

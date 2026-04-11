@@ -1,16 +1,60 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { QuickAddButton } from "@/components/shared/QuickAddButton";
+import { useWishlist } from "@/context/WishlistContext";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface HurryUpProductCardProps {
   product: any;
 }
 
 export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const { toast } = useToast();
+  
   const discount = product.discount || Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+
+  const handleWishlistClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsAddingToWishlist(true);
+
+    try {
+      await toggleWishlist(String(product.id));
+      const wishlisted = isWishlisted(String(product.id));
+      
+      toast({
+        title: wishlisted ? "Added to Wishlist" : "Removed from Wishlist",
+        description: wishlisted 
+          ? `${product.name} has been added to your wishlist` 
+          : `${product.name} has been removed from your wishlist`,
+        duration: 2000,
+      });
+    } catch (error: any) {
+      const errorMsg = error.message || "Failed to update wishlist";
+      if (errorMsg.includes("login")) {
+        toast({
+          title: "Login Required",
+          description: "Please login to add items to your wishlist",
+          variant: "destructive",
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMsg,
+          variant: "destructive",
+          duration: 2000,
+        });
+      }
+    } finally {
+      setIsAddingToWishlist(false);
+    }
+  };
 
   return (
     <Link
@@ -30,10 +74,15 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
 
           {/* Wishlist Button */}
           <button 
-            onClick={(e) => e.preventDefault()}
-            className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-all active:scale-90 group-hover:scale-110"
+            onClick={handleWishlistClick}
+            disabled={isAddingToWishlist}
+            className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-all active:scale-90 group-hover:scale-110 disabled:opacity-50"
+            aria-label={isWishlisted(String(product.id)) ? "Remove from wishlist" : "Add to wishlist"}
           >
-            <Heart className="w-5 h-5 text-zinc-400 hover:text-red-500 transition-colors" />
+            <Heart className={cn(
+              "w-5 h-5 transition-colors",
+              isWishlisted(String(product.id)) ? "fill-brand stroke-brand" : "stroke-zinc-400 hover:stroke-red-500"
+            )} />
           </button>
 
           {/* Image */}
