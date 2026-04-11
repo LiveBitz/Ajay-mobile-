@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { usePathname } from "next/navigation";
 import { 
   Menu,
   Settings,
@@ -14,6 +17,14 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
+  const pathname = usePathname();
+  const isEntryPage = pathname === "/admin/entry";
+
+  // On entry page, just render children without admin UI
+  if (isEntryPage) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="flex min-h-screen bg-zinc-50/20 antialiased">
       {/* Desktop Sidebar (Permanent) */}

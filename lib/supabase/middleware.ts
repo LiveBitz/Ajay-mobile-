@@ -33,38 +33,53 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isAdminPath = request.nextUrl.pathname.startsWith('/admin')
-  const isEntryPath = request.nextUrl.pathname === '/admin/entry'
-  const isAuthPath = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup')
+  const pathname = request.nextUrl.pathname
+  const isAdminPath = pathname.startsWith('/admin')
+  const isEntryPath = pathname === '/admin/entry'
+  const isAuthPath = pathname.startsWith('/login') || pathname.startsWith('/signup')
+  const hasAdminAccess = request.cookies.get('admin_access')?.value === 'true'
+  
   const isPublicPath = 
-    request.nextUrl.pathname === '/' || 
+    pathname === '/' || 
     isAuthPath ||
-    request.nextUrl.pathname.startsWith('/auth')
+    isEntryPath ||
+    pathname.startsWith('/auth')
+
+  console.log('[MIDDLEWARE]', {
+    pathname,
+    isAdminPath,
+    isEntryPath,
+    isAuthPath,
+    isPublicPath,
+    hasAdminAccess,
+    hasUser: !!user,
+  })
 
   // Redirect authenticated users away from login/signup pages
   if (user && isAuthPath) {
+    console.log('[MIDDLEWARE] Redirecting authenticated user away from auth page')
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)
   }
 
-  // Global Primary Identity Protection
-  if (!user && !isPublicPath) {
+  // Global Primary Identity Protection - but allow admin entry page and admin paths with passcode without login
+  if (!user && !isPublicPath && !isAdminPath) {
+    console.log('[MIDDLEWARE] Redirecting unauthenticated user to login')
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // Administrative Passcode Shield
-  if (user && isAdminPath && !isEntryPath) {
-    const adminAccess = request.cookies.get('admin_access')
-    
-    if (!adminAccess || adminAccess.value !== 'true') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/admin/entry'
-      return NextResponse.redirect(url)
-    }
+  // Protect admin paths - redirect to entry if no admin access
+  if (isAdminPath && !isEntryPath && !hasAdminAccess) {
+    console.log('[MIDDLEWARE] Redirecting to admin entry - no admin access')
+    const url = request.nextUrl.clone()
+    url.pathname = '/admin/entry'
+    return NextResponse.redirect(url)
   }
+
+  console.log('[MIDDLEWARE] No redirects needed')
 
   return response
 }

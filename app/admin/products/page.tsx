@@ -95,7 +95,7 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
           </p>
         </div>
         <div className="w-full sm:w-auto">
-          <AddProductButton categories={categories} />
+          <AddProductButton />
         </div>
       </div>
 
@@ -145,7 +145,7 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
                         <p className="font-extrabold text-xl text-zinc-900">
                           Digital Inventory is pristine.
                         </p>
-                        <AddProductButton categories={categories} />
+                        <AddProductButton />
                       </div>
                     </td>
                   </tr>
@@ -311,7 +311,7 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
               <p className="font-extrabold text-zinc-900 text-sm">
                 Digital Inventory is pristine.
               </p>
-              <AddProductButton categories={categories} />
+              <AddProductButton />
             </div>
           ) : (
             products.map((p) => {

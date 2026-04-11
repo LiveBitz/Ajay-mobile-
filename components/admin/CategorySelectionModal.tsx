@@ -39,6 +39,9 @@ const CATEGORY_CONFIG: Record<string, {
   },
 };
 
+// Fallback icon when category doesn't have a specific icon
+const DEFAULT_ICON = Sparkles;
+
 export function CategorySelectionModal({
   categories,
   isOpen,
@@ -55,9 +58,8 @@ export function CategorySelectionModal({
 
   if (!isOpen) return null;
 
-  const coreCategories = categories.filter((c) =>
-    ["men", "watches", "perfumes", "accessories"].includes(c.name.toLowerCase())
-  );
+  // Show all categories dynamically - no hardcoded filter
+  const allCategoriesForDisplay = categories;
 
   const handleSelect = (categoryId: string) => {
     onClose();
@@ -109,11 +111,10 @@ export function CategorySelectionModal({
           {/* Grid */}
           <div className="px-6 sm:px-8 py-6 sm:py-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-              {coreCategories.map((cat) => {
+              {allCategoriesForDisplay.map((cat) => {
                 const key = cat.name.toLowerCase();
                 const config = CATEGORY_CONFIG[key];
-                if (!config) return null;
-                const Icon = config.icon;
+                const Icon = config?.icon || DEFAULT_ICON;
 
                 return (
                   <button
@@ -137,7 +138,7 @@ export function CategorySelectionModal({
                         {cat.name}
                       </p>
                       <p className="text-xs sm:text-sm text-zinc-500 mt-1 leading-snug">
-                        {config.description}
+                        {config?.description || "Manage & organize"}
                       </p>
                     </div>
                   </button>

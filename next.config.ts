@@ -30,6 +30,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "zjhxlwanzqdigsvqxzau.supabase.co",
       },
+      // ✅ Added - current Supabase project
+      {
+        protocol: "https",
+        hostname: "zmsbmnxqhmxaaemnswzc.supabase.co",
+      },
       {
         protocol: "https",
         hostname: "api.dicebear.com",
@@ -45,32 +50,26 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: [
-          // Prevent clickjacking attacks
           {
             key: "X-Frame-Options",
             value: "SAMEORIGIN",
           },
-          // Prevent MIME sniffing
           {
             key: "X-Content-Type-Options",
             value: "nosniff",
           },
-          // Enable XSS protection
           {
             key: "X-XSS-Protection",
             value: "1; mode=block",
           },
-          // Referrer policy
           {
             key: "Referrer-Policy",
             value: "strict-origin-when-cross-origin",
           },
-          // Permissions policy
           {
             key: "Permissions-Policy",
             value: "geolocation=(), microphone=(), camera=()",
           },
-          // Cache policy for static assets
           {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
@@ -88,7 +87,6 @@ const nextConfig: NextConfig = {
             key: "X-Content-Type-Options",
             value: "nosniff",
           },
-          // CORS headers can be configured per endpoint
           {
             key: "Access-Control-Max-Age",
             value: "86400",
