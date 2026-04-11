@@ -30,8 +30,8 @@ export async function NewArrivals() {
     <section id="new-arrivals" className="py-16 md:py-20 container mx-auto">
       <div className="px-4 md:px-6 lg:px-8 mb-10">
         <SectionHeading 
-          title="New Arrivals" 
-          subtitle="Discover our latest designs and exclusive collections."
+          title="Latest Launches" 
+          subtitle="Check out the newest smartphone releases with cutting-edge technology."
         />
       </div>
       

@@ -16,43 +16,50 @@ export type Product = {
 };
 
 export const productsBySlug: Record<string, string> = {
-  men: "Men's Collection",
-  watches: "Watches Collection",
-  perfumes: "Luxury Perfumes",
-  accessories: "Premium Accessories",
+  apple: "Apple iPhones",
+  samsung: "Samsung Phones",
+  oneplus: "OnePlus Devices",
+  xiaomi: "Xiaomi Phones",
+  realme: "Realme Phones",
+  poco: "Poco Devices",
 };
 
 export const allProducts: any[] = [
-  { id: 1, name: "Classic White Oversized Tee", category: "men", subCategory: "T-Shirts", price: 699, originalPrice: 999, discount: 30, stock: 45, sizes: ["S","M","L","XL"], colors: ["White","Black"], image: "https://picsum.photos/seed/p1/400/400", isNew: true, isBestSeller: false },
-  { id: 2, name: "Acid Wash Graphic Tee", category: "men", subCategory: "T-Shirts", price: 799, originalPrice: 1099, discount: 27, stock: 32, sizes: ["M","L","XL","XXL"], colors: ["Grey","Black"], image: "https://picsum.photos/seed/p2/400/400", isNew: false, isBestSeller: true },
-  { id: 3, name: "Pullover Hoodie - Navy", category: "men", subCategory: "Hoodies", price: 1299, originalPrice: 1799, discount: 28, stock: 0, sizes: ["S","M","L"], colors: ["Navy","Black"], image: "https://picsum.photos/seed/p3/400/400", isNew: true, isBestSeller: false },
-  { id: 4, name: "Slim Fit Polo", category: "men", subCategory: "T-Shirts", price: 599, originalPrice: 849, discount: 29, stock: 56, sizes: ["S","M","L","XL"], colors: ["White","Navy","Red"], image: "https://picsum.photos/seed/p4/400/400", isNew: false, isBestSeller: true },
-  { id: 5, name: "Cargo Jogger Pants", category: "men", subCategory: "Joggers", price: 1099, originalPrice: 1499, discount: 27, stock: 0, sizes: ["M","L","XL"], colors: ["Black","Grey"], image: "https://picsum.photos/seed/p5/400/400", isNew: false, isBestSeller: false },
-  { id: 6, name: "Drop Shoulder Tee - Olive", category: "men", subCategory: "T-Shirts", price: 749, originalPrice: 999, discount: 25, stock: 28, sizes: ["M","L","XL","XXL"], colors: ["Green","Black"], image: "https://picsum.photos/seed/p6/400/400", isNew: true, isBestSeller: false },
-  { id: 7, name: "Zip-Up Bomber Jacket", category: "men", subCategory: "Jackets", price: 1899, originalPrice: 2499, discount: 24, stock: 12, sizes: ["S","M","L"], colors: ["Black","Navy"], image: "https://picsum.photos/seed/p7/400/400", isNew: true, isBestSeller: false },
-  { id: 8, name: "French Terry Sweatshirt", category: "men", subCategory: "Hoodies", price: 999, originalPrice: 1399, discount: 29, stock: 38, sizes: ["M","L","XL"], colors: ["Grey","White"], image: "https://picsum.photos/seed/p8/400/400", isNew: false, isBestSeller: true },
+  // Apple
+  { id: 1, name: "iPhone 15 Pro Max", category: "apple", subCategory: "Flagship", price: 129999, originalPrice: 149999, discount: 13, stock: 12, sizes: ["256GB","512GB","1TB"], colors: ["Titanium Black","Titanium White"], image: "https://picsum.photos/seed/iphone15pro/400/400", isNew: true, isBestSeller: true },
+  { id: 2, name: "iPhone 15", category: "apple", subCategory: "Standard", price: 79999, originalPrice: 99999, discount: 20, stock: 18, sizes: ["128GB","256GB","512GB"], colors: ["Black","Blue","Pink"], image: "https://picsum.photos/seed/iphone15/400/400", isNew: true, isBestSeller: true },
+  { id: 3, name: "iPhone 14 Pro", category: "apple", subCategory: "Flagship", price: 99999, originalPrice: 129999, discount: 23, stock: 8, sizes: ["128GB","256GB","512GB"], colors: ["Space Black","Gold"], image: "https://picsum.photos/seed/iphone14pro/400/400", isNew: false, isBestSeller: true },
+  { id: 4, name: "iPhone SE", category: "apple", subCategory: "Budget", price: 39999, originalPrice: 49999, discount: 20, stock: 24, sizes: ["128GB","256GB"], colors: ["Red","White","Black"], image: "https://picsum.photos/seed/iphonese/400/400", isNew: false, isBestSeller: false },
   
-  // Watches
-  { id: 9, name: "Classic Silver Watch", category: "watches", subCategory: "Analog", price: 2499, originalPrice: 3499, discount: 29, stock: 15, sizes: ["One Size"], colors: ["Grey","White"], image: "https://picsum.photos/seed/w1/400/400", isNew: true, isBestSeller: true },
-  { id: 10, name: "Minimalist Black Watch", category: "watches", subCategory: "Analog", price: 1999, originalPrice: 2999, discount: 33, stock: 22, sizes: ["One Size"], colors: ["Black"], image: "https://picsum.photos/seed/w2/400/400", isNew: false, isBestSeller: true },
-  { id: 11, name: "Sport Digital Watch", category: "watches", subCategory: "Digital", price: 1299, originalPrice: 1799, discount: 28, stock: 0, sizes: ["One Size"], colors: ["Black","Blue"], image: "https://picsum.photos/seed/w3/400/400", isNew: true, isBestSeller: false },
-  { id: 12, name: "Chronograph Leather", category: "watches", subCategory: "Chronograph", price: 4499, originalPrice: 5999, discount: 25, stock: 8, sizes: ["One Size"], colors: ["Brown","Black"], image: "https://picsum.photos/seed/w4/400/400", isNew: true, isBestSeller: false },
-  { id: 13, name: "Luxury Gold Watch", category: "watches", subCategory: "Analog", price: 5999, originalPrice: 8999, discount: 33, stock: 5, sizes: ["One Size"], colors: ["Yellow"], image: "https://picsum.photos/seed/w5/400/400", isNew: false, isBestSeller: true },
-  { id: 14, name: "Military Rugged Watch", category: "watches", subCategory: "Digital", price: 1499, originalPrice: 1999, discount: 25, stock: 0, sizes: ["One Size"], colors: ["Green","Black"], image: "https://picsum.photos/seed/w6/400/400", isNew: false, isBestSeller: false },
-  { id: 15, name: "Skeleton Automatic", category: "watches", subCategory: "Analog", price: 7999, originalPrice: 10999, discount: 27, stock: 3, sizes: ["One Size"], colors: ["Grey","Black"], image: "https://picsum.photos/seed/w7/400/400", isNew: true, isBestSeller: false },
-  { id: 16, name: "Retro Digital Blue", category: "watches", subCategory: "Digital", price: 999, originalPrice: 1499, discount: 33, stock: 18, sizes: ["One Size"], colors: ["Blue"], image: "https://picsum.photos/seed/w8/400/400", isNew: false, isBestSeller: false },
-
-  // Perfumes
-  { id: 17, name: "Oud Royale EDP", category: "perfumes", subCategory: "EDP", price: 3499, originalPrice: 4999, discount: 30, stock: 25, sizes: ["50ml", "100ml"], colors: ["Gold"], image: "https://picsum.photos/seed/perf1/400/400", isNew: true, isBestSeller: true },
-  { id: 18, name: "Oceanic Mist EDT", category: "perfumes", subCategory: "EDT", price: 1899, originalPrice: 2599, discount: 27, stock: 0, sizes: ["100ml"], colors: ["Blue"], image: "https://picsum.photos/seed/perf2/400/400", isNew: false, isBestSeller: true },
-  { id: 19, name: "Midnight Musk", category: "perfumes", subCategory: "EDP", price: 2799, originalPrice: 3999, discount: 30, stock: 14, sizes: ["100ml"], colors: ["Black"], image: "https://picsum.photos/seed/perf3/400/400", isNew: true, isBestSeller: false },
-  { id: 20, name: "Citrus Bloom", category: "perfumes", subCategory: "EDT", price: 1499, originalPrice: 1999, discount: 25, stock: 36, sizes: ["50ml"], colors: ["Orange"], image: "https://picsum.photos/seed/perf4/400/400", isNew: false, isBestSeller: false },
+  // Samsung
+  { id: 5, name: "Samsung Galaxy S24 Ultra", category: "samsung", subCategory: "Flagship", price: 139999, originalPrice: 159999, discount: 12, stock: 10, sizes: ["256GB","512GB"], colors: ["Phantom Black","Cream"], image: "https://picsum.photos/seed/galaxys24ultra/400/400", isNew: true, isBestSeller: true },
+  { id: 6, name: "Samsung Galaxy S24", category: "samsung", subCategory: "Standard", price: 79999, originalPrice: 99999, discount: 20, stock: 16, sizes: ["128GB","256GB"], colors: ["Onyx Black","Amber Gold"], image: "https://picsum.photos/seed/galaxys24/400/400", isNew: true, isBestSeller: true },
+  { id: 7, name: "Samsung Galaxy A54", category: "samsung", subCategory: "Mid-Range", price: 35999, originalPrice: 45999, discount: 22, stock: 22, sizes: ["128GB","256GB"], colors: ["Black","Lime"], image: "https://picsum.photos/seed/galaxya54/400/400", isNew: false, isBestSeller: false },
+  { id: 8, name: "Samsung Galaxy Z Fold5", category: "samsung", subCategory: "Foldable", price: 154999, originalPrice: 189999, discount: 18, stock: 5, sizes: ["256GB","512GB"], colors: ["Phantom Black","Cream"], image: "https://picsum.photos/seed/galaxyzfold5/400/400", isNew: true, isBestSeller: false },
   
-  // Accessories
-  { id: 21, name: "Genuine Leather Belt", category: "accessories", subCategory: "Belts", price: 1299, originalPrice: 1799, discount: 28, stock: 19, sizes: ["32","34","36"], colors: ["Brown","Black"], image: "https://picsum.photos/seed/acc1/400/400", isNew: true, isBestSeller: true },
-  { id: 22, name: "Aviator Sunglasses", category: "accessories", subCategory: "Eyewear", price: 1999, originalPrice: 2999, discount: 33, stock: 0, sizes: ["One Size"], colors: ["Black","Gold"], image: "https://picsum.photos/seed/acc2/400/400", isNew: false, isBestSeller: true },
-  { id: 23, name: "Slim Leather Wallet", category: "accessories", subCategory: "Wallets", price: 899, originalPrice: 1299, discount: 31, stock: 42, sizes: ["One Size"], colors: ["Tan","Black"], image: "https://picsum.photos/seed/acc3/400/400", isNew: true, isBestSeller: false },
-  { id: 24, name: "Silver Cufflinks", category: "accessories", subCategory: "Jewelry", price: 1499, originalPrice: 1999, discount: 25, stock: 11, sizes: ["One Size"], colors: ["Grey"], image: "https://picsum.photos/seed/acc4/400/400", isNew: false, isBestSeller: false },
+  // OnePlus
+  { id: 9, name: "OnePlus 12", category: "oneplus", subCategory: "Flagship", price: 64999, originalPrice: 79999, discount: 19, stock: 14, sizes: ["256GB","512GB"], colors: ["Black","White"], image: "https://picsum.photos/seed/oneplus12/400/400", isNew: true, isBestSeller: true },
+  { id: 10, name: "OnePlus 12R", category: "oneplus", subCategory: "Mid-Range", price: 42999, originalPrice: 54999, discount: 22, stock: 20, sizes: ["128GB","256GB"], colors: ["Cool Black","Astro Black"], image: "https://picsum.photos/seed/oneplus12r/400/400", isNew: true, isBestSeller: true },
+  { id: 11, name: "OnePlus Nord CE 4", category: "oneplus", subCategory: "Budget", price: 24999, originalPrice: 32999, discount: 24, stock: 30, sizes: ["128GB","256GB"], colors: ["Dark Grey","Silver"], image: "https://picsum.photos/seed/oneplusnordce4/400/400", isNew: false, isBestSeller: false },
+  { id: 12, name: "OnePlus Pad", category: "oneplus", subCategory: "Tablet", price: 39999, originalPrice: 49999, discount: 20, stock: 8, sizes: ["128GB","256GB"], colors: ["Halo Grey","Moonstone Black"], image: "https://picsum.photos/seed/oneluspad/400/400", isNew: false, isBestSeller: false },
+  
+  // Xiaomi
+  { id: 13, name: "Xiaomi 14 Ultra", category: "xiaomi", subCategory: "Flagship", price: 84999, originalPrice: 99999, discount: 15, stock: 11, sizes: ["256GB","512GB"], colors: ["Black","White","Gold"], image: "https://picsum.photos/seed/xiaomi14ultra/400/400", isNew: true, isBestSeller: true },
+  { id: 14, name: "Xiaomi 14", category: "xiaomi", subCategory: "Standard", price: 52999, originalPrice: 64999, discount: 18, stock: 19, sizes: ["256GB","512GB"], colors: ["Black","White"], image: "https://picsum.photos/seed/xiaomi14/400/400", isNew: true, isBestSeller: true },
+  { id: 15, name: "Xiaomi 13 Lite", category: "xiaomi", subCategory: "Mid-Range", price: 29999, originalPrice: 39999, discount: 25, stock: 25, sizes: ["128GB","256GB"], colors: ["Black","Green"], image: "https://picsum.photos/seed/xiaomi13lite/400/400", isNew: false, isBestSeller: false },
+  { id: 16, name: "Xiaomi Redmi Note 13", category: "xiaomi", subCategory: "Budget", price: 16999, originalPrice: 22999, discount: 26, stock: 35, sizes: ["128GB"], colors: ["Black","Blue","Silver"], image: "https://picsum.photos/seed/redminote13/400/400", isNew: false, isBestSeller: false },
+  
+  // Realme
+  { id: 17, name: "Realme GT 5 Pro", category: "realme", subCategory: "Flagship", price: 54999, originalPrice: 69999, discount: 21, stock: 13, sizes: ["256GB","512GB"], colors: ["Green","Titanium Black"], image: "https://picsum.photos/seed/realmeGT5pro/400/400", isNew: true, isBestSeller: true },
+  { id: 18, name: "Realme 12 Pro+", category: "realme", subCategory: "Mid-Range", price: 34999, originalPrice: 44999, discount: 22, stock: 23, sizes: ["128GB","256GB"], colors: ["Gold","Black"], image: "https://picsum.photos/seed/realme12proplus/400/400", isNew: true, isBestSeller: false },
+  { id: 19, name: "Realme 12", category: "realme", subCategory: "Budget", price: 19999, originalPrice: 27999, discount: 29, stock: 32, sizes: ["128GB","256GB"], colors: ["Starlight Blue","Midnight Black"], image: "https://picsum.photos/seed/realme12/400/400", isNew: false, isBestSeller: false },
+  { id: 20, name: "Realme C67", category: "realme", subCategory: "Entry-Level", price: 9999, originalPrice: 13999, discount: 29, stock: 40, sizes: ["64GB","128GB"], colors: ["Black","Blue"], image: "https://picsum.photos/seed/realmec67/400/400", isNew: false, isBestSeller: false },
+  
+  // Poco
+  { id: 21, name: "Poco F6 Pro", category: "poco", subCategory: "Flagship", price: 39999, originalPrice: 49999, discount: 20, stock: 15, sizes: ["256GB","512GB"], colors: ["Black","Blue","White"], image: "https://picsum.photos/seed/pocof6pro/400/400", isNew: true, isBestSeller: true },
+  { id: 22, name: "Poco X6", category: "poco", subCategory: "Mid-Range", price: 24999, originalPrice: 33999, discount: 26, stock: 26, sizes: ["128GB","256GB"], colors: ["Black","Silver","Gold"], image: "https://picsum.photos/seed/pocox6/400/400", isNew: true, isBestSeller: false },
+  { id: 23, name: "Poco M6", category: "poco", subCategory: "Budget", price: 12999, originalPrice: 17999, discount: 28, stock: 38, sizes: ["128GB"], colors: ["Black","Green","Gold"], image: "https://picsum.photos/seed/pocom6/400/400", isNew: false, isBestSeller: false },
+  { id: 24, name: "Poco C65", category: "poco", subCategory: "Entry-Level", price: 8999, originalPrice: 11999, discount: 25, stock: 45, sizes: ["64GB","128GB"], colors: ["Black","Blue"], image: "https://picsum.photos/seed/pococ65/400/400", isNew: false, isBestSeller: false },
 ];
 
 export const products = (allProducts as any[]).map(p => ({
@@ -73,10 +80,12 @@ export const products = (allProducts as any[]).map(p => ({
 }));
 
 export const categories = [
-  { id: 1, name: "Men", image: "https://picsum.photos/seed/cat-men/600/600" },
-  { id: 2, name: "Watches", image: "https://picsum.photos/seed/cat-watch/600/600" },
-  { id: 3, name: "Perfumes", image: "https://picsum.photos/seed/cat-perf/600/600" },
-  { id: 4, name: "Accessories", image: "https://picsum.photos/seed/cat-acc/600/600" },
+  { id: 1, name: "Apple", image: "https://picsum.photos/seed/cat-apple/600/600" },
+  { id: 2, name: "Samsung", image: "https://picsum.photos/seed/cat-samsung/600/600" },
+  { id: 3, name: "OnePlus", image: "https://picsum.photos/seed/cat-oneplus/600/600" },
+  { id: 4, name: "Xiaomi", image: "https://picsum.photos/seed/cat-xiaomi/600/600" },
+  { id: 5, name: "Realme", image: "https://picsum.photos/seed/cat-realme/600/600" },
+  { id: 6, name: "Poco", image: "https://picsum.photos/seed/cat-poco/600/600" },
 ];
 
 export const heroSlides = [

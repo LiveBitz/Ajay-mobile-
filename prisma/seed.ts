@@ -8,10 +8,12 @@ async function main() {
 
   // 1. Create Categories
   const categories = [
-    { name: "Men", slug: "men", image: "https://picsum.photos/seed/cat-men/600/600" },
-    { name: "Watches", slug: "watches", image: "https://picsum.photos/seed/cat-watch/600/600" },
-    { name: "Perfumes", slug: "perfumes", image: "https://picsum.photos/seed/cat-perf/600/600" },
-    { name: "Accessories", slug: "accessories", image: "https://picsum.photos/seed/cat-acc/600/600" },
+    { name: "Apple", slug: "apple", image: "https://picsum.photos/seed/cat-apple/600/600" },
+    { name: "Samsung", slug: "samsung", image: "https://picsum.photos/seed/cat-samsung/600/600" },
+    { name: "OnePlus", slug: "oneplus", image: "https://picsum.photos/seed/cat-oneplus/600/600" },
+    { name: "Xiaomi", slug: "xiaomi", image: "https://picsum.photos/seed/cat-xiaomi/600/600" },
+    { name: "Realme", slug: "realme", image: "https://picsum.photos/seed/cat-realme/600/600" },
+    { name: "Poco", slug: "poco", image: "https://picsum.photos/seed/cat-poco/600/600" },
   ];
 
   const categoryMap: Record<string, string> = {};

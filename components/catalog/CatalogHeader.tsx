@@ -24,11 +24,11 @@ interface CatalogHeaderProps {
 
 export function CatalogHeader({ slug, count, sortBy, setSortBy }: CatalogHeaderProps) {
   const categoryName = !slug 
-    ? "Collection" 
+    ? "All Phones" 
     : slug === "sale" 
-      ? "Seasonal Sale" 
+      ? "Special Offers" 
       : slug === "new-arrivals" 
-        ? "New Arrivals" 
+        ? "Latest Launches" 
         : productsBySlug[slug] || (slug.charAt(0).toUpperCase() + slug.slice(1));
 
   return (

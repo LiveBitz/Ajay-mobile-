@@ -27,8 +27,8 @@ export async function BestSellers() {
       <div className="container mx-auto">
         <div className="px-4 md:px-6 lg:px-8 mb-10">
           <SectionHeading 
-            title="Best Sellers" 
-            subtitle="The most loved pieces from our collection." 
+            title="Most Loved Phones" 
+            subtitle="Our bestselling smartphones trusted by thousands of customers." 
           />
         </div>
         

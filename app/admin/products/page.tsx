@@ -87,11 +87,11 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
         <div className="space-y-1 sm:space-y-2">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold font-heading tracking-tight text-zinc-900">
-            Inventory Console
+            Mobile Phone Inventory
           </h1>
           <p className="text-zinc-500 font-medium text-xs sm:text-sm leading-relaxed">
-            Orchestrate and monitor your{" "}
-            <span className="text-brand font-bold">Premium Digital Assets</span>.
+            Manage and monitor your{" "}
+            <span className="text-brand font-bold">Smartphone Stock</span>.
           </p>
         </div>
         <div className="w-full sm:w-auto">
@@ -143,7 +143,7 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
                           <Package className="w-9 h-9 text-zinc-200" />
                         </div>
                         <p className="font-extrabold text-xl text-zinc-900">
-                          Digital Inventory is pristine.
+                          Mobile Phone Stock
                         </p>
                         <AddProductButton />
                       </div>
@@ -309,7 +309,7 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
                 <Package className="w-7 h-7 text-zinc-200" />
               </div>
               <p className="font-extrabold text-zinc-900 text-sm">
-                Digital Inventory is pristine.
+                All phones are in stock. Start adding your collection!
               </p>
               <AddProductButton />
             </div>

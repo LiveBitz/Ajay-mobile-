@@ -14,8 +14,8 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
   return (
     <section id="categories" className="py-16 md:py-20 px-4 md:px-6 lg:px-8 container mx-auto">
       <SectionHeading 
-        title="Shop by Category" 
-        subtitle="Explore our curated collections for every style and occasion." 
+        title="Explore by Brand" 
+        subtitle="Discover the latest and greatest mobile phones from top brands worldwide." 
       />
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
         {categories.map((category) => (

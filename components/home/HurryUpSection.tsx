@@ -28,10 +28,10 @@ export async function HurryUpSection() {
         <div className="flex items-center justify-between mb-8 md:mb-12">
           <div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-zinc-900 tracking-tight mb-2">
-              Hurry Up!
+              Limited Time Offers!
             </h2>
             <p className="text-lg md:text-xl font-bold text-zinc-700">
-              Get Up to 40% Off
+              Save Up to 40% on Premium Phones
             </p>
           </div>
           

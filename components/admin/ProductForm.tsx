@@ -135,18 +135,18 @@ export function ProductForm({
 
   const selectedCategory = categories.find((c) => c.id === formData.categoryId);
   const isPerfume =
-    selectedCategory?.name?.toLowerCase() === "perfumes";
+    selectedCategory?.name?.toLowerCase() === "smart accessories";
   const isWatch =
-    selectedCategory?.name?.toLowerCase() === "watches";
+    selectedCategory?.name?.toLowerCase() === "accessories";
   const isApparel =
-    selectedCategory?.name?.toLowerCase() === "men";
+    selectedCategory?.name?.toLowerCase() === "smartphones";
 
   useEffect(() => {
     if (!isEdit && !initialData && formData.categoryId) {
       if (isPerfume) {
-        setFormData((p) => ({ ...p, sizes: ["50ml", "100ml"] }));
+        setFormData((p) => ({ ...p, sizes: ["256GB", "512GB", "1TB"] }));
       } else if (isApparel) {
-        setFormData((p) => ({ ...p, sizes: ["S", "M", "L", "XL"] }));
+        setFormData((p) => ({ ...p, sizes: ["64GB", "128GB", "256GB", "512GB"] }));
       }
     }
   }, [formData.categoryId, isPerfume, isApparel, isEdit]);

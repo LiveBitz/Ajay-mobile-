@@ -20,8 +20,8 @@ export function FeaturesStrip() {
     },
     {
       icon: <Gift className="w-6 h-6 text-brand" />,
-      title: "Gift Wrapping",
-      subtitle: "Available on requests",
+      title: "Warranty Support",
+      subtitle: "Complete device protection included",
     },
   ];
 

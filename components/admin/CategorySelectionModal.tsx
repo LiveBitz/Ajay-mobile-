@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Shirt, Watch, FlaskConical, Briefcase, Sparkles, X } from "lucide-react";
+import { Apple, Smartphone, Zap, Cpu, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Category {
@@ -21,26 +21,34 @@ const CATEGORY_CONFIG: Record<string, {
   icon: any;
   description: string;
 }> = {
-  men: {
-    icon: Shirt,
-    description: "Apparel & premium wear",
+  apple: {
+    icon: Apple,
+    description: "Premium iPhones & iOS devices",
   },
-  accessories: {
-    icon: Briefcase,
-    description: "Bags & lifestyle essentials",
+  samsung: {
+    icon: Smartphone,
+    description: "Galaxy phones & tablets",
   },
-  perfumes: {
-    icon: FlaskConical,
-    description: "Signature scents & fragrances",
+  oneplus: {
+    icon: Zap,
+    description: "Fast & smooth performance",
   },
-  watches: {
-    icon: Watch,
-    description: "Luxury timepieces & craft",
+  xiaomi: {
+    icon: Cpu,
+    description: "Value for money devices",
+  },
+  realme: {
+    icon: Smartphone,
+    description: "Gaming & photography focus",
+  },
+  poco: {
+    icon: Sparkles,
+    description: "Budget friendly phones",
   },
 };
 
 // Fallback icon when category doesn't have a specific icon
-const DEFAULT_ICON = Sparkles;
+const DEFAULT_ICON = Smartphone;
 
 export function CategorySelectionModal({
   categories,

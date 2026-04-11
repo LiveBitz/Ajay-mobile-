@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Heart, ShoppingBag, User, Menu, X, ChevronRight, LogIn, HelpCircle, PhoneCall, LogOut, Shield, Loader2 } from "lucide-react";
+import { Search, Heart, ShoppingBag, User, Menu, X, ChevronRight, LogIn, HelpCircle, PhoneCall, LogOut, Shield, Loader2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -16,12 +16,15 @@ import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/lib/actions/auth-actions";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
+// Mobile phone brand navigation links
 const navLinks = [
-  { name: "Home", href: "/" },
-  { name: "Men", href: "/category/men" },
-  { name: "Watches", href: "/category/watches" },
-  { name: "Perfumes", href: "/category/perfumes" },
-  { name: "Accessories", href: "/category/accessories" },
+  { name: "Home", href: "/", icon: "🏠" },
+  { name: "Apple", href: "/category/apple", icon: "🍎" },
+  { name: "Samsung", href: "/category/samsung", icon: "📱" },
+  { name: "OnePlus", href: "/category/oneplus", icon: "⚡" },
+  { name: "Xiaomi", href: "/category/xiaomi", icon: "🔧" },
+  { name: "Realme", href: "/category/realme", icon: "🎮" },
+  { name: "Poco", href: "/category/poco", icon: "💰" },
 ];
 
 export function Navbar() {
@@ -34,17 +37,121 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [location, setLocation] = useState<{ city: string; postalCode: string } | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
   const { totalItems, setIsOpen: setOpenCart } = useCart();
   const { items: wishlistItems } = useWishlist();
   const supabase = createClient();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
+  // Reverse geocode coordinates to get city and postal code
+  const reverseGeocode = async (latitude: number, longitude: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
+        {
+          headers: {
+            "Accept": "application/json",
+            "User-Agent": "SouledStore-Mobile-App/1.0"
+          }
+        }
+      );
 
-    // Initial user fetch
+      if (!response.ok) {
+        throw new Error(`Geocoding API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      const city = 
+        data.address?.city || 
+        data.address?.town || 
+        data.address?.village ||
+        data.address?.city_district ||
+        data.address?.district ||
+        data.address?.county ||
+        data.name ||
+        "Your Location";
+
+      const postalCode = data.address?.postcode || "";
+
+      const locationData = { city, postalCode };
+      
+      // Cache the location
+      localStorage.setItem("userLocation", JSON.stringify(locationData));
+      localStorage.setItem("userLocationTime", Date.now().toString());
+      
+      setLocation(locationData);
+      console.log("[LOCATION_FETCHED]", { city, postalCode, latitude, longitude });
+      
+      return locationData;
+    } catch (error) {
+      console.error("[GEOCODING_ERROR]", error);
+      const fallbackLocation = { city: "Your Location", postalCode: "" };
+      setLocation(fallbackLocation);
+      return fallbackLocation;
+    }
+  };
+
+  // Request location permission from user
+  const requestLocationPermission = () => {
+    if (!navigator.geolocation) {
+      setLocation({ city: "Location Not Available", postalCode: "" });
+      return;
+    }
+
+    setLocationLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        await reverseGeocode(latitude, longitude);
+        setLocationLoading(false);
+      },
+      (error) => {
+        console.warn("[GEOLOCATION_ERROR]", error.code, error.message);
+        
+        if (error.code === 1) {
+          setLocation({ city: "Enable Location", postalCode: "" });
+        } else if (error.code === 2) {
+          setLocation({ city: "Location Unavailable", postalCode: "" });
+        } else if (error.code === 3) {
+          setLocation({ city: "Detection Timeout", postalCode: "" });
+        }
+        setLocationLoading(false);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000
+      }
+    );
+  };
+
+  // Initialize - check for cached location, or request it
+  useEffect(() => {
+    const cachedLocation = localStorage.getItem("userLocation");
+    const cacheTime = localStorage.getItem("userLocationTime");
+    const now = Date.now();
+
+    if (cachedLocation && cacheTime && now - parseInt(cacheTime) < 24 * 60 * 60 * 1000) {
+      const parsedLocation = JSON.parse(cachedLocation);
+      setLocation(parsedLocation);
+    } else {
+      // Request location on first visit (browser will show native popup)
+      setTimeout(() => requestLocationPermission(), 1000);
+    }
+  }, []);
+
+  // Handle location refresh
+  const handleRefreshLocation = () => {
+    setLocationLoading(true);
+    localStorage.removeItem("userLocation");
+    localStorage.removeItem("userLocationTime");
+    requestLocationPermission();
+  };
+
+  // Auth effect - fetch user and subscribe to changes
+  useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
@@ -56,6 +163,12 @@ export function Navbar() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
+
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+
+    window.addEventListener("scroll", handleScroll);
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -118,22 +231,33 @@ export function Navbar() {
               </SheetHeader>
               
               <div className="flex-1 overflow-y-auto">
-                {/* Categories */}
+                {/* Location Section */}
                 <div className="p-4 py-2">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[2px] ml-2">Categories</span>
-                  <div className="mt-2 flex flex-col">
-                    {navLinks.map((link) => (
-                      <Link
-                        key={link.name}
-                        href={link.href}
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center justify-between w-full p-4 rounded-xl hover:bg-zinc-50 transition-colors group"
-                      >
-                        <span className="text-lg font-bold text-zinc-900 group-hover:text-brand transition-colors">{link.name}</span>
-                        <ChevronRight className="w-4 h-4 text-zinc-300 group-hover:text-brand transition-colors" />
-                      </Link>
-                    ))}
-                  </div>
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[2px] ml-2">Your Delivery Location</span>
+                  <button 
+                    onClick={handleRefreshLocation}
+                    disabled={locationLoading}
+                    className="mt-3 w-full p-4 rounded-xl bg-gradient-to-r from-brand/10 to-transparent border border-brand/20 hover:border-brand/40 hover:from-brand/15 transition-all flex items-center gap-3 cursor-pointer disabled:opacity-50"
+                  >
+                    <MapPin className="w-5 h-5 text-brand shrink-0" />
+                    <div className="flex-1 text-left min-w-0">
+                      {locationLoading ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin text-brand" />
+                          <span className="text-sm font-semibold text-zinc-600">Detecting location...</span>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-sm font-bold text-zinc-900">{location?.city}</p>
+                          {location?.postalCode ? (
+                            <p className="text-xs text-zinc-500">{location.postalCode}</p>
+                          ) : (
+                            <p className="text-xs text-zinc-400">Postal code not found</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </button>
                 </div>
 
                 <div className="px-6 py-2">
@@ -196,17 +320,29 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8 ml-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className="text-sm font-semibold text-zinc-800 hover:text-brand transition-all relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-brand after:transition-all hover:after:w-full"
+        {/* Desktop Location Display */}
+        <div className="hidden md:flex items-center gap-2 ml-8">
+          {locationLoading ? (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-50 border border-zinc-200">
+              <Loader2 className="w-4 h-4 animate-spin text-brand" />
+              <span className="text-sm font-medium text-zinc-600">Detecting...</span>
+            </div>
+          ) : (
+            <button 
+              onClick={handleRefreshLocation}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-200 hover:border-brand hover:bg-brand/5 transition-all group"
+              title="Click to refresh location"
             >
-              {link.name}
-            </Link>
-          ))}
+              <MapPin className="w-5 h-5 text-brand group-hover:scale-110 transition-transform" />
+              <div className="text-left">
+                <p className="text-xs font-semibold text-zinc-500">Deliver to</p>
+                <p className="text-sm font-bold text-zinc-900">
+                  {location?.city} 
+                  {location?.postalCode && <span className="text-xs text-zinc-500 ml-1">{location.postalCode}</span>}
+                </p>
+              </div>
+            </button>
+          )}
         </div>
 
         {/* Search Bar - Desktop */}
