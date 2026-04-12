@@ -74,7 +74,7 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
             {banners.map((slide) => (
               <CarouselItem key={slide.id} className="pl-0 basis-full w-full">
                 <Link href={(slide as any).link || "/"} className="block w-full h-full">
-                  <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden">
+                  <div className="relative w-full h-[200px] sm:h-[280px] md:h-[360px] lg:h-[420px] overflow-hidden">
                     <Image
                       src={slide.image}
                       alt={slide.title}
@@ -94,7 +94,7 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
 
       {/* Pagination Dots */}
       {scrollSnaps.length > 1 && (
-        <div className="flex items-center justify-center gap-2 sm:gap-3 py-4 sm:py-6 px-4 bg-white">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 px-4 bg-white">
           {scrollSnaps.map((_, index) => (
             <button
               key={index}
