@@ -10,81 +10,135 @@ import { FeaturedCategoriesSection } from "@/components/home/FeaturedCategoriesS
 import { getBanners } from "@/lib/actions/banner-actions";
 import { getCategories } from "@/lib/actions/category-actions";
 
-// ✅ PHASE 2: Static regeneration - revalidate home page every 5 minutes for development
 export const revalidate = 300;
 
-export default async function Home() {
-  const heroBanners = await getBanners("HERO");
-  const promoBanners = await getBanners("PROMO");
-  const newsletterBanners = await getBanners("NEWSLETTER");
-  const dbCategories = await getCategories();
+// ✅ Reusable divider component
+function Divider({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent ${className}`}
+    />
+  );
+}
 
-  // Use the first active newsletter banner
-  const activeNewsletter = newsletterBanners.length > 0 ? newsletterBanners[0] : null;
+// ✅ Reusable section wrapper with consistent spacing + optional animation delay
+function Section({
+  children,
+  delay = 0,
+  className = "",
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  className?: string;
+}) {
+  return (
+    <section
+      className={`w-full animate-fade-in-up ${className}`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      {children}
+    </section>
+  );
+}
+
+export default async function Home() {
+  // ✅ Parallel data fetching — all 3 banner calls run simultaneously
+  const [heroBanners, promoBanners, newsletterBanners, dbCategories] =
+    await Promise.all([
+      getBanners("HERO"),
+      getBanners("PROMO"),
+      getBanners("NEWSLETTER"),
+      getCategories(),
+    ]);
+
+  // ✅ Pick only the first active newsletter banner
+  const activeNewsletter = newsletterBanners[0] ?? null;
 
   return (
-    <div className="flex flex-col bg-white">
-      {/* Featured Categories — above fold, no delay */}
-      <FeaturedCategoriesSection />
+    <main className="flex flex-col w-full bg-white overflow-x-hidden">
 
-      <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
+      {/* ── 1. Featured Categories ── above fold, no delay */}
+      <Section>
+        <FeaturedCategoriesSection />
+      </Section>
 
-      {/* Hero Banner — above fold with reliable rendering */}
-      <div className="w-full">
+      <Divider />
+
+      {/* ── 2. Hero Banner ── */}
+      <Section>
         {heroBanners.length > 0 ? (
           <HeroBanner banners={heroBanners} />
         ) : (
-          <div className="w-full h-[300px] bg-zinc-200 flex items-center justify-center text-center">
-            <div>
-              <p className="text-zinc-600 font-semibold">No hero banners available</p>
-              <p className="text-zinc-500 text-sm">Banners: {heroBanners.length}</p>
+          // ✅ Proper empty state — matches real banner height so layout doesn't jump
+          <div className="w-full flex items-center justify-center bg-zinc-50 border-y border-zinc-100"
+            style={{ minHeight: "320px" }}
+          >
+            <div className="text-center space-y-1 px-4">
+              <p className="text-zinc-500 font-semibold text-sm">
+                No hero banners configured
+              </p>
+              <p className="text-zinc-400 text-xs">
+                Add banners from the admin dashboard
+              </p>
             </div>
           </div>
         )}
-      </div>
+      </Section>
 
-      <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
+      <Divider />
 
-      {/* Below-fold sections fade in */}
-      <div className="animate-fade-in-up" style={{ animationDelay: "0ms" }}>
+      {/* ── 3. Hurry Up / Flash Sale ── */}
+      <Section delay={0}>
         <HurryUpSection />
-      </div>
+      </Section>
 
-      <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
+      <Divider />
 
-      <div className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+      {/* ── 4. Brand / Category Carousel ── */}
+      <Section delay={100}>
         <BrandCarousel categories={dbCategories} />
-      </div>
+      </Section>
 
-      <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
+      <Divider />
 
-      <div className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+      {/* ── 5. Best Sellers ── */}
+      <Section delay={150}>
         <BestSellersSection />
-      </div>
+      </Section>
 
-      <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
+      <Divider />
 
-      <div className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+      {/* ── 6. New Arrivals ── */}
+      <Section delay={200}>
         <NewArrivals />
-      </div>
+      </Section>
 
-      <div className="h-px bg-zinc-100" />
+      <Divider />
 
-      <div className="animate-fade-in-up">
-        <PromoBanner banners={promoBanners} />
-      </div>
+      {/* ── 7. Promo Banner ── only render if banners exist */}
+      {promoBanners.length > 0 && (
+        <>
+          <Section delay={250}>
+            <PromoBanner banners={promoBanners} />
+          </Section>
+          <Divider />
+        </>
+      )}
 
-      <div className="h-px bg-zinc-100" />
-
-      <div className="animate-fade-in-up">
+      {/* ── 8. Features Strip ── */}
+      <Section delay={300}>
         <FeaturesStrip />
-      </div>
+      </Section>
 
-      <div className="h-px bg-zinc-100" />
+      <Divider />
 
-      <div className="animate-fade-in-up">
-        <NewsletterBanner banner={activeNewsletter} />
-      </div>
-    </div>
+      {/* ── 9. Newsletter ── only render if banner exists */}
+      {activeNewsletter && (
+        <Section delay={350}>
+          <NewsletterBanner banner={activeNewsletter} />
+        </Section>
+      )}
+
+    </main>
   );
 }

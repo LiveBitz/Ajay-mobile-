@@ -12,70 +12,68 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
   if (!categories || categories.length === 0) return null;
 
   return (
-    <section className="py-8 md:py-12 lg:py-16 bg-white">
+    <section className="bg-black border-b border-zinc-800">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        {/* Section Header — visible on all screen sizes */}
-        <div className="mb-8 md:mb-10 lg:mb-12">
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-zinc-900 mb-1.5 tracking-tight">
-            Shop by Brand
-          </h2>
-          <p className="text-sm md:text-base text-zinc-500 font-medium">
-            Explore our premium collection of devices
-          </p>
-        </div>
-
-        {/* Scrollable carousel */}
         <div
-          className="flex gap-4 md:gap-6 lg:gap-8 overflow-x-auto scroll-smooth pb-2 scrollbar-hide"
+          className="flex items-center justify-between overflow-x-auto scrollbar-hide py-3 md:py-4 lg:py-5 gap-2"
           style={{ scrollBehavior: "smooth" }}
         >
           {categories.map((category) => (
             <Link
               key={category.id}
               href={`/category/${category.slug}`}
-              className="flex-shrink-0 group cursor-pointer"
+              className="flex-1 min-w-[60px] max-w-[100px] group flex flex-col items-center gap-2"
             >
-              <div className="flex flex-col items-center gap-3">
-                {/* Category Icon */}
-                <div className="relative h-20 w-20 md:h-28 md:w-28 lg:h-32 lg:w-32 rounded-2xl overflow-hidden bg-zinc-50 border border-zinc-200 group-hover:border-zinc-300 group-hover:shadow-lg transition-all duration-300 shadow-sm flex items-center justify-center flex-shrink-0">
-                  {category.image ? (
-                    <img
-                      src={category.image}
-                      alt={category.name}
-                      className="w-full h-full object-cover transition-transform duration-500"
-                      loading="lazy"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  ) : null}
-                  {!category.image && (
-                    <div className="text-zinc-400 text-center px-2">
-                      <span className="text-xs md:text-sm font-semibold">
-                        {category.name.split(" ")[0]}
-                      </span>
-                    </div>
-                  )}
-                </div>
+              {/* Icon — fixed px size per breakpoint via inline style */}
+              <div
+                className="relative rounded-xl lg:rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 group-hover:border-red-500 group-hover:shadow-md group-hover:shadow-red-500/20 group-hover:-translate-y-0.5 transition-all duration-200 mx-auto shrink-0"
+                style={{
+                  width: "clamp(48px, 5vw, 80px)",
+                  height: "clamp(48px, 5vw, 80px)",
+                }}
+              >
+                {category.image ? (
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                    }}
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{ width: "100%", height: "100%" }}
+                    className="flex items-center justify-center bg-zinc-800 group-hover:bg-zinc-700 transition-colors"
+                  >
+                    <span className="text-lg font-black text-zinc-500 group-hover:text-red-500 transition-colors">
+                      {category.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
 
-                {/* Category Name */}
-                <p className="text-xs md:text-sm font-semibold text-zinc-700 group-hover:text-zinc-900 transition-colors duration-200 line-clamp-2 text-center w-20 md:w-28 lg:w-32">
-                  {category.name}
-                </p>
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-red-600/0 group-hover:bg-red-600/10 transition-colors duration-200" />
               </div>
+
+              {/* Name */}
+              <p className="text-[10px] md:text-[11px] lg:text-xs font-semibold text-white group-hover:text-red-400 transition-colors duration-200 text-center leading-tight w-full line-clamp-1 px-1">
+                {category.name}
+              </p>
             </Link>
           ))}
         </div>
       </div>
 
       <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </section>
   );

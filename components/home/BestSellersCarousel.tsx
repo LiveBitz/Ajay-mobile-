@@ -3,9 +3,7 @@
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Heart, ShoppingBag } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, ChevronRight, Heart, ShoppingBag, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
@@ -29,12 +27,10 @@ interface BestSellersCarouselProps {
 }
 
 export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
-  if (!products || products.length === 0) return null;
-
   const [scrollPosition, setScrollPosition] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(products.length > 4);
+  const [canScrollRight, setCanScrollRight] = useState((products?.length ?? 0) > 3);
 
   const checkScroll = () => {
     if (carouselRef.current) {
@@ -47,76 +43,78 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
 
   const scroll = (direction: "left" | "right") => {
     if (carouselRef.current) {
-      const scrollAmount = 320;
+      const scrollAmount = 400;
       const newPosition =
         direction === "left"
           ? scrollPosition - scrollAmount
           : scrollPosition + scrollAmount;
-
-      carouselRef.current.scrollTo({
-        left: newPosition,
-        behavior: "smooth",
-      });
-
+      carouselRef.current.scrollTo({ left: newPosition, behavior: "smooth" });
       setTimeout(checkScroll, 300);
     }
   };
 
+  if (!products || products.length === 0) return null;
+
   return (
     <section className="py-12 md:py-16 lg:py-20 bg-white">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8 md:mb-10">
+
+        {/* Header Row */}
+        <div className="flex items-end justify-between mb-8 md:mb-10">
           <div>
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-zinc-900 mb-1.5 tracking-tight">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-5 h-0.5 bg-red-600 rounded-full" />
+              <span className="text-red-600 text-xs font-bold uppercase tracking-[0.18em]">
+                Trending Now
+              </span>
+            </div>
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-zinc-900 tracking-tight leading-tight">
               Best Selling Phones
             </h2>
-            <p className="text-sm md:text-base text-zinc-500 font-medium">
-              Shop the most loved devices this season
+            <p className="text-sm text-zinc-500 font-medium mt-1.5">
+              The most loved devices this season
             </p>
           </div>
 
-          {/* Desktop nav — clean, contained */}
-          <div className="hidden md:flex gap-2 items-center">
-            <Button
-              variant="outline"
-              size="icon"
+          {/* Desktop Nav */}
+          <div className="hidden md:flex gap-2">
+            <button
               onClick={() => scroll("left")}
               disabled={!canScrollLeft}
               className={cn(
-                "h-9 w-9 rounded-full border border-zinc-200 bg-white shadow-sm transition-all duration-200",
+                "h-11 w-11 rounded-full flex items-center justify-center border transition-all duration-200",
                 canScrollLeft
-                  ? "hover:shadow-md hover:border-zinc-300 text-zinc-700"
-                  : "text-zinc-300 opacity-40 cursor-not-allowed"
+                  ? "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white shadow-sm"
+                  : "border-zinc-200 bg-zinc-50 text-zinc-300 cursor-not-allowed"
               )}
             >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
               onClick={() => scroll("right")}
               disabled={!canScrollRight}
               className={cn(
-                "h-9 w-9 rounded-full border border-zinc-200 bg-white shadow-sm transition-all duration-200",
+                "h-11 w-11 rounded-full flex items-center justify-center border transition-all duration-200",
                 canScrollRight
-                  ? "hover:shadow-md hover:border-zinc-300 text-zinc-700"
-                  : "text-zinc-300 opacity-40 cursor-not-allowed"
+                  ? "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white shadow-sm"
+                  : "border-zinc-200 bg-zinc-50 text-zinc-300 cursor-not-allowed"
               )}
             >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+              <ChevronRight className="h-5 w-5" />
+            </button>
           </div>
         </div>
 
-        {/* Mobile nav — in flow */}
-        <div className="md:hidden flex items-center justify-end gap-2 mb-4">
+        {/* Mobile Nav */}
+        <div className="md:hidden flex justify-end gap-2 mb-4">
           <button
             onClick={() => scroll("left")}
             disabled={!canScrollLeft}
             className={cn(
-              "h-9 w-9 rounded-full border border-zinc-200 bg-white flex items-center justify-center shadow-sm transition-all duration-200",
-              canScrollLeft ? "text-zinc-700 hover:shadow-md" : "text-zinc-300 opacity-40 cursor-not-allowed"
+              "h-9 w-9 rounded-full border flex items-center justify-center transition-all duration-200",
+              canScrollLeft
+                ? "border-zinc-300 bg-white text-zinc-700"
+                : "border-zinc-200 bg-zinc-50 text-zinc-300 cursor-not-allowed opacity-50"
             )}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -125,8 +123,10 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
             onClick={() => scroll("right")}
             disabled={!canScrollRight}
             className={cn(
-              "h-9 w-9 rounded-full border border-zinc-200 bg-white flex items-center justify-center shadow-sm transition-all duration-200",
-              canScrollRight ? "text-zinc-700 hover:shadow-md" : "text-zinc-300 opacity-40 cursor-not-allowed"
+              "h-9 w-9 rounded-full border flex items-center justify-center transition-all duration-200",
+              canScrollRight
+                ? "border-zinc-300 bg-white text-zinc-700"
+                : "border-zinc-200 bg-zinc-50 text-zinc-300 cursor-not-allowed opacity-50"
             )}
           >
             <ChevronRight className="h-4 w-4" />
@@ -137,55 +137,48 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
         <div
           ref={carouselRef}
           onScroll={checkScroll}
-          className="flex gap-4 md:gap-5 lg:gap-6 overflow-x-auto scroll-smooth pb-2 scrollbar-hide"
-          style={{ scrollBehavior: "smooth" }}
+          className="flex gap-5 md:gap-6 overflow-x-auto pb-4 scrollbar-hide"
         >
-          {products.map((product) => (
-            <BestSellerCard key={product.id} product={product} />
+          {products.map((product, index) => (
+            <BestSellerCard key={product.id} product={product} index={index} />
           ))}
         </div>
       </div>
 
       <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </section>
   );
 }
 
-function BestSellerCard({ product }: { product: Product }) {
+function BestSellerCard({ product, index }: { product: Product; index: number }) {
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { toast } = useToast();
   const { addItem } = useCart();
 
-  const isOutOfStock = (product.stock || 0) <= 0;
+  const isOutOfStock = typeof product.stock === "number" && product.stock <= 0;
+  const wishlisted = isWishlisted(String(product.id));
+  const savings = product.originalPrice - product.price;
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsAddingToWishlist(true);
-
     try {
       await toggleWishlist(String(product.id));
-      const wishlisted = isWishlisted(String(product.id));
-
       toast({
-        title: wishlisted ? "Added to Wishlist" : "Removed from Wishlist",
+        title: wishlisted ? "Removed from Wishlist" : "Added to Wishlist",
         description: wishlisted
-          ? `${product.name} has been added to your wishlist`
-          : `${product.name} has been removed from your wishlist`,
+          ? `${product.name} removed from your wishlist`
+          : `${product.name} added to your wishlist`,
         duration: 2000,
       });
     } catch (error: any) {
-      const errorMsg = error.message || "Failed to update wishlist";
-      if (errorMsg.includes("login")) {
+      if (error?.message?.includes("login")) {
         toast({
           title: "Login Required",
           description: "Please login to add items to your wishlist",
@@ -201,33 +194,41 @@ function BestSellerCard({ product }: { product: Product }) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
+    setIsAddingToCart(true);
     try {
       addItem({
-        productId: product.id,
+        productId: String(product.id),
         name: product.name,
         price: product.price,
         image: product.image,
       });
-
       toast({
         title: "Added to Cart",
         description: `${product.name} has been added to your cart.`,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to add product to cart",
         variant: "destructive",
       });
+    } finally {
+      setTimeout(() => setIsAddingToCart(false), 700);
     }
   };
 
   return (
-    <Link href={`/product/${product.slug}`} className="flex-shrink-0 group">
-      <div className="bg-white rounded-2xl overflow-hidden border border-zinc-100 shadow-sm hover:shadow-lg transition-all duration-300 w-56 md:w-64 lg:w-72 flex flex-col h-full hover:-translate-y-1">
-        {/* Product Image */}
-        <div className="relative aspect-square overflow-hidden bg-zinc-50">
+    <Link
+      href={`/product/${product.slug}`}
+      className="flex-shrink-0 group w-[280px] md:w-[300px] lg:w-[320px]"
+    >
+      <div className="flex flex-col h-full rounded-2xl overflow-hidden bg-white border border-zinc-100 shadow-sm hover:shadow-xl hover:shadow-zinc-200/80 hover:-translate-y-1.5 transition-all duration-300">
+
+        {/* Image */}
+        <div
+          className="relative overflow-hidden bg-zinc-50"
+          style={{ paddingBottom: "95%" }}
+        >
           <Image
             src={product.image}
             alt={product.name}
@@ -237,60 +238,111 @@ function BestSellerCard({ product }: { product: Product }) {
             loading="lazy"
           />
 
+          {/* Hover gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
           {/* Discount Badge */}
-          {product.discount > 0 && (
-            <Badge className="absolute bottom-3 left-3 bg-brand text-white font-bold px-2 py-1 rounded-full shadow-sm z-10">
-              {product.discount}% OFF
-            </Badge>
+         {/* Discount Badge */}
+{product.discount > 0 && (
+  <div className="absolute top-3 left-3 z-10">
+    <div
+      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white font-black text-xs tracking-wide shadow-lg"
+      style={{
+        background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+        boxShadow: "0 2px 8px rgba(220, 38, 38, 0.45)",
+      }}
+    >
+      <Zap
+        size={10}
+        style={{ fill: "#fbbf24", stroke: "none" }}
+      />
+      <span>{product.discount}% OFF</span>
+    </div>
+  </div>
+)}
+
+          {/* Bestseller tag */}
+          {product.isBestSeller && !product.isNew && !product.discount && (
+            <div className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full uppercase tracking-wider">
+              🔥 Hot
+            </div>
           )}
 
-          {/* Wishlist Button */}
-          <button
-            onClick={handleWishlistClick}
-            disabled={isAddingToWishlist}
-            className="absolute top-3 right-3 p-2 rounded-full bg-white/95 backdrop-blur-sm shadow-md hover:bg-white hover:shadow-lg transition-all duration-300 z-10 disabled:opacity-50 active:scale-90"
-            aria-label={isWishlisted(String(product.id)) ? "Remove from wishlist" : "Add to wishlist"}
-          >
-            <Heart
-              className={cn(
-                "w-4 h-4 transition-all duration-300 ease-out",
-                isWishlisted(String(product.id))
-                  ? "fill-brand stroke-brand scale-110"
-                  : "stroke-zinc-400 scale-100 hover:stroke-zinc-600"
-              )}
-            />
-          </button>
+          {/* Wishlist */}
+         <button
+  onClick={handleWishlistClick}
+  disabled={isAddingToWishlist}
+  className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 disabled:opacity-50 bg-white/80 backdrop-blur-md hover:bg-white shadow-sm hover:shadow-md"
+  aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+>
+  <Heart
+    size={14}
+    strokeWidth={2}
+    style={{
+      fill: wishlisted ? "#ef4444" : "none",       // ✅ inline style — always works
+      stroke: wishlisted ? "#ef4444" : "#9f9f9f",  // ✅ bypasses Tailwind purge issues
+      transition: "all 0.3s ease",
+    }}
+  />
+</button>
+          {/* Out of stock overlay */}
+          {isOutOfStock && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center z-20">
+              <span className="text-zinc-700 text-xs font-bold uppercase tracking-widest border border-zinc-300 px-4 py-2 rounded-full bg-white shadow-sm">
+                Out of Stock
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Product Info */}
-        <div className="p-4 md:p-5 flex-1 flex flex-col justify-between space-y-3">
-          <div>
-            <h3 className="font-semibold text-zinc-900 text-sm md:text-base line-clamp-2 mb-2">
+        {/* Info */}
+        <div className="flex flex-col flex-1 p-5 gap-4">
+          <div className="flex-1 space-y-2">
+            <h3 className="font-semibold text-zinc-900 text-base leading-snug line-clamp-2 group-hover:text-red-600 transition-colors duration-200">
               {product.name}
             </h3>
+
             <div className="flex items-baseline gap-2 tabular-nums">
-              <span className="font-black text-lg text-zinc-900">
+              <span className="font-black text-xl text-zinc-900">
                 ₹{product.price.toLocaleString("en-IN")}
               </span>
-              <span className="text-xs text-zinc-400 line-through">
+              <span className="text-sm text-zinc-400 line-through">
                 ₹{product.originalPrice.toLocaleString("en-IN")}
               </span>
             </div>
+
+            {/* Savings pill */}
+            {savings > 0 && (
+              <div className="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
+                You save ₹{savings.toLocaleString("en-IN")}
+              </div>
+            )}
           </div>
 
           {/* Add to Cart */}
-          <Button
+          <button
             onClick={handleAddToCart}
-            disabled={isOutOfStock}
+            disabled={isOutOfStock || isAddingToCart}
             className={cn(
-              "w-full rounded-xl gap-2 h-10 font-semibold text-xs uppercase tracking-widest transition-all duration-200 bg-zinc-50 text-zinc-800 border border-zinc-200 hover:bg-zinc-100 hover:border-zinc-300",
-              isOutOfStock && "opacity-40 cursor-not-allowed"
+              "w-full flex items-center justify-center gap-2 h-11 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all duration-200",
+              isOutOfStock
+                ? "bg-zinc-50 border-zinc-200 text-zinc-400 cursor-not-allowed"
+                : isAddingToCart
+                ? "bg-red-600 border-red-600 text-white scale-[0.98]"
+                : "bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white hover:shadow-md"
             )}
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span className="hidden sm:inline">{isOutOfStock ? "Out of Stock" : "Add to Cart"}</span>
-            <span className="sm:hidden">{isOutOfStock ? "Out" : "Add"}</span>
-          </Button>
+            <ShoppingBag
+              className={cn("w-4 h-4", isAddingToCart && "animate-bounce")}
+            />
+            <span>
+              {isOutOfStock
+                ? "Out of Stock"
+                : isAddingToCart
+                ? "Adding..."
+                : "Add to Cart"}
+            </span>
+          </button>
         </div>
       </div>
     </Link>

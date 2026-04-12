@@ -57,10 +57,10 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
   }, [api, onSelect]);
 
   return (
-    <section className="w-full">
+    <section className="w-full bg-black">
       {/* Hero Carousel */}
       <div
-        className="w-full"
+        className="w-full overflow-hidden"
         onMouseEnter={() => pluginRef.current?.stop?.()}
         onMouseLeave={() => pluginRef.current?.reset?.()}
       >
@@ -70,19 +70,19 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
           className="w-full"
           opts={{ loop: true }}
         >
-          <CarouselContent className="w-full">
+          <CarouselContent className="m-0 w-full">
             {banners.map((slide) => (
-              <CarouselItem key={slide.id} className="w-full">
-                <Link href={(slide as any).link || "/"} className="block cursor-pointer w-full">
-                  <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
+              <CarouselItem key={slide.id} className="pl-0 basis-full w-full">
+                <Link href={(slide as any).link || "/"} className="block w-full h-full">
+                  <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden">
                     <Image
                       src={slide.image}
                       alt={slide.title}
                       fill
-                      className="object-cover transition-transform duration-700 hover:scale-105"
+                      className="object-cover transition-transform duration-700 hover:scale-105 w-full h-full"
                       priority
                       quality={90}
-                      sizes="100vw"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 100vw"
                     />
                   </div>
                 </Link>
