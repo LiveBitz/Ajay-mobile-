@@ -102,16 +102,18 @@ export function MobileFilterBar({
               )}
             </SheetHeader>
 
-            {/* Scrollable filter content */}
+            {/* Scrollable filter content - native CSS scroll */}
             <div className="flex-1 min-h-0 overflow-y-auto">
-              <FilterSidebar
-                filters={filters}
-                setFilters={setFilters}
-                clearAll={clearAll}
-                counts={counts}
-                slug={slug}
-                className="border-0 shadow-none rounded-none"
-              />
+              <div className="px-6 py-5 space-y-3 pb-24">
+                <FilterSidebar
+                  filters={filters}
+                  setFilters={setFilters}
+                  clearAll={clearAll}
+                  counts={counts}
+                  slug={slug}
+                  className="border-0 shadow-none rounded-none !h-auto !bg-transparent"
+                />
+              </div>
             </div>
 
             <SheetFooter className="p-4 border-t bg-white shrink-0 gap-2">
