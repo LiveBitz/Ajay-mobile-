@@ -58,7 +58,7 @@ export default async function Home() {
     <main className="flex flex-col w-full bg-white overflow-x-hidden">
 
       {/* ── 1. Featured Categories ── above fold, no delay */}
-      <Section className="mt-6 md:mt-8">
+      <Section>
         <FeaturedCategoriesSection />
       </Section>
 

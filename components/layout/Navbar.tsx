@@ -246,7 +246,7 @@ export function Navbar() {
       ref={navRef}
       suppressHydrationWarning
       style={{ borderBottomLeftRadius: "24px", borderBottomRightRadius: "24px" }}
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-white md:overflow-hidden border border-black ${
+      className={`relative w-full z-50 transition-all duration-300 bg-white md:overflow-hidden border border-black mb-8 md:mb-10 ${
         isScrolled
           ? "shadow-md shadow-black/5"
           : "shadow-sm"
@@ -256,7 +256,7 @@ export function Navbar() {
       {/* ══════════════════════════════════════════
           MOBILE LAYOUT  (md:hidden)
 ══════════════════════════════════════════ */}
-      <div className="md:hidden relative" suppressHydrationWarning style={{ paddingBottom: "calc(50px + 0.75rem)" }}>
+      <div className="md:hidden relative" suppressHydrationWarning style={{ paddingBottom: "40px" }}>
 
         {/* ── Row 1: Logo · Icons · Menu ── */}
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
