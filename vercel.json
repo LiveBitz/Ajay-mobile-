@@ -1,16 +1,21 @@
 {
-  "crons": [],
+  "buildCommand": "npm run build",
+  "devCommand": "next dev -p $PORT",
+  "installCommand": "npm ci",
   "functions": {
     "app/**": {
       "maxDuration": 60
     }
   },
-  "buildCommand": "npm run build",
-  "devCommand": "next dev -p $PORT",
-  "installCommand": "npm ci",
-  "env": [
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    "DATABASE_URL"
-  ]
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": {
+      "required": false
+    },
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
+      "required": false
+    },
+    "DATABASE_URL": {
+      "required": false
+    }
+  }
 }
