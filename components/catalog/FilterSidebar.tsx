@@ -4,8 +4,6 @@ import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Filters } from "@/hooks/useProductFilter";
@@ -22,33 +20,51 @@ interface FilterSidebarProps {
   };
   className?: string;
   slug?: string;
+  hideHeader?: boolean; // ← NEW: mobile sheet passes true
 }
 
-const sizeOrder = ["One Size", "50ml", "100ml", "32", "34", "36", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL", "6XL"];
+const sizeOrder = [
+  "One Size", "50ml", "100ml", "32", "34", "36",
+  "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL", "6XL",
+];
 
 const colorMap: Record<string, { hex: string; border?: string }> = {
-  "White": { hex: "#FFFFFF", border: "border-zinc-200" },
-  "Black": { hex: "#000000" },
-  "Navy": { hex: "#000080" },
-  "Grey": { hex: "#808080" },
-  "Red": { hex: "#FF0000" },
-  "Green": { hex: "#008000" },
-  "Yellow": { hex: "#FFFF00" },
-  "Pink": { hex: "#FFC0CB" },
-  "Brown": { hex: "#A52A2A" },
-  "Beige": { hex: "#F5F5DC", border: "border-zinc-100" },
-  "Blue": { hex: "#0000FF" },
-  "Purple": { hex: "#800080" },
-  "Orange": { hex: "#FFA500" },
-  "Lavender": { hex: "#E6E6FA" },
-  "Maroon": { hex: "#800000" },
-  "Olive": { hex: "#808000" },
-  "Teal": { hex: "#008080" },
+  White:    { hex: "#FFFFFF", border: "border-zinc-300" },
+  Black:    { hex: "#000000" },
+  Navy:     { hex: "#000080" },
+  Grey:     { hex: "#808080" },
+  Gray:     { hex: "#808080" },
+  Silver:   { hex: "#C0C0C0", border: "border-zinc-300" },
+  Red:      { hex: "#FF0000" },
+  Green:    { hex: "#008000" },
+  Yellow:   { hex: "#FFFF00", border: "border-yellow-200" },
+  Pink:     { hex: "#FFC0CB" },
+  Brown:    { hex: "#A52A2A" },
+  Beige:    { hex: "#F5F5DC", border: "border-zinc-200" },
+  Blue:     { hex: "#2563EB" },
+  Purple:   { hex: "#800080" },
+  Orange:   { hex: "#FFA500" },
+  Lavender: { hex: "#E6E6FA", border: "border-zinc-200" },
+  Maroon:   { hex: "#800000" },
+  Olive:    { hex: "#808000" },
+  Teal:     { hex: "#008080" },
+  Charcoal: { hex: "#36454F" },
+  Mint:     { hex: "#98FF98", border: "border-green-200" },
+  Gold:     { hex: "#FFD700", border: "border-yellow-300" },
+  Lake:     { hex: "#4A7C9E" },
 };
 
 const discounts = [10, 20, 30, 40, 50];
 
-export function FilterSidebar({ filters, setFilters, clearAll, counts, className, slug }: FilterSidebarProps) {
+export function FilterSidebar({
+  filters,
+  setFilters,
+  clearAll,
+  counts,
+  className,
+  slug,
+  hideHeader = false,
+}: FilterSidebarProps) {
   const [expanded, setExpanded] = React.useState<Record<string, boolean>>({
     price: true,
     size: true,
@@ -58,37 +74,26 @@ export function FilterSidebar({ filters, setFilters, clearAll, counts, className
   });
 
   const isPerfume = slug === "perfumes";
-  const isWatch = slug === "watches";
-  const isAccessory = slug === "accessories";
-  const isMen = slug === "men";
+  const isWatch   = slug === "watches";
 
-  const availableSizes = React.useMemo(() => {
-    return Object.keys(counts.sizes).sort((a, b) => {
-      const indexA = sizeOrder.indexOf(a);
-      const indexB = sizeOrder.indexOf(b);
-      if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-      if (indexA === -1) return 1;
-      if (indexB === -1) return -1;
-      return indexA - indexB;
-    });
-  }, [counts.sizes]);
+  const availableSizes = React.useMemo(() =>
+    Object.keys(counts.sizes).sort((a, b) => {
+      const ia = sizeOrder.indexOf(a), ib = sizeOrder.indexOf(b);
+      if (ia === -1 && ib === -1) return a.localeCompare(b);
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    }), [counts.sizes]);
 
-  const availableColors = React.useMemo(() => {
-    return Object.keys(counts.colors);
-  }, [counts.colors]);
+  const availableColors       = React.useMemo(() => Object.keys(counts.colors), [counts.colors]);
+  const availableSubCategories = React.useMemo(() => Object.keys(counts.subCategories).sort(), [counts.subCategories]);
 
-  const availableSubCategories = React.useMemo(() => {
-    return Object.keys(counts.subCategories).sort();
-  }, [counts.subCategories]);
-
-  // Logic for showing sections
-  const showSize = availableSizes.length > 0;
-  const showColor = availableColors.length > 0;
+  const showSize        = availableSizes.length > 0;
+  const showColor       = availableColors.length > 0;
   const showSubCategory = availableSubCategories.length > 0;
 
-  const toggleExpanded = (key: string) => {
+  const toggleExpanded = (key: string) =>
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
 
   const toggleArrayFilter = (key: "sizes" | "colors" | "subCategories", value: string) => {
     const current = filters[key];
@@ -105,231 +110,270 @@ export function FilterSidebar({ filters, setFilters, clearAll, counts, className
     return `${selected.length} selected`;
   };
 
-  return (
-    <div className={cn("flex flex-col h-full bg-white rounded-lg border border-zinc-200 overflow-hidden", className)}>
-      <div className="p-5 border-b border-zinc-200 flex items-center justify-between sticky top-0 bg-white z-10">
-        <h3 className="font-bold text-base tracking-tight text-zinc-900">Filters</h3>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={clearAll}
-          className="text-xs font-semibold text-brand hover:text-brand/80 hover:bg-transparent p-0 h-auto"
-        >
-          Clear
-        </Button>
-      </div>
+  // ─── Shared sub-components ───────────────────────────────────────────────
 
-      <ScrollArea className="flex-1 min-h-0">
-        <div className="p-5 space-y-3 pr-4 pb-8 lg:pb-2">
-          {/* Price Range */}
-          <section className="space-y-3 py-4 border-b border-zinc-100">
-            <button 
-              onClick={() => toggleExpanded("price")}
-              className="flex items-center justify-between w-full group"
-            >
-              <h4 className="text-sm font-semibold text-zinc-900">Price Range</h4>
-              <div className="flex items-center gap-2">
-                {!expanded.price && <span className="text-xs font-medium text-brand">₹{filters.priceRange[0]}-₹{filters.priceRange[1]}</span>}
-                <ChevronDown className={cn("w-4 h-4 transition-transform text-zinc-400 group-hover:text-zinc-700", expanded.price ? "rotate-180" : "")} />
-              </div>
-            </button>
-            
-            {expanded.price && (
-              <div className="space-y-4 pt-2">
-                <Slider
-                  value={filters.priceRange}
-                  min={0}
-                  max={(counts as any).maxPrice || 10000}
-                  step={100}
-                  onValueChange={(val) => setFilters({ ...filters, priceRange: val as [number, number] })}
-                  className="py-4"
-                />
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs text-zinc-500 font-medium">Min</span>
-                    <div className="border border-zinc-200 rounded-lg p-2 text-sm font-semibold text-zinc-900">₹{filters.priceRange[0]}</div>
-                  </div>
-                  <div className="flex-1 min-w-0 text-right">
-                    <span className="text-xs text-zinc-500 font-medium">Max</span>
-                    <div className="border border-zinc-200 rounded-lg p-2 text-sm font-semibold text-zinc-900">₹{filters.priceRange[1]}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* Sizes / Volume */}
-          {showSize && (
-            <section className="space-y-3 py-4 border-b border-zinc-100">
-                <button 
-                  onClick={() => toggleExpanded("size")}
-                  className="flex items-center justify-between w-full group"
-                >
-                  <h4 className="text-sm font-semibold text-zinc-900">
-                    {isPerfume ? "Volume" : "Size"}
-                  </h4>
-                  <div className="flex items-center gap-2">
-                    {!expanded.size && <span className="text-xs font-medium text-brand">{getSelectionSummary("sizes")}</span>}
-                    <ChevronDown className={cn("w-4 h-4 transition-transform text-zinc-400 group-hover:text-zinc-700", expanded.size ? "rotate-180" : "")} />
-                  </div>
-                </button>
-                
-                {expanded.size && (
-                  <div className="grid grid-cols-2 gap-2 pt-2 text-sm">
-                    {availableSizes.map((size) => {
-                      const count = counts.sizes[size] || 0;
-                      // Hide sizes with 0 available units (unless currently selected for display)
-                      if (count === 0) return null;
-                      return (
-                        <div 
-                          key={size} 
-                          className="flex items-center space-x-2 group cursor-pointer"
-                        >
-                          <Checkbox 
-                            id={`size-${size}`} 
-                            checked={filters.sizes.includes(size)}
-                            onCheckedChange={() => toggleArrayFilter("sizes", size)}
-                            className="data-[state=checked]:bg-brand data-[state=checked]:border-brand"
-                          />
-                          <label htmlFor={`size-${size}`} className="font-medium text-zinc-700 cursor-pointer group-hover:text-brand transition-colors flex-1 flex items-center justify-between">
-                            {size}
-                            <span className="text-xs text-zinc-400 ml-1">({count} units)</span>
-                          </label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-          )}
-
-          {/* Colors */}
-          {showColor && (
-            <section className="space-y-3 py-4 border-b border-zinc-100">
-                <button 
-                  onClick={() => toggleExpanded("color")}
-                  className="flex items-center justify-between w-full group"
-                >
-                  <h4 className="text-sm font-semibold text-zinc-900">Color</h4>
-                  <div className="flex items-center gap-2">
-                    {!expanded.color && <span className="text-xs font-medium text-brand">{getSelectionSummary("colors")}</span>}
-                    <ChevronDown className={cn("w-4 h-4 transition-transform text-zinc-400 group-hover:text-zinc-700", expanded.color ? "rotate-180" : "")} />
-                  </div>
-                </button>
-                
-                {expanded.color && (
-                  <div className="flex flex-wrap gap-3 pt-2">
-                    {availableColors.map((colorName) => {
-                      const count = counts.colors[colorName] || 0;
-                      const colorInfo = colorMap[colorName] || { hex: colorName.toLowerCase() }; // Try CSS color name or hex
-                      const isDisabled = count === 0 && !filters.colors.includes(colorName);
-                      
-                      return (
-                        <div key={colorName} className="flex flex-col items-center gap-2">
-                          <button
-                            onClick={() => !isDisabled && toggleArrayFilter("colors", colorName)}
-                            title={`${colorName} (${count})`}
-                            disabled={isDisabled}
-                            className={cn(
-                              "w-10 h-10 rounded-lg border transition-all relative flex items-center justify-center overflow-hidden",
-                              colorInfo.border || "border-zinc-200",
-                              filters.colors.includes(colorName) ? "ring-2 ring-brand ring-offset-2" : "hover:border-brand/50",
-                              isDisabled ? "opacity-20 grayscale cursor-not-allowed" : "opacity-100"
-                            )}
-                            style={{ backgroundColor: colorInfo.hex }}
-                          >
-                            {filters.colors.includes(colorName) && (
-                              <Check className={cn("w-4 h-4", ["White", "Yellow", "Beige"].includes(colorName) ? "text-zinc-900" : "text-white")} />
-                            )}
-                          </button>
-                          <span className="text-[9px] font-medium text-zinc-400 truncate max-w-[48px]">
-                            {colorName}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-          )}
-
-          {/* Discount */}
-          <section className="space-y-3 py-4 border-b border-zinc-100">
-            <button 
-              onClick={() => toggleExpanded("discount")}
-              className="flex items-center justify-between w-full group"
-            >
-              <h4 className="text-sm font-semibold text-zinc-900">Discount</h4>
-              <div className="flex items-center gap-2">
-                {!expanded.discount && filters.discount > 0 && <span className="text-xs font-medium text-brand">{filters.discount}%+</span>}
-                <ChevronDown className={cn("w-4 h-4 transition-transform text-zinc-400 group-hover:text-zinc-700", expanded.discount ? "rotate-180" : "")} />
-              </div>
-            </button>
-            
-            {expanded.discount && (
-              <div className="space-y-2 pt-2">
-                {discounts.map((discount) => (
-                  <div key={discount} className="flex items-center space-x-2 cursor-pointer group">
-                    <Checkbox 
-                      id={`discount-${discount}`} 
-                      checked={filters.discount === discount}
-                      onCheckedChange={() => setFilters({ ...filters, discount: filters.discount === discount ? 0 : discount })}
-                      className="data-[state=checked]:bg-brand data-[state=checked]:border-brand"
-                    />
-                    <label htmlFor={`discount-${discount}`} className="font-medium text-zinc-700 cursor-pointer group-hover:text-brand transition-colors text-sm">
-                      {discount}% and above
-                    </label>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Categories / Watch Type */}
-          {showSubCategory && (
-            <section className="space-y-3 py-4 pb-8">
-              <button 
-                onClick={() => toggleExpanded("category")}
-                className="flex items-center justify-between w-full group"
-              >
-                <h4 className="text-sm font-semibold text-zinc-900">
-                  {isWatch ? "Watch Type" : (isPerfume ? "Fragrance Type" : "Category")}
-                </h4>
-                <div className="flex items-center gap-2">
-                  {!expanded.category && <span className="text-xs font-medium text-brand">{getSelectionSummary("subCategories")}</span>}
-                  <ChevronDown className={cn("w-4 h-4 transition-transform text-zinc-400 group-hover:text-zinc-700", expanded.category ? "rotate-180" : "")} />
-                </div>
-              </button>
-              
-              {expanded.category && (
-                <div className="space-y-2 pt-2">
-                  {availableSubCategories
-                  .map((sub) => {
-                    const count = counts.subCategories[sub] || 0;
-                    return (
-                      <div 
-                        key={sub} 
-                        className="flex items-center space-x-2 cursor-pointer group"
-                      >
-                        <Checkbox 
-                          id={`sub-${sub}`} 
-                          checked={filters.subCategories.includes(sub)}
-                          onCheckedChange={() => toggleArrayFilter("subCategories", sub)}
-                          className="data-[state=checked]:bg-brand data-[state=checked]:border-brand"
-                        />
-                        <label htmlFor={`sub-${sub}`} className="font-medium text-zinc-700 cursor-pointer group-hover:text-brand transition-colors text-sm flex-1 flex items-center justify-between">
-                          {sub}
-                          <span className="text-xs text-zinc-400 ml-1">({count})</span>
-                        </label>
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
-          </section>
+  const SectionHeader = ({
+    label,
+    sectionKey,
+    badge,
+  }: {
+    label: string;
+    sectionKey: string;
+    badge?: string | null;
+  }) => (
+    <button
+      onClick={() => toggleExpanded(sectionKey)}
+      className="flex items-center justify-between w-full py-1 group"
+    >
+      <span className="text-[13px] font-semibold text-zinc-800 tracking-wide uppercase">
+        {label}
+      </span>
+      <div className="flex items-center gap-2">
+        {!expanded[sectionKey] && badge && (
+          <span className="text-[11px] font-semibold text-brand">{badge}</span>
         )}
+        <ChevronDown
+          className={cn(
+            "w-4 h-4 text-zinc-400 transition-transform duration-200 group-hover:text-zinc-700",
+            expanded[sectionKey] && "rotate-180"
+          )}
+        />
       </div>
-    </ScrollArea>
+    </button>
+  );
+
+  const Section = ({ children }: { children: React.ReactNode }) => (
+    <div className="py-4 border-b border-zinc-100 last:border-0">{children}</div>
+  );
+
+  // ─── Main render ─────────────────────────────────────────────────────────
+
+  return (
+    <div className={cn("flex flex-col bg-white", className)}>
+
+      {/*
+        Desktop-only internal header.
+        On mobile the MobileFilterBar's SheetHeader is used instead.
+      */}
+      {!hideHeader && (
+        <div className="px-5 py-4 border-b border-zinc-100 flex items-center justify-between sticky top-0 bg-white z-10">
+          <h3 className="font-bold text-sm tracking-tight text-zinc-900">Filters</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearAll}
+            className="text-xs font-semibold text-brand hover:text-brand/80 hover:bg-transparent p-0 h-auto"
+          >
+            Clear
+          </Button>
+        </div>
+      )}
+
+      {/*
+        No ScrollArea here — the parent controls scrolling.
+        On desktop: FilterSidebar is inside a scrollable sidebar column.
+        On mobile:  MobileFilterBar's sheet body is overflow-y-auto.
+      */}
+      <div className="px-5 py-2 space-y-1">
+
+        {/* ── Price Range ─────────────────────────────────────── */}
+        <Section>
+          <SectionHeader
+            label="Price Range"
+            sectionKey="price"
+            badge={`₹${filters.priceRange[0]}–₹${filters.priceRange[1]}`}
+          />
+          {expanded.price && (
+            <div className="mt-4 space-y-4">
+              <Slider
+                value={filters.priceRange}
+                min={0}
+                max={counts.maxPrice ?? 10000}
+                step={100}
+                onValueChange={(val) =>
+                  setFilters({ ...filters, priceRange: val as [number, number] })
+                }
+                className="py-1"
+              />
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <p className="text-[10px] font-medium text-zinc-400 mb-1 uppercase tracking-wide">Min</p>
+                  <div className="border border-zinc-200 rounded-lg px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50">
+                    ₹{filters.priceRange[0].toLocaleString("en-IN")}
+                  </div>
+                </div>
+                <div className="mt-4 w-3 h-px bg-zinc-300 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-[10px] font-medium text-zinc-400 mb-1 uppercase tracking-wide text-right">Max</p>
+                  <div className="border border-zinc-200 rounded-lg px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50 text-right">
+                    ₹{filters.priceRange[1].toLocaleString("en-IN")}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </Section>
+
+        {/* ── Size / Volume ───────────────────────────────────── */}
+        {showSize && (
+          <Section>
+            <SectionHeader
+              label={isPerfume ? "Volume" : "Size"}
+              sectionKey="size"
+              badge={getSelectionSummary("sizes")}
+            />
+            {expanded.size && (
+              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5">
+                {availableSizes.map((size) => {
+                  const count = counts.sizes[size] ?? 0;
+                  if (count === 0) return null;
+                  const checked = filters.sizes.includes(size);
+                  return (
+                    <label
+                      key={size}
+                      className="flex items-center gap-2.5 cursor-pointer group"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() => toggleArrayFilter("sizes", size)}
+                        className="data-[state=checked]:bg-zinc-900 data-[state=checked]:border-zinc-900 rounded-[4px]"
+                      />
+                      <span className={cn(
+                        "text-[13px] font-medium flex-1 flex items-center justify-between transition-colors",
+                        checked ? "text-zinc-900" : "text-zinc-600 group-hover:text-zinc-900"
+                      )}>
+                        {size}
+                        <span className="text-[11px] text-zinc-400 font-normal">{count}</span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </Section>
+        )}
+
+        {/* ── Color ───────────────────────────────────────────── */}
+        {showColor && (
+          <Section>
+            <SectionHeader
+              label="Color"
+              sectionKey="color"
+              badge={getSelectionSummary("colors")}
+            />
+            {expanded.color && (
+              <div className="mt-3 flex flex-wrap gap-3">
+                {availableColors.map((colorName) => {
+                  const count   = counts.colors[colorName] ?? 0;
+                  const info    = colorMap[colorName] ?? { hex: colorName.toLowerCase() };
+                  const checked = filters.colors.includes(colorName);
+                  const disabled = count === 0 && !checked;
+                  const isLight = ["White", "Yellow", "Beige", "Lavender", "Mint", "Silver", "Gold"].includes(colorName);
+
+                  return (
+                    <div key={colorName} className="flex flex-col items-center gap-1.5">
+                      <button
+                        onClick={() => !disabled && toggleArrayFilter("colors", colorName)}
+                        disabled={disabled}
+                        title={`${colorName} (${count})`}
+                        className={cn(
+                          "w-9 h-9 rounded-[10px] border-[1.5px] transition-all duration-150 relative flex items-center justify-center",
+                          info.border ?? "border-zinc-200",
+                          checked
+                            ? "ring-2 ring-offset-2 ring-zinc-900 border-transparent"
+                            : "hover:scale-105",
+                          disabled && "opacity-25 grayscale cursor-not-allowed"
+                        )}
+                        style={{ backgroundColor: info.hex }}
+                      >
+                        {checked && (
+                          <Check
+                            className={cn("w-3.5 h-3.5 stroke-[2.5]", isLight ? "text-zinc-800" : "text-white")}
+                          />
+                        )}
+                      </button>
+                      <span className="text-[9px] font-medium text-zinc-400 truncate max-w-[40px] text-center leading-tight">
+                        {colorName}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Section>
+        )}
+
+        {/* ── Discount ────────────────────────────────────────── */}
+        <Section>
+          <SectionHeader
+            label="Discount"
+            sectionKey="discount"
+            badge={filters.discount > 0 ? `${filters.discount}%+` : null}
+          />
+          {expanded.discount && (
+            <div className="mt-3 space-y-2.5">
+              {discounts.map((d) => {
+                const checked = filters.discount === d;
+                return (
+                  <label key={d} className="flex items-center gap-2.5 cursor-pointer group">
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={() =>
+                        setFilters({ ...filters, discount: checked ? 0 : d })
+                      }
+                      className="data-[state=checked]:bg-zinc-900 data-[state=checked]:border-zinc-900 rounded-[4px]"
+                    />
+                    <span className={cn(
+                      "text-[13px] font-medium transition-colors",
+                      checked ? "text-zinc-900" : "text-zinc-600 group-hover:text-zinc-900"
+                    )}>
+                      {d}% and above
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </Section>
+
+        {/* ── Category / Watch Type / Fragrance Type ──────────── */}
+        {showSubCategory && (
+          <Section>
+            <SectionHeader
+              label={isWatch ? "Watch Type" : isPerfume ? "Fragrance" : "Category"}
+              sectionKey="category"
+              badge={getSelectionSummary("subCategories")}
+            />
+            {expanded.category && (
+              <div className="mt-3 space-y-2.5">
+                {availableSubCategories.map((sub) => {
+                  const count   = counts.subCategories[sub] ?? 0;
+                  const checked = filters.subCategories.includes(sub);
+                  return (
+                    <label key={sub} className="flex items-center gap-2.5 cursor-pointer group">
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() => toggleArrayFilter("subCategories", sub)}
+                        className="data-[state=checked]:bg-zinc-900 data-[state=checked]:border-zinc-900 rounded-[4px]"
+                      />
+                      <span className={cn(
+                        "text-[13px] font-medium flex-1 flex items-center justify-between transition-colors",
+                        checked ? "text-zinc-900" : "text-zinc-600 group-hover:text-zinc-900"
+                      )}>
+                        {sub}
+                        <span className="text-[11px] text-zinc-400 font-normal">({count})</span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </Section>
+        )}
+
+        {/* Bottom breathing room */}
+        <div className="h-4" />
+      </div>
     </div>
   );
 }

@@ -52,7 +52,6 @@ export function MobileFilterBar({
 }: MobileFilterBarProps) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
-  const currentSort = sortOptions.find((o) => o.value === sortBy);
 
   const handleSortSelect = (value: string) => {
     setSortBy(value);
@@ -60,34 +59,53 @@ export function MobileFilterBar({
   };
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t bg-white/95 backdrop-blur-sm">
-      <div className="container mx-auto px-4 py-3 flex gap-2 items-center">
-        {/* Filter Button */}
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-200 bg-white/95 backdrop-blur-sm safe-area-pb">
+      <div className="flex gap-2 items-center px-4 py-3">
+
+        {/* ── FILTER SHEET ── */}
         <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
           <SheetTrigger asChild>
             <Button
               className={cn(
-                "flex-1 h-11 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2",
+                "flex-1 h-11 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2",
                 activeFilterCount > 0
-                  ? "bg-black text-white hover:bg-zinc-900"
-                  : "bg-zinc-100 text-black hover:bg-zinc-200"
+                  ? "bg-black text-white hover:bg-zinc-800"
+                  : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
               )}
             >
-              <SlidersHorizontal className="w-4 h-4" />
+              <SlidersHorizontal className="w-4 h-4 shrink-0" />
               <span>Filters</span>
               {activeFilterCount > 0 && (
-                <span className="ml-auto bg-red-500 text-white rounded-full px-2 py-0.5 text-xs font-bold">
+                <span className="ml-1 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs font-bold leading-none">
                   {activeFilterCount}
                 </span>
               )}
             </Button>
           </SheetTrigger>
+
+          {/*
+            Key fix: SheetContent must be a flex column with a fixed max height.
+            - The header and footer are shrink-0 (never compress).
+            - The middle scroll area is flex-1 with overflow-y-auto.
+            - No padding-bottom tricks needed — footer is always visible.
+          */}
           <SheetContent
             side="bottom"
-            className="h-[90dvh] rounded-t-3xl p-0 flex flex-col overflow-hidden border-none bg-white"
+            className={cn(
+              // Fixed height: use dvh so it accounts for mobile browser chrome
+              "h-[92dvh] max-h-[92dvh]",
+              // Rounded top corners, no default border
+              "rounded-t-2xl border-none",
+              // Flex column — children stack vertically and fill height
+              "flex flex-col",
+              // Remove default SheetContent padding so we control it per-section
+              "p-0",
+              "bg-white"
+            )}
           >
-            <SheetHeader className="p-6 pb-3 border-b shrink-0 bg-white flex flex-row items-center justify-between space-y-0">
-              <SheetTitle className="text-lg font-bold tracking-tight text-zinc-900">
+            {/* ── HEADER — never scrolls ── */}
+            <SheetHeader className="shrink-0 flex flex-row items-center justify-between space-y-0 px-5 py-4 border-b border-zinc-100">
+              <SheetTitle className="text-base font-bold tracking-tight text-zinc-900">
                 Filters
               </SheetTitle>
               {activeFilterCount > 0 && (
@@ -95,179 +113,97 @@ export function MobileFilterBar({
                   variant="ghost"
                   size="sm"
                   onClick={clearAll}
-                  className="text-xs font-semibold text-brand hover:text-brand/80 hover:bg-brand/5 p-2 h-auto rounded-lg"
+                  className="text-xs font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 h-8 px-3 rounded-lg"
                 >
                   Clear All
                 </Button>
               )}
             </SheetHeader>
 
-            {/* Scrollable filter content - use native scroll without nested ScrollArea */}
-            <div className="flex-1 overflow-y-scroll overscroll-contain">
-              <div className="px-6 py-5 pb-32 space-y-4">
-                {/* Price Range */}
-                <section className="space-y-3 pb-4 border-b border-zinc-100">
-                  <button 
-                    onClick={() => {}}
-                    className="flex items-center justify-between w-full"
-                  >
-                    <h4 className="text-sm font-bold text-zinc-900">Price Range</h4>
-                    <span className="text-xs font-medium text-brand">₹{filters.priceRange[0]}-₹{filters.priceRange[1]}</span>
-                  </button>
-                </section>
-
-                {/* Sizes */}
-                <section className="space-y-3 pb-4 border-b border-zinc-100">
-                  <h4 className="text-sm font-bold text-zinc-900">Size</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    {Object.entries(counts.sizes).map(([size, count]) => (
-                      <label key={size} className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          checked={filters.sizes.includes(size)}
-                          onChange={() => {
-                            const updated = filters.sizes.includes(size)
-                              ? filters.sizes.filter(s => s !== size)
-                              : [...filters.sizes, size];
-                            setFilters({ ...filters, sizes: updated });
-                          }}
-                          className="w-4 h-4 rounded border-zinc-300"
-                        />
-                        <div className="flex-1 text-sm">
-                          <div className="font-medium text-zinc-900">{size}</div>
-                          <div className="text-xs text-zinc-500">({count} units)</div>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </section>
-
-                {/* Colors */}
-                <section className="space-y-3 pb-4 border-b border-zinc-100">
-                  <h4 className="text-sm font-bold text-zinc-900">Color</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.keys(counts.colors).map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => {
-                          const updated = filters.colors.includes(color)
-                            ? filters.colors.filter(c => c !== color)
-                            : [...filters.colors, color];
-                          setFilters({ ...filters, colors: updated });
-                        }}
-                        className={`w-10 h-10 rounded-lg border-2 transition-all ${
-                          filters.colors.includes(color)
-                            ? 'border-brand ring-2 ring-brand ring-offset-2'
-                            : 'border-zinc-200'
-                        }`}
-                        title={color}
-                      />
-                    ))}
-                  </div>
-                </section>
-
-                {/* Discount */}
-                <section className="space-y-3 pb-4 border-b border-zinc-100">
-                  <h4 className="text-sm font-bold text-zinc-900">Discount</h4>
-                  <div className="space-y-2">
-                    {[10, 20, 30, 40, 50].map((discount) => (
-                      <label key={discount} className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="radio" 
-                          name="discount"
-                          checked={filters.discount === discount}
-                          onChange={() => setFilters({ ...filters, discount })}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm font-medium text-zinc-900">{discount}% and above</span>
-                      </label>
-                    ))}
-                  </div>
-                </section>
-
-                {/* Categories */}
-                <section className="space-y-3 pb-4">
-                  <h4 className="text-sm font-bold text-zinc-900">Category</h4>
-                  <div className="space-y-2">
-                    {Object.entries(counts.subCategories).map(([category, count]) => (
-                      <label key={category} className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          checked={filters.subCategories.includes(category)}
-                          onChange={() => {
-                            const updated = filters.subCategories.includes(category)
-                              ? filters.subCategories.filter(c => c !== category)
-                              : [...filters.subCategories, category];
-                            setFilters({ ...filters, subCategories: updated });
-                          }}
-                          className="w-4 h-4 rounded border-zinc-300"
-                        />
-                        <div className="flex-1 flex items-center justify-between">
-                          <span className="text-sm font-medium text-zinc-900">{category}</span>
-                          <span className="text-xs text-zinc-500">({count})</span>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </section>
+            {/*
+              ── SCROLLABLE BODY ──
+              flex-1       → takes all remaining height between header & footer
+              min-h-0      → critical! without this, flex children won't shrink
+              overflow-y-auto → enables scroll
+            */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+              <div className="px-5 py-4">
+                <FilterSidebar
+                  filters={filters}
+                  setFilters={setFilters}
+                  clearAll={clearAll}
+                  counts={counts}
+                  slug={slug}
+                  className="border-0 shadow-none rounded-none bg-transparent"
+                />
               </div>
             </div>
 
-            <SheetFooter className="p-4 border-t bg-white shrink-0 gap-2">
+            {/* ── FOOTER — never scrolls ── */}
+            <div className="shrink-0 flex gap-3 px-4 py-3 border-t border-zinc-100 bg-white">
               <Button
                 variant="outline"
-                className="flex-1 h-11 rounded-lg border-zinc-200 text-zinc-900 font-semibold hover:bg-zinc-50"
+                className="flex-1 h-11 rounded-xl border-zinc-200 text-zinc-800 font-semibold hover:bg-zinc-50 active:scale-[0.97] transition-transform"
                 onClick={() => setFilterOpen(false)}
               >
                 Cancel
               </Button>
               <Button
-                className="flex-1 h-11 rounded-lg bg-black hover:bg-zinc-900 text-white font-semibold transition-all active:scale-[0.98]"
+                className="flex-1 h-11 rounded-xl bg-black hover:bg-zinc-800 text-white font-semibold active:scale-[0.97] transition-transform"
                 onClick={() => setFilterOpen(false)}
               >
                 Show {productCount} Results
               </Button>
-            </SheetFooter>
+            </div>
           </SheetContent>
         </Sheet>
 
-        {/* Sort Button */}
+        {/* ── SORT SHEET ── */}
         <Sheet open={sortOpen} onOpenChange={setSortOpen}>
           <SheetTrigger asChild>
             <Button
-              className="flex-1 h-11 rounded-lg font-medium text-sm transition-all bg-zinc-100 text-black hover:bg-zinc-200 flex items-center justify-center gap-2"
+              className="flex-1 h-11 rounded-xl font-semibold text-sm bg-zinc-100 text-zinc-900 hover:bg-zinc-200 flex items-center justify-center gap-2 transition-all"
             >
-              <ArrowUpDown className="w-4 h-4" />
-              <span className="hidden xs:inline">Sort</span>
+              <ArrowUpDown className="w-4 h-4 shrink-0" />
+              <span>Sort</span>
+              {sortBy !== "relevance" && (
+                <span className="ml-1 w-2 h-2 rounded-full bg-black shrink-0" />
+              )}
             </Button>
           </SheetTrigger>
+
           <SheetContent
             side="bottom"
-            className="rounded-t-3xl p-0 bg-white border-none"
+            className="rounded-t-2xl border-none p-0 bg-white flex flex-col"
           >
-            <SheetHeader className="px-6 pt-6 pb-3 border-b border-zinc-200">
-              <SheetTitle className="text-lg font-bold text-zinc-900">
-                Sort Products
+            <SheetHeader className="shrink-0 px-5 py-4 border-b border-zinc-100">
+              <SheetTitle className="text-base font-bold text-zinc-900">
+                Sort By
               </SheetTitle>
             </SheetHeader>
-            <div className="py-4 space-y-2 max-h-[60vh] overflow-y-auto px-6">
+
+            <div className="overflow-y-auto overscroll-contain px-4 py-3 space-y-2">
               {sortOptions.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => handleSortSelect(option.value)}
                   className={cn(
-                    "w-full text-left px-4 py-3 rounded-lg font-medium transition-colors",
+                    "w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors",
                     sortBy === option.value
                       ? "bg-black text-white"
-                      : "bg-zinc-100 text-zinc-900 border border-zinc-200 hover:bg-zinc-200"
+                      : "bg-zinc-100 text-zinc-800 hover:bg-zinc-200 active:bg-zinc-300"
                   )}
                 >
                   {option.label}
                 </button>
               ))}
             </div>
+
+            {/* Bottom padding for safe area on notched phones */}
+            <div className="shrink-0 h-safe-bottom pb-2" />
           </SheetContent>
         </Sheet>
+
       </div>
     </div>
   );
