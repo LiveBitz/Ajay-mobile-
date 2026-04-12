@@ -164,7 +164,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
           {categories.map((category) => (
             <Link
               key={category.id}
-              href={`/category/${category.name.toLowerCase()}`}
+              href={`/category/${category.slug}`}
               className="flex-shrink-0 group cursor-pointer scroll-snap-align-start"
               style={{ scrollSnapAlign: "start" }}
             >
