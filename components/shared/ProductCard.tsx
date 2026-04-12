@@ -85,13 +85,15 @@ export function ProductCard({ product }: ProductCardProps) {
         <button
           onClick={handleWishlistClick}
           disabled={isAddingToWishlist}
-          className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:bg-white transition-all z-10 disabled:opacity-50"
+          className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:bg-white hover:shadow-lg transition-all duration-300 z-10 disabled:opacity-50 active:scale-90"
           aria-label={isWishlisted(String(product.id)) ? "Remove from wishlist" : "Add to wishlist"}
         >
           <Heart
             className={cn(
-              "w-4 h-4 transition-colors",
-              isWishlisted(String(product.id)) ? "fill-brand stroke-brand" : "stroke-zinc-500"
+              "w-4 h-4 transition-all duration-300 ease-out",
+              isWishlisted(String(product.id))
+                ? "fill-brand stroke-brand scale-110"
+                : "stroke-zinc-400 scale-100 hover:stroke-zinc-600"
             )}
           />
         </button>

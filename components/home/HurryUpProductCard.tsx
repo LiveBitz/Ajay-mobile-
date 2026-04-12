@@ -126,16 +126,20 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
             onClick={handleWishlistClick}
             disabled={isAddingToWishlist}
             aria-label="Toggle wishlist"
-            className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-all duration-200 disabled:opacity-50"
+            className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-all duration-300 disabled:opacity-50 hover:bg-black/40 active:scale-90"
             style={{ backgroundColor: "rgba(24,24,27,0.85)", border: "1px solid #52525b" }}
           >
             <Heart
               className={cn(
-                "w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors",
+                "w-3.5 h-3.5 sm:w-4 sm:h-4 transition-all duration-300 ease-out",
                 isWishlisted(String(product.id))
-                  ? "fill-brand stroke-brand"
-                  : "stroke-zinc-400"
+                  ? "fill-brand stroke-brand scale-110"
+                  : "fill-none scale-100 hover:scale-110"
               )}
+              style={{
+                stroke: isWishlisted(String(product.id)) ? undefined : "white",
+                strokeWidth: 1.5
+              }}
             />
           </button>
 

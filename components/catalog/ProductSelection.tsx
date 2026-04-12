@@ -254,13 +254,15 @@ export function ProductSelection({ product }: ProductSelectionProps) {
             className={cn(
               "h-16 w-16 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center p-0 shrink-0",
               isWishlisted(product.id)
-                ? "border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-500 border"
-                : "border-zinc-100 bg-white hover:border-zinc-200 hover:bg-zinc-50 hover:text-rose-400 border text-zinc-300"
+                ? "border-brand border-2 bg-brand/10 hover:bg-brand/15 text-brand shadow-sm hover:shadow-md"
+                : "border-zinc-200 border-2 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-zinc-400 hover:text-zinc-600 shadow-sm hover:shadow-md"
             )}
           >
             <Heart className={cn(
-              "w-5 h-5 transition-colors stroke-black",
-              isWishlisted(product.id) && "fill-rose-500 stroke-rose-500"
+              "w-5 h-5 transition-all duration-300 ease-out",
+              isWishlisted(product.id)
+                ? "fill-brand stroke-brand scale-110"
+                : "scale-100 hover:scale-105"
             )} />
           </Button>
         </div>
