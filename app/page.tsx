@@ -10,15 +10,15 @@ import { FeaturedCategoriesSection } from "@/components/home/FeaturedCategoriesS
 import { getBanners } from "@/lib/actions/banner-actions";
 import { getCategories } from "@/lib/actions/category-actions";
 
-// ✅ PHASE 2: Static regeneration - revalidate home page every 30 minutes
-export const revalidate = 1800;
+// ✅ PHASE 2: Static regeneration - revalidate home page every 5 minutes for development
+export const revalidate = 300;
 
 export default async function Home() {
   const heroBanners = await getBanners("HERO");
   const promoBanners = await getBanners("PROMO");
   const newsletterBanners = await getBanners("NEWSLETTER");
   const dbCategories = await getCategories();
-  
+
   // Use the first active promo banner for the section
   const activePromo = promoBanners.length > 0 ? promoBanners[0] : null;
 
@@ -26,73 +26,66 @@ export default async function Home() {
   const activeNewsletter = newsletterBanners.length > 0 ? newsletterBanners[0] : null;
 
   return (
-    <div className="flex flex-col gap-0 bg-gradient-to-b from-stone-50 via-white to-stone-50/50">
-      {/* Featured Categories - Stagger 1 */}
+    <div className="flex flex-col bg-white">
+      {/* Featured Categories — above fold, no delay */}
+      <FeaturedCategoriesSection />
+
+      <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
+
+      {/* Hero Banner — above fold with reliable rendering */}
+      <div className="w-full">
+        {heroBanners.length > 0 ? (
+          <HeroBanner banners={heroBanners} />
+        ) : (
+          <div className="w-full h-[300px] bg-zinc-200 flex items-center justify-center text-center">
+            <div>
+              <p className="text-zinc-600 font-semibold">No hero banners available</p>
+              <p className="text-zinc-500 text-sm">Banners: {heroBanners.length}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
+
+      {/* Below-fold sections fade in */}
       <div className="animate-fade-in-up" style={{ animationDelay: "0ms" }}>
-        <FeaturedCategoriesSection />
-      </div>
-      
-      {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
-
-      {/* Hero Banner - Stagger 2 */}
-      <div className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-        <HeroBanner banners={heroBanners} />
-      </div>
-      
-      {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
-
-      {/* Hurry Up Section - Stagger 3 */}
-      <div className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
         <HurryUpSection />
       </div>
-      
-      {/* Divider */}
+
       <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
 
-      {/* Brand Carousel - Stagger 4 */}
-      <div className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
+      <div className="animate-fade-in-up" style={{ animationDelay: "100ms" }}>
         <BrandCarousel categories={dbCategories} />
       </div>
-      
-      {/* Divider */}
+
       <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
 
-      {/* Best Sellers Section - Stagger 5 */}
-      <div className="animate-fade-in-up" style={{ animationDelay: "400ms" }}>
+      <div className="animate-fade-in-up" style={{ animationDelay: "200ms" }}>
         <BestSellersSection />
       </div>
-      
-      {/* Divider */}
+
       <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
 
-      {/* New Arrivals - Stagger 6 */}
-      <div className="animate-fade-in-up" style={{ animationDelay: "500ms" }}>
+      <div className="animate-fade-in-up" style={{ animationDelay: "300ms" }}>
         <NewArrivals />
       </div>
-      
-      {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
 
-      {/* Promo Banner - Stagger 7 */}
-      <div className="animate-fade-in-up" style={{ animationDelay: "600ms" }}>
+      <div className="h-px bg-zinc-100" />
+
+      <div className="animate-fade-in-up">
         <PromoBanner banner={activePromo} />
       </div>
-      
-      {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
 
-      {/* Features Strip - Stagger 8 */}
-      <div className="animate-fade-in-up" style={{ animationDelay: "700ms" }}>
+      <div className="h-px bg-zinc-100" />
+
+      <div className="animate-fade-in-up">
         <FeaturesStrip />
       </div>
-      
-      {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent" />
 
-      {/* Newsletter Banner - Stagger 9 */}
-      <div className="animate-fade-in-up" style={{ animationDelay: "800ms" }}>
+      <div className="h-px bg-zinc-100" />
+
+      <div className="animate-fade-in-up">
         <NewsletterBanner banner={activeNewsletter} />
       </div>
     </div>

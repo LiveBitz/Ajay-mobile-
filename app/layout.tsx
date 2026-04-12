@@ -20,8 +20,8 @@ import { WishlistProvider } from "@/context/WishlistContext";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: "SOULED | Premium Clothing Store",
-  description: "Experience premium, conversion-focused clothing shop.",
+  title: "NEXUS | Premium Smartphones & Mobile Phones",
+  description: "Shop the latest smartphones from top brands — Apple, Samsung, OnePlus & more. Premium phones, unbeatable prices.",
 };
 
 export default function RootLayout({
@@ -34,7 +34,7 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${dmSans.variable} h-full antialiased font-body selection:bg-brand/20 text-[15px]`}
     >
-      <body className="min-h-full flex flex-col bg-[#FFE4EB] text-zinc-950">
+      <body className="min-h-full flex flex-col bg-white text-zinc-900">
         <CartProvider>
           <WishlistProvider>
             <Navbar />

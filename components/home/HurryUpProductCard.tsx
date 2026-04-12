@@ -2,9 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Heart, ShoppingBag } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Heart, ShoppingCart } from "lucide-react";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/context/CartContext";
@@ -20,41 +18,39 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { toast } = useToast();
   const { addItem } = useCart();
-  
-  const discount = product.discount || Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+
+  const discount =
+    product.discount ||
+    Math.round(
+      ((product.originalPrice - product.price) / product.originalPrice) * 100
+    );
+
+  const isOutOfStock = (product.stock ?? 0) <= 0;
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsAddingToWishlist(true);
-
     try {
       await toggleWishlist(String(product.id));
       const wishlisted = isWishlisted(String(product.id));
-      
       toast({
         title: wishlisted ? "Added to Wishlist" : "Removed from Wishlist",
-        description: wishlisted 
-          ? `${product.name} has been added to your wishlist` 
+        description: wishlisted
+          ? `${product.name} has been added to your wishlist`
           : `${product.name} has been removed from your wishlist`,
         duration: 2000,
       });
     } catch (error: any) {
-      const errorMsg = error.message || "Failed to update wishlist";
-      if (errorMsg.includes("login")) {
-        toast({
-          title: "Login Required",
-          description: "Please login to add items to your wishlist",
-          variant: "destructive",
-          duration: 3000,
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: errorMsg,
-          variant: "destructive",
-          duration: 2000,
-        });
-      }
+      const msg = error.message || "";
+      toast({
+        title: msg.includes("login") ? "Login Required" : "Error",
+        description: msg.includes("login")
+          ? "Please login to add items to your wishlist"
+          : msg || "Failed to update wishlist",
+        variant: "destructive",
+        duration: 3000,
+      });
     } finally {
       setIsAddingToWishlist(false);
     }
@@ -63,8 +59,8 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) return;
     setIsAddingToCart(true);
-
     try {
       addItem({
         productId: product.id,
@@ -72,12 +68,11 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
         price: product.price,
         image: product.image,
       });
-
       toast({
         title: "Added to Cart",
         description: `${product.name} has been added to your cart.`,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to add product to cart",
@@ -89,78 +84,109 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
   };
 
   return (
-    <Link href={`/product/${product.slug}`} className="group">
-      <div className="relative overflow-hidden rounded-2xl border-2 border-stone-100 shadow-md hover:shadow-2xl transition-all duration-500 h-full flex flex-col hover:border-brand hover:scale-105 group-hover:bg-stone-50/50">
-        {/* Image Container */}
-        <div className="p-0 flex-1 group-hover:opacity-95 transition-opacity duration-300">
-          <div className="block relative aspect-square overflow-hidden bg-stone-100">
-            {/* Product Image */}
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-              onError={(e) => {
-                (e.target as any).src = "https://placehold.co/300/f4f4f5/9ca3af?text=" + encodeURIComponent(product.name);
-              }}
+    <Link href={`/product/${product.slug}`} className="group block h-full">
+      <div
+        className="relative flex flex-col h-full rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+        style={{
+          backgroundColor: "#18181b",
+          border: "1px solid #3f3f46",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLDivElement).style.borderColor = "#71717a";
+          (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 30px rgba(0,0,0,0.5)";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLDivElement).style.borderColor = "#3f3f46";
+          (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.4)";
+        }}
+      >
+
+        {/* ── Image ── */}
+        <div className="relative aspect-square overflow-hidden shrink-0" style={{ backgroundColor: "#27272a" }}>
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src =
+                "https://placehold.co/300/18181b/52525b?text=Phone";
+            }}
+          />
+
+          {/* Discount badge — top-left, prominent */}
+          {discount > 0 && (
+            <div className="absolute top-2 sm:top-2.5 left-2 sm:left-2.5 bg-brand text-white text-[9px] sm:text-[11px] font-black px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg tracking-wide shadow-lg">
+              -{discount}%
+            </div>
+          )}
+
+          {/* Wishlist button — top-right */}
+          <button
+            onClick={handleWishlistClick}
+            disabled={isAddingToWishlist}
+            aria-label="Toggle wishlist"
+            className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-all duration-200 disabled:opacity-50"
+            style={{ backgroundColor: "rgba(24,24,27,0.85)", border: "1px solid #52525b" }}
+          >
+            <Heart
+              className={cn(
+                "w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors",
+                isWishlisted(String(product.id))
+                  ? "fill-brand stroke-brand"
+                  : "stroke-zinc-400"
+              )}
             />
+          </button>
 
-            {/* Wishlist Button Overlay */}
-            <button
-              onClick={handleWishlistClick}
-              disabled={isAddingToWishlist}
-              className="absolute top-3 right-3 p-2 rounded-full bg-white/95 backdrop-blur-sm shadow-lg hover:bg-white hover:scale-125 hover:shadow-xl transition-all z-10 disabled:opacity-50 active:scale-90"
-              aria-label={isWishlisted(String(product.id)) ? "Remove from wishlist" : "Add to wishlist"}
-            >
-              <Heart
-                className={cn(
-                  "w-5 h-5 transition-colors",
-                  isWishlisted(String(product.id)) ? "fill-brand stroke-brand" : "stroke-stone-600"
-                )}
-              />
-            </button>
-
-            {/* Discount Badge */}
-            {discount > 0 && (
-              <Badge className="absolute bottom-3 left-3 bg-gradient-to-r from-brand to-red-700 text-white hover:shadow-lg hover:scale-110 font-bold px-2 py-1 rounded-full shadow-md z-10 transition-all duration-300">
-                {discount}% OFF
-              </Badge>
-            )}
-          </div>
+          {/* Out of stock overlay */}
+          {isOutOfStock && (
+            <div className="absolute inset-0 bg-zinc-950/70 flex items-center justify-center">
+              <span className="text-zinc-300 text-xs font-bold uppercase tracking-widest">
+                Out of Stock
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Product Info Section */}
-        <div className="flex flex-col items-start p-4 space-y-3">
-          {/* Product Name */}
-          <div className="w-full">
-            <h3 className="font-bold text-sm line-clamp-1 group-hover:text-brand transition-colors duration-300 text-stone-900">
-              {product.name}
-            </h3>
+        {/* ── Info ── */}
+        <div className="flex flex-col flex-1 p-2 sm:p-2.5 md:p-3 gap-2 sm:gap-2.5">
+          {/* Name */}
+          <p className="text-zinc-100 text-xs sm:text-sm font-semibold line-clamp-2 leading-snug">
+            {product.name}
+          </p>
 
-            {/* Price */}
-            <div className="flex items-center gap-2 mt-2 tabular-nums">
-              <span className="font-black text-lg text-stone-900">
-                ₹{product.price.toLocaleString("en-IN")}
+          {/* Pricing */}
+          <div className="flex items-baseline gap-1.5 sm:gap-2 tabular-nums">
+            <span className="text-white text-sm sm:text-base font-black">
+              ₹{product.price.toLocaleString("en-IN")}
+            </span>
+            {product.originalPrice > product.price && (
+              <span className="text-zinc-500 text-[10px] sm:text-xs line-through">
+                ₹{product.originalPrice.toLocaleString("en-IN")}
               </span>
-              {product.originalPrice > product.price && (
-                <span className="text-xs text-stone-500 line-through decoration-stone-400/60">
-                  ₹{product.originalPrice.toLocaleString("en-IN")}
-                </span>
-              )}
-            </div>
+            )}
           </div>
 
-          {/* Add to Cart Button - Light Theme */}
-          <Button
+          {/* Add to Cart — brand red, feels urgent */}
+          <button
             onClick={handleAddToCart}
-            disabled={isAddingToCart || product.stock <= 0}
+            disabled={isOutOfStock || isAddingToCart}
             className={cn(
-              "w-full rounded-xl gap-2 h-10 font-bold text-xs uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-95 bg-stone-100 text-stone-900 border-2 border-stone-200 hover:bg-brand hover:text-white hover:border-brand hover:shadow-lg disabled:opacity-50"
+              "mt-auto w-full h-8 sm:h-9 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200",
+              isOutOfStock
+                ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                : "bg-brand text-white hover:bg-red-700 active:scale-95"
             )}
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span className="hidden sm:inline">{isAddingToCart ? "Adding..." : "Add to Cart"}</span>
-            <span className="sm:hidden">{isAddingToCart ? "..." : "Add"}</span>
-          </Button>
+            <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <span className="hidden sm:inline">
+              {isAddingToCart ? "Adding…" : isOutOfStock ? "Sold Out" : "Add to Cart"}
+            </span>
+            <span className="sm:hidden">
+              {isAddingToCart ? "Adding" : isOutOfStock ? "Sold Out" : "Add"}
+            </span>
+          </button>
         </div>
       </div>
     </Link>

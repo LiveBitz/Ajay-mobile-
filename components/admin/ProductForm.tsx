@@ -64,6 +64,55 @@ export function ProductForm({
 
   const isEdit = !!initialData;
 
+  // Phone spec keys displayed in the admin form
+  const PHONE_SPEC_KEYS = [
+    "Processor",
+    "RAM",
+    "Display",
+    "Battery",
+    "Camera",
+    "OS",
+    "Connectivity",
+  ] as const;
+
+  type PhoneSpecKey = typeof PHONE_SPEC_KEYS[number];
+
+  const parseSpecsFromFeatures = (features: string[]): Record<string, string> => {
+    const specs: Record<string, string> = {};
+    features.forEach((f) => {
+      const colonIndex = f.indexOf(":");
+      if (colonIndex > -1) {
+        const key = f.slice(0, colonIndex).trim();
+        const val = f.slice(colonIndex + 1).trim();
+        if ((PHONE_SPEC_KEYS as readonly string[]).includes(key)) {
+          specs[key] = val;
+        }
+      }
+    });
+    return specs;
+  };
+
+  const [phoneSpecs, setPhoneSpecs] = useState<Record<string, string>>(
+    () => parseSpecsFromFeatures(
+      Array.isArray(initialData?.features) ? initialData.features : []
+    )
+  );
+
+  const handleSpecChange = (key: PhoneSpecKey, value: string) => {
+    const updatedSpecs = { ...phoneSpecs, [key]: value };
+    setPhoneSpecs(updatedSpecs);
+    const nonSpecFeatures = (formData.features as string[]).filter((f: string) => {
+      const colonIdx = f.indexOf(":");
+      if (colonIdx === -1) return true;
+      const fKey = f.slice(0, colonIdx).trim();
+      return !(PHONE_SPEC_KEYS as readonly string[]).includes(fKey);
+    });
+    const specFeatures = Object.entries(updatedSpecs)
+      .filter(([, v]) => v.trim() !== "")
+      .map(([k, v]) => `${k}: ${v}`);
+    setFormData((p: typeof formData) => ({ ...p, features: [...nonSpecFeatures, ...specFeatures] }));
+  };
+
   // Helper functions to parse existing data
   const extractBaseSizes = (sizes: string[] = []) => {
     const baseSizes = new Set<string>();
@@ -134,22 +183,22 @@ export function ProductForm({
   );
 
   const selectedCategory = categories.find((c) => c.id === formData.categoryId);
-  const isPerfume =
+  const isSmartAccessory =
     selectedCategory?.name?.toLowerCase() === "smart accessories";
-  const isWatch =
+  const isAccessory =
     selectedCategory?.name?.toLowerCase() === "accessories";
-  const isApparel =
+  const isSmartphone =
     selectedCategory?.name?.toLowerCase() === "smartphones";
 
   useEffect(() => {
     if (!isEdit && !initialData && formData.categoryId) {
-      if (isPerfume) {
+      if (isSmartAccessory) {
         setFormData((p) => ({ ...p, sizes: ["256GB", "512GB", "1TB"] }));
-      } else if (isApparel) {
+      } else if (isSmartphone) {
         setFormData((p) => ({ ...p, sizes: ["64GB", "128GB", "256GB", "512GB"] }));
       }
     }
-  }, [formData.categoryId, isPerfume, isApparel, isEdit]);
+  }, [formData.categoryId, isSmartAccessory, isSmartphone, isEdit]);
 
   const handleSlugify = (name: string) => {
     const slug = name
@@ -945,6 +994,54 @@ export function ProductForm({
                     💡 Tip: Include key features, materials, and care info for better conversion
                   </div>
                 </div>
+
+                {/* Phone Specifications */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <div>
+                      <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                        Phone Specifications
+                      </label>
+                      <p className="text-[9px] text-zinc-300 font-bold uppercase mt-0.5">
+                        Technical Details for Product Page
+                      </p>
+                    </div>
+                    {Object.values(phoneSpecs).some((v) => v.trim() !== "") && (
+                      <span className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                        {Object.values(phoneSpecs).filter((v) => v.trim() !== "").length} Added
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {PHONE_SPEC_KEYS.map((specKey) => (
+                      <div key={specKey} className="space-y-1">
+                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+                          {specKey}
+                        </label>
+                        <Input
+                          placeholder={
+                            specKey === "Processor" ? "e.g. Snapdragon 8 Gen 3" :
+                            specKey === "RAM"       ? "e.g. 12GB" :
+                            specKey === "Display"   ? "e.g. 6.7\" AMOLED 120Hz" :
+                            specKey === "Battery"   ? "e.g. 5000mAh" :
+                            specKey === "Camera"    ? "e.g. 50MP + 12MP + 10MP" :
+                            specKey === "OS"        ? "e.g. Android 14" :
+                                                     "e.g. 5G, WiFi 6E, Bluetooth 5.3"
+                          }
+                          value={phoneSpecs[specKey] || ""}
+                          onChange={(e) => handleSpecChange(specKey, e.target.value)}
+                          className="rounded-2xl border-zinc-100 h-11 sm:h-12 font-medium text-zinc-900 bg-white shadow-sm focus:ring-2 focus:ring-brand/20 text-sm"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="px-1 text-[9px] text-zinc-400 font-bold uppercase tracking-widest">
+                    Specs will appear in the &quot;Technical Specs&quot; card on the product page
+                  </div>
+                </div>
+
               </div>
             </section>
 
@@ -977,9 +1074,9 @@ export function ProductForm({
                   </div>
 
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-                  {(isPerfume
+                  {(isSmartAccessory
                     ? ["50ml", "100ml"]
-                    : isWatch
+                    : isAccessory
                     ? ["40mm", "42mm", "44mm"]
                       : ["XS", "S", "M", "L", "XL", "XXL", "3XL"]
                     ).map((sizeLabel) => {

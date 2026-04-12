@@ -280,32 +280,32 @@ export default async function ProductDetailsPage({
                 
                 <div className="space-y-0 divide-y divide-zinc-100/50">
                   {[
-                    { label: "Collection", value: product.category.name },
+                    { label: "Brand", value: product.category.name },
                     product.subCategory && {
-                      label: "Archetype",
+                      label: "Category",
                       value: product.subCategory,
                     },
                     {
-                      label: "Availability",
+                      label: "Storage Options",
                       value:
                         (product.sizes as string[])
                           ?.map((s) => s.split(":")[0])
                           .join(", ") || "One Size",
                     },
                     {
-                      label: "Palette",
+                      label: "Colors Available",
                       value:
                         product.colors.length > 0
                           ? `${product.colors.length} Variants`
                           : "Unified",
                     },
                     {
-                      label: "Reference",
+                      label: "Model ID",
                       value: product.slug.toUpperCase().replace(/-/g, ""),
                     },
                     {
-                      label: "Logistics",
-                      value: "7-Day Return Sync",
+                      label: "Return Policy",
+                      value: "7-Day Returns",
                     },
                   ]
                     .filter(Boolean)
@@ -322,6 +322,27 @@ export default async function ProductDetailsPage({
                         </span>
                       </div>
                     ))}
+
+                  {/* Dynamic phone specs from product.features */}
+                  {Array.isArray(product.features) && product.features.length > 0 &&
+                    product.features.map((feature: string) => {
+                      const colonIndex = feature.indexOf(":");
+                      const label = colonIndex > -1 ? feature.slice(0, colonIndex).trim() : feature;
+                      const value = colonIndex > -1 ? feature.slice(colonIndex + 1).trim() : "";
+                      return (
+                        <div
+                          key={label}
+                          className="flex items-start justify-between gap-6 py-4"
+                        >
+                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest shrink-0 pt-0.5">
+                            {label}
+                          </span>
+                          <span className="text-[11px] font-black text-zinc-900 text-right leading-relaxed">
+                            {value || label}
+                          </span>
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </div>

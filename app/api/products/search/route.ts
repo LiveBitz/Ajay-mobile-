@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
               { description: { contains: searchTerm, mode: "insensitive" } },
               { subCategory: { contains: searchTerm, mode: "insensitive" } },
               { category: { name: { contains: searchTerm, mode: "insensitive" } } },
+              { features: { hasSome: [searchTerm] } },
             ],
           },
           { stock: { gt: 0 } } // Only return products with stock > 0

@@ -6,7 +6,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-zinc-50 border-t border-zinc-200 mt-20 pt-16 pb-8">
+    <footer className="bg-zinc-50 border-t border-zinc-100 mt-16 pt-14 pb-8">
       <div className="container mx-auto px-4 md:px-8 lg:px-16 grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
         {/* Column 1: Brand */}
         <div className="flex flex-col gap-6">
@@ -14,20 +14,20 @@ export function Footer() {
             NEXUS
           </Link>
           <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
-            Premium streetwear and casual clothing for the urban adventurer.
+            Your trusted destination for premium smartphones, accessories, and the latest mobile technology.
           </p>
         </div>
 
         {/* Column 2: Categories */}
         <div className="flex flex-col gap-6">
           <h4 className="text-sm font-bold uppercase tracking-wider text-zinc-900 font-heading">
-            Shop By Category
+            Shop By Brand
           </h4>
           <div className="flex flex-col gap-3 text-sm text-muted-foreground">
             <Link href="/" className="hover:text-brand transition-colors">Home</Link>
-            <Link href="/category/men" className="hover:text-brand transition-colors">Men</Link>
-            <Link href="/category/watches" className="hover:text-brand transition-colors">Watches</Link>
-            <Link href="/category/perfumes" className="hover:text-brand transition-colors">Perfumes</Link>
+            <Link href="/category/smartphones" className="hover:text-brand transition-colors">Smartphones</Link>
+            <Link href="/category/apple" className="hover:text-brand transition-colors">Apple</Link>
+            <Link href="/category/samsung" className="hover:text-brand transition-colors">Samsung</Link>
             <Link href="/category/accessories" className="hover:text-brand transition-colors">Accessories</Link>
           </div>
         </div>
@@ -55,7 +55,7 @@ export function Footer() {
       </div>
       
       {/* Footer Bottom */}
-      <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-8 border-t border-zinc-200 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+      <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-8 border-t border-zinc-100 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
         <p>© {currentYear} NEXUS. All rights reserved.</p>
         <p className="text-xs text-zinc-400 font-medium">
           Built by <span className="font-semibold text-zinc-600">Himanshu Meena</span> & <span className="font-semibold text-zinc-600">Ashibur Rehman</span>

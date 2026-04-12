@@ -3,9 +3,6 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { Heart, ShoppingBag } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +14,7 @@ interface ProductCardProps {
     id: number | string;
     name: string;
     slug: string;
-    category: any;
+    category?: any;
     price: number;
     originalPrice: number;
     discount: number;
@@ -35,118 +32,118 @@ export function ProductCard({ product }: ProductCardProps) {
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { toast } = useToast();
 
-  // Calculate total stock using shared utility
   const totalStock = getTotalStock(product.sizes);
   const isOutOfStock = totalStock === 0;
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsAddingToWishlist(true);
-
     try {
       await toggleWishlist(String(product.id));
       const wishlisted = isWishlisted(String(product.id));
-      
       toast({
         title: wishlisted ? "Added to Wishlist" : "Removed from Wishlist",
-        description: wishlisted 
-          ? `${product.name} has been added to your wishlist` 
+        description: wishlisted
+          ? `${product.name} has been added to your wishlist`
           : `${product.name} has been removed from your wishlist`,
         duration: 2000,
       });
     } catch (error: any) {
-      const errorMsg = error.message || "Failed to update wishlist";
-      if (errorMsg.includes("login")) {
-        toast({
-          title: "Login Required",
-          description: "Please login to add items to your wishlist",
-          variant: "destructive",
-          duration: 3000,
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: errorMsg,
-          variant: "destructive",
-          duration: 2000,
-        });
-      }
+      const msg = error.message || "Failed to update wishlist";
+      toast({
+        title: msg.includes("login") ? "Login Required" : "Error",
+        description: msg.includes("login")
+          ? "Please login to add items to your wishlist"
+          : msg,
+        variant: "destructive",
+        duration: 3000,
+      });
     } finally {
       setIsAddingToWishlist(false);
     }
   };
 
   return (
-    <Card className="group relative overflow-hidden rounded-2xl border-2 border-stone-100 shadow-md hover:shadow-2xl transition-all duration-500 h-full flex flex-col hover:border-brand">
-      <CardContent className="p-0 flex-1">
-        <Link href={`/product/${product.slug}`} className="block relative aspect-square overflow-hidden bg-stone-100">
-          <Image
-            src={imgError ? "https://picsum.photos/seed/error/600/600" : product.image}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
-            onError={() => setImgError(true)}
-            quality={85}
-            loading="lazy"
+    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 h-full">
+      {/* Image */}
+      <Link
+        href={`/product/${product.slug}`}
+        className="block relative aspect-square overflow-hidden bg-zinc-50 shrink-0"
+      >
+        <Image
+          src={imgError ? "https://placehold.co/600/f4f4f5/a1a1aa?text=Phone" : product.image}
+          alt={product.name}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          onError={() => setImgError(true)}
+          quality={85}
+          loading="lazy"
+        />
+
+        {/* Wishlist button */}
+        <button
+          onClick={handleWishlistClick}
+          disabled={isAddingToWishlist}
+          className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:bg-white transition-all z-10 disabled:opacity-50"
+          aria-label={isWishlisted(String(product.id)) ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart
+            className={cn(
+              "w-4 h-4 transition-colors",
+              isWishlisted(String(product.id)) ? "fill-brand stroke-brand" : "stroke-zinc-500"
+            )}
           />
-          {/* Wishlist Button Overlay */}
-          <button
-            onClick={handleWishlistClick}
-            disabled={isAddingToWishlist}
-            className="absolute top-3 right-3 p-2 rounded-full bg-white/95 backdrop-blur-sm shadow-lg hover:bg-white hover:scale-110 transition-all z-10 disabled:opacity-50"
-            aria-label={isWishlisted(String(product.id)) ? "Remove from wishlist" : "Add to wishlist"}
-          >
-            <Heart
-              className={cn(
-                "w-5 h-5 transition-colors",
-                isWishlisted(String(product.id)) ? "fill-brand stroke-brand" : "stroke-stone-600"
-              )}
-            />
-          </button>
+        </button>
 
-          {/* Discount Badge */}
-          {product.discount > 0 && (
-            <Badge className="absolute bottom-3 left-3 bg-gradient-to-r from-brand to-red-700 text-white hover:shadow-lg font-bold px-2 py-1 rounded-full shadow-md z-10">
-              {product.discount}% OFF
-            </Badge>
-          )}
+        {/* Discount badge */}
+        {product.discount > 0 && (
+          <div className="absolute bottom-2.5 left-2.5 bg-brand text-white text-[11px] font-black px-2 py-0.5 rounded-md tracking-wide z-10 shadow-sm">
+            -{product.discount}%
+          </div>
+        )}
 
-          {/* Out of Stock Overlay */}
-          {isOutOfStock && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20 backdrop-blur-sm">
-              <span className="text-white font-bold text-sm">OUT OF STOCK</span>
-            </div>
-          )}
-        </Link>
-      </CardContent>
+        {/* Out of stock overlay */}
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center z-20">
+            <span className="text-zinc-500 font-bold text-xs uppercase tracking-widest">
+              Out of Stock
+            </span>
+          </div>
+        )}
+      </Link>
 
-      <CardFooter className="flex flex-col items-start p-4 space-y-3">
-        <Link href={`/product/${product.slug}`} className="w-full">
-          <h3 className="font-bold text-sm line-clamp-1 group-hover:text-brand transition-colors">
+      {/* Info */}
+      <div className="flex flex-col flex-1 p-3.5 gap-2.5">
+        <Link href={`/product/${product.slug}`} className="flex-1">
+          <h3 className="font-semibold text-sm text-zinc-800 line-clamp-2 leading-snug">
             {product.name}
           </h3>
-          <div className="flex items-center gap-2 mt-2 tabular-nums">
-            <span className="font-black text-lg text-stone-900">₹{product.price.toLocaleString("en-IN")}</span>
-            <span className="text-xs text-stone-500 line-through decoration-stone-400/60">
+          <div className="flex items-baseline gap-1.5 mt-2 tabular-nums">
+            <span className="font-black text-base text-zinc-900">
+              ₹{product.price.toLocaleString("en-IN")}
+            </span>
+            <span className="text-xs text-zinc-400 line-through">
               ₹{product.originalPrice.toLocaleString("en-IN")}
             </span>
           </div>
         </Link>
 
-        <Link href={`/product/${product.slug}`} className="w-full">
-          <Button
+        <Link href={`/product/${product.slug}`} className="block">
+          <button
             disabled={isOutOfStock}
             className={cn(
-              "w-full rounded-xl border-2 border-stone-200 gap-2 h-10 font-bold text-xs uppercase tracking-widest transition-all duration-300 hover:scale-105 bg-white hover:bg-stone-50 text-stone-900 hover:border-stone-300",
-              !isOutOfStock && "group-hover:bg-brand group-hover:text-white group-hover:border-brand",
-              isOutOfStock && "opacity-50 cursor-not-allowed"
+              "w-full h-9 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 border transition-all duration-200",
+              isOutOfStock
+                ? "border-zinc-100 bg-zinc-50 text-zinc-400 cursor-not-allowed"
+                : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300"
             )}
           >
-            <ShoppingBag className="w-4 h-4" />
-            {isOutOfStock ? "Out of Stock" : "Add to Cart"}
-          </Button>
+            <ShoppingBag className="w-3.5 h-3.5" />
+            {isOutOfStock ? "Out of Stock" : "View Product"}
+          </button>
         </Link>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

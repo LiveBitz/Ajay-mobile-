@@ -52,6 +52,50 @@ async function main() {
     console.log(`Created product: ${p.name}`);
   }
 
+  // 3. Create Sample Banners
+  const banners = [
+    {
+      type: "HERO",
+      title: "Premium Smartphones",
+      subtitle: "Latest technology at unbeatable prices",
+      image: "https://images.unsplash.com/photo-1511707267537-b85faf00021e?w=1200&h=600&fit=crop",
+      buttonText: "Shop Now",
+      link: "/category/smartphones",
+      order: 1,
+      isActive: true,
+    },
+    {
+      type: "HERO",
+      title: "Apple iPhones",
+      subtitle: "Experience the power of iOS",
+      image: "https://images.unsplash.com/photo-1592286927505-1def25115558?w=1200&h=600&fit=crop",
+      buttonText: "View iPhones",
+      link: "/category/apple",
+      order: 2,
+      isActive: true,
+    },
+    {
+      type: "PROMO",
+      title: "Summer Sale",
+      subtitle: "Up to 50% off",
+      image: "https://images.unsplash.com/photo-1556656793-08538906a9f8?w=1200&h=600&fit=crop",
+      buttonText: "View Sale",
+      link: "/category/sale",
+      order: 1,
+      isActive: true,
+    },
+  ];
+
+  // Delete existing banners
+  await prisma.banner.deleteMany({});
+
+  for (const banner of banners) {
+    await prisma.banner.create({
+      data: banner,
+    });
+    console.log(`Created banner: ${banner.type} - ${banner.title}`);
+  }
+
   console.log("Seeding finished!");
 }
 

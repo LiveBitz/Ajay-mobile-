@@ -38,12 +38,16 @@ export async function updateSession(request: NextRequest) {
   const isEntryPath = pathname === '/admin/entry'
   const isAuthPath = pathname.startsWith('/login') || pathname.startsWith('/signup')
   const hasAdminAccess = request.cookies.get('admin_access')?.value === 'true'
+  const isSeedApi = pathname === '/api/seed-banners'
+  const isDebugApi = pathname === '/api/debug-banners'
   
   const isPublicPath = 
     pathname === '/' || 
     isAuthPath ||
     isEntryPath ||
-    pathname.startsWith('/auth')
+    pathname.startsWith('/auth') ||
+    isSeedApi ||
+    isDebugApi
 
   console.log('[MIDDLEWARE]', {
     pathname,

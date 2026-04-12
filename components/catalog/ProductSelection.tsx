@@ -149,10 +149,10 @@ export function ProductSelection({ product }: ProductSelectionProps) {
               "text-[11px] font-black uppercase tracking-[0.2em] transition-colors",
               showError && !selectedSize ? "text-rose-500" : "text-zinc-400"
             )}>
-              Select Archetype (Size)
+              Select Storage
             </p>
             <button className="text-[10px] font-bold text-zinc-400 underline underline-offset-4 hover:text-zinc-900 transition-colors uppercase tracking-widest">
-              Scale Matrix
+              Storage Guide
             </button>
           </div>
 

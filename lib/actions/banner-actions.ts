@@ -5,13 +5,7 @@ import { revalidatePath } from "next/cache";
 
 export async function getBanners(type?: string) {
   try {
-    // Defensive check for stale dev server cache
-    if (!(prisma as any).banner) {
-      console.warn("Prisma client stale: 'banner' model not found. Returning empty array.");
-      return [];
-    }
-
-    const banners = await (prisma as any).banner.findMany({
+    const banners = await prisma.banner.findMany({
       where: {
         ...(type ? { type } : {}),
         isActive: true,
@@ -20,6 +14,7 @@ export async function getBanners(type?: string) {
         order: "asc",
       },
     });
+    
     return banners;
   } catch (error) {
     console.error("Failed to fetch banners:", error);
