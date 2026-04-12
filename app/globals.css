@@ -97,9 +97,14 @@
     @apply transition-all duration-300;
   }
 
+  /* Premium link hover effect */
+  a:not(.no-hover) {
+    @apply hover:text-brand transition-colors duration-300;
+  }
+
   /* Smooth scale on interactive elements */
   button:not(:disabled) {
-    @apply focus:ring-2 focus:ring-brand/50 focus:outline-none;
+    @apply active:scale-95 focus:ring-2 focus:ring-brand/50 focus:outline-none;
   }
 
   /* Enhanced focus states for accessibility */
@@ -109,7 +114,7 @@
 
   /* Subtle shadow on card hovers */
   .card-hover {
-    @apply hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300;
+    @apply hover:shadow-lg transition-shadow duration-300;
   }
 
   /* Smooth color transitions */
@@ -117,19 +122,9 @@
     @apply transition-colors duration-300;
   }
 
-  /* Premium divider */
+  /* Premium divider with gradient */
   .premium-divider {
-    @apply h-px bg-zinc-100;
-  }
-
-  /* Clean section divider */
-  .section-divider {
-    @apply h-px bg-zinc-100;
-  }
-
-  /* Premium card base */
-  .card-premium {
-    @apply bg-white border border-zinc-100 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300;
+    @apply h-px bg-gradient-to-r from-transparent via-stone-200/50 to-transparent;
   }
 
   /* Stagger animations for lists */
@@ -168,9 +163,9 @@
     @apply backdrop-blur-xl bg-white/10 border border-white/20;
   }
 
-  /* Premium button hover */
+  /* Premium button hover scale */
   .button-hover-scale {
-    @apply hover:-translate-y-0.5 active:translate-y-0 transition-transform duration-200;
+    @apply hover:scale-105 active:scale-95 transition-transform duration-300;
   }
 
   /* Text selection style */

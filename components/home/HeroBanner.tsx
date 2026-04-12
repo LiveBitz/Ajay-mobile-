@@ -1,61 +1,123 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Truck, Star } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { Banner } from "@prisma/client";
+import useEmblaCarousel, {
+  type UseEmblaCarouselType,
+} from "embla-carousel-react";
+
+type CarouselApi = UseEmblaCarouselType[1];
 
 interface HeroBannerProps {
   banners?: Banner[];
 }
 
 export function HeroBanner({ banners = [] }: HeroBannerProps) {
-  const plugin = React.useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: true })
-  );
+  const [api, setApi] = useState<CarouselApi>();
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
+  const pluginRef = useRef<ReturnType<typeof Autoplay> | null>(null);
 
   // Only render carousel if banners exist
   if (!Array.isArray(banners) || banners.length === 0) {
     return null;
   }
 
+  if (!pluginRef.current) {
+    pluginRef.current = Autoplay({ delay: 5000, stopOnInteraction: false });
+  }
+
+  const onSelect = useCallback(() => {
+    if (!api) return;
+    setSelectedIndex(api.selectedScrollSnap());
+  }, [api]);
+
+  const onDotClick = useCallback(
+    (index: number) => {
+      if (!api) return;
+      api.scrollTo(index);
+    },
+    [api]
+  );
+
+  useEffect(() => {
+    if (!api) return;
+
+    setScrollSnaps(api.scrollSnapList());
+    api.on("select", onSelect);
+    onSelect();
+  }, [api, onSelect]);
+
   return (
-    <section className="w-full overflow-hidden">
-      <Carousel
-        plugins={[plugin.current]}
+    <section className="w-full">
+      {/* Hero Carousel */}
+      <div
         className="w-full"
-        onMouseEnter={() => plugin.current.stop()}
-        onMouseLeave={() => plugin.current.reset()}
+        onMouseEnter={() => pluginRef.current?.stop?.()}
+        onMouseLeave={() => pluginRef.current?.reset?.()}
       >
-        <CarouselContent>
-          {banners.map((slide) => (
-            <CarouselItem key={slide.id}>
-              <Link href={(slide as any).link || "/"} className="block cursor-pointer w-full">
-                <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
-                  <Image
-                    src={slide.image}
-                    alt={slide.title}
-                    fill
-                    className="object-cover transition-transform duration-700 hover:scale-105"
-                    priority
-                    quality={90}
-                    sizes="100vw"
-                  />
-                </div>
-              </Link>
-            </CarouselItem>
+        <Carousel
+          setApi={setApi}
+          plugins={[pluginRef.current]}
+          className="w-full"
+          opts={{ loop: true }}
+        >
+          <CarouselContent className="w-full">
+            {banners.map((slide) => (
+              <CarouselItem key={slide.id} className="w-full">
+                <Link href={(slide as any).link || "/"} className="block cursor-pointer w-full">
+                  <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
+                    <Image
+                      src={slide.image}
+                      alt={slide.title}
+                      fill
+                      className="object-cover transition-transform duration-700 hover:scale-105"
+                      priority
+                      quality={90}
+                      sizes="100vw"
+                    />
+                  </div>
+                </Link>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+      </div>
+
+      {/* Pagination Dots */}
+      {scrollSnaps.length > 1 && (
+        <div className="flex items-center justify-center gap-2 sm:gap-3 py-4 sm:py-6 px-4 bg-white">
+          {scrollSnaps.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => onDotClick(index)}
+              className="transition-all duration-300 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand"
+              style={{
+                width: selectedIndex === index ? "28px" : "10px",
+                height: "10px",
+                backgroundColor:
+                  selectedIndex === index
+                    ? "rgb(220, 38, 38)" // brand red
+                    : "rgb(229, 231, 235)", // light gray
+                boxShadow:
+                  selectedIndex === index
+                    ? "0 2px 8px rgba(220, 38, 38, 0.3)"
+                    : "none",
+              }}
+              aria-label={`Go to slide ${index + 1}`}
+              aria-current={selectedIndex === index ? "true" : "false"}
+            />
           ))}
-        </CarouselContent>
-      </Carousel>
+        </div>
+      )}
     </section>
   );
 }
