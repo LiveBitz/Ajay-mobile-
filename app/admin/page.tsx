@@ -130,8 +130,8 @@ export default async function AdminPage() {
       </div>
 
       {/* ── Main Dashboard Content ── */}
-      {/* ✅ Pass fetched stats as props so DashboardContent doesn't re-fetch */}
-      <DashboardContent stats={stats} />
+      {/* ✅ DashboardContent fetches its own data via API */}
+      <DashboardContent />
     </div>
   );
 }

@@ -2,21 +2,9 @@
 
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { Product } from "@/lib/data";
 import { SearchFilters } from "@/components/search/SearchFilters";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  originalPrice: number;
-  discount?: number;
-  image: string;
-  stock: number;
-  isNew?: boolean;
-  isBestSeller?: boolean;
-}
 
 interface SearchCatalogProps {
   initialProducts: Product[];
