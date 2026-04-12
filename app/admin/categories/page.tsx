@@ -4,16 +4,16 @@ import React, { useEffect, useState } from "react";
 import { 
   Layers, 
   Image as ImageIcon, 
-  Link as LinkIcon, 
   Save, 
-  CheckCircle2, 
   AlertCircle,
   Loader2,
   RefreshCw,
   Plus,
   Trash2,
   X,
-  Star
+  Star,
+  Edit2,
+  Search
 } from "lucide-react";
 import { getCategories, updateCategoryImage, createCategory, deleteCategory } from "@/lib/actions/category-actions";
 import { toggleCategoryFeatured, updateCategoryFeaturedOrder } from "@/lib/actions/featured-category-actions";
@@ -29,6 +29,7 @@ export default function CategoriesAdminPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
   // Add category form state
@@ -53,13 +54,13 @@ export default function CategoriesAdminPage() {
     
     if (result.success) {
       toast({
-        title: "Visual Assets Synchronized",
-        description: "The category image has been professionally updated.",
+        title: "Image Updated",
+        description: "Category image has been updated successfully.",
       });
       setCategories(prev => prev.map(c => c.id === id ? { ...c, image: newUrl } : c));
     } else {
       toast({
-        title: "Synchronization Error",
+        title: "Error",
         description: result.error as string,
         variant: "destructive",
       });
@@ -91,7 +92,7 @@ export default function CategoriesAdminPage() {
       setShowAddForm(false);
     } else {
       toast({
-        title: "Creation Error",
+        title: "Error",
         description: result.error as string,
         variant: "destructive",
       });
@@ -115,7 +116,7 @@ export default function CategoriesAdminPage() {
       setCategories(categories.filter(c => c.id !== id));
     } else {
       toast({
-        title: "Deletion Error",
+        title: "Error",
         description: result.error as string,
         variant: "destructive",
       });
@@ -145,46 +146,50 @@ export default function CategoriesAdminPage() {
     }
   };
 
+  const filteredCategories = categories.filter(cat =>
+    cat.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (loading) {
     return (
       <div className="h-[60vh] flex flex-col items-center justify-center space-y-4">
         <Loader2 className="w-10 h-10 text-brand animate-spin" />
-        <p className="text-zinc-500 font-bold text-sm tracking-tight animate-pulse">Orchestrating Visual Data...</p>
+        <p className="text-zinc-500 font-bold text-sm">Loading categories...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 pb-16">
-      {/* Header Orchestration */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div className="space-y-2">
+    <div className="space-y-6 pb-16">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 bg-brand/5 rounded-2xl flex items-center justify-center">
-               <Layers className="w-5 h-5 text-brand" />
-             </div>
-             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-heading tracking-tight text-zinc-900">
-               Visual Console
-             </h1>
+            <div className="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center">
+              <Layers className="w-5 h-5 text-brand" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900">
+              Categories Management
+            </h1>
           </div>
-          <p className="text-zinc-500 font-medium text-sm leading-relaxed max-w-xl">
-             Manage your flagship&apos;s <span className="text-zinc-900 font-bold underline decoration-brand/30">Category Orchestration</span>. 
-             Create, update and delete categories in real-time.
+          <p className="text-zinc-500 text-sm">
+            Manage {categories.length} categories
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
             onClick={fetchCategories}
-            className="h-12 rounded-2xl border-zinc-100 hover:bg-zinc-50 font-extrabold text-zinc-900 shadow-sm gap-2 transition-all active:scale-95"
+            className="h-10 rounded-lg gap-2"
+            disabled={loading}
           >
-            <RefreshCw className={cn("w-4 h-4 text-zinc-400", loading && "animate-spin")} />
-            Sync Dataset
+            <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+            Refresh
           </Button>
           <Button 
             onClick={() => setShowAddForm(!showAddForm)}
-            className="h-12 rounded-2xl bg-brand text-white hover:bg-brand/90 font-extrabold shadow-lg shadow-brand/20 gap-2 transition-all active:scale-95"
+            className="h-10 rounded-lg bg-brand hover:bg-brand/90 gap-2"
           >
             <Plus className="w-4 h-4" />
             Add Category
@@ -194,46 +199,48 @@ export default function CategoriesAdminPage() {
 
       {/* Add Category Form */}
       {showAddForm && (
-        <div className="bg-white rounded-[32px] border border-zinc-100 shadow-lg p-6 sm:p-8 space-y-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-zinc-900">Create New Category</h2>
+        <div className="bg-white rounded-lg border border-zinc-200 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-zinc-900">Create New Category</h2>
             <button 
               onClick={() => setShowAddForm(false)}
-              className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
+              className="p-1 hover:bg-zinc-100 rounded transition-colors"
             >
               <X className="w-5 h-5 text-zinc-400" />
             </button>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1">
-              Category Name *
-            </label>
-            <Input 
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              placeholder="e.g. Electronics, Fashion, Home Decor"
-              className="h-12 rounded-2xl border-zinc-100 bg-zinc-50/30 text-sm font-bold placeholder:text-zinc-400"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-zinc-700">
+                Category Name *
+              </label>
+              <Input 
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="e.g. Electronics, Fashion"
+                className="h-10 rounded-lg border-zinc-200"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-zinc-700">
+                Category Image (URL)
+              </label>
+              <Input 
+                value={newCategoryImage}
+                onChange={(e) => setNewCategoryImage(e.target.value)}
+                placeholder="https://..."
+                className="h-10 rounded-lg border-zinc-200"
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1">
-              Category Image (Optional)
-            </label>
-            <Input 
-              value={newCategoryImage}
-              onChange={(e) => setNewCategoryImage(e.target.value)}
-              placeholder="e.g. https://domain.com/image.jpg"
-              className="h-12 rounded-2xl border-zinc-100 bg-zinc-50/30 text-sm font-bold placeholder:text-zinc-400"
-            />
-          </div>
-
-          <div className="flex items-center gap-3 pt-4">
+          <div className="flex items-center gap-2 pt-2">
             <Button 
               onClick={handleAddCategory}
               disabled={isCreating || !newCategoryName.trim()}
-              className="h-12 rounded-2xl bg-brand text-white hover:bg-brand/90 font-extrabold gap-2 transition-all active:scale-95"
+              className="h-10 rounded-lg bg-brand hover:bg-brand/90 gap-2"
             >
               {isCreating ? (
                 <>
@@ -243,14 +250,14 @@ export default function CategoriesAdminPage() {
               ) : (
                 <>
                   <Plus className="w-4 h-4" />
-                  Create Category
+                  Create
                 </>
               )}
             </Button>
             <Button 
               onClick={() => setShowAddForm(false)}
               variant="outline"
-              className="h-12 rounded-2xl border-zinc-100 hover:bg-zinc-50"
+              className="h-10 rounded-lg"
             >
               Cancel
             </Button>
@@ -258,169 +265,219 @@ export default function CategoriesAdminPage() {
         </div>
       )}
 
-      {/* Grid Orchestration */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8 sm:gap-10">
-        {categories.map((cat) => (
-          <CategoryCard 
-            key={cat.id} 
-            category={cat} 
-            isUpdating={updatingId === cat.id}
-            isDeleting={deletingId === cat.id}
-            onUpdate={handleUpdateImage}
-            onDelete={handleDeleteCategory}
-            onToggleFeatured={handleToggleFeatured}
-          />
-        ))}
+      {/* Search & Filter */}
+      <div className="bg-white p-3 rounded-lg border border-zinc-200 shadow-sm flex items-center gap-3">
+        <Search className="w-4 h-4 text-zinc-400" />
+        <input
+          type="text"
+          placeholder="Search categories..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="flex-1 bg-transparent border-0 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none"
+        />
       </div>
 
-      {categories.length === 0 && (
-        <div className="py-24 text-center bg-white rounded-[48px] border border-zinc-100 shadow-sm flex flex-col items-center justify-center space-y-6">
-            <div className="w-20 h-20 bg-zinc-50 rounded-3xl flex items-center justify-center border-4 border-white shadow-xl">
-              <Layers className="w-9 h-9 text-zinc-200" />
+      {/* Table */}
+      <div className="bg-white rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
+        {filteredCategories.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="w-16 h-16 bg-zinc-50 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <Layers className="w-8 h-8 text-zinc-300" />
             </div>
-            <p className="font-extrabold text-xl text-zinc-900">No categories found in the flagship.</p>
-            <Button 
-              onClick={() => setShowAddForm(true)}
-              className="mt-4 h-12 rounded-2xl bg-brand text-white hover:bg-brand/90 font-extrabold gap-2 shadow-lg shadow-brand/20"
-            >
-              <Plus className="w-4 h-4" />
-              Create First Category
-            </Button>
-        </div>
-      )}
+            <p className="font-semibold text-zinc-900 mb-4">
+              {categories.length === 0 ? "No categories yet" : "No categories match your search"}
+            </p>
+            {categories.length === 0 && (
+              <Button 
+                onClick={() => setShowAddForm(true)}
+                className="h-10 rounded-lg bg-brand hover:bg-brand/90 gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Create First Category
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-zinc-200 bg-zinc-50">
+                  <th className="py-3 px-4 text-left text-xs font-bold text-zinc-600 uppercase tracking-wide">
+                    Image
+                  </th>
+                  <th className="py-3 px-4 text-left text-xs font-bold text-zinc-600 uppercase tracking-wide">
+                    Name
+                  </th>
+                  <th className="py-3 px-4 text-left text-xs font-bold text-zinc-600 uppercase tracking-wide">
+                    Featured
+                  </th>
+                  <th className="py-3 px-4 text-left text-xs font-bold text-zinc-600 uppercase tracking-wide">
+                    Created
+                  </th>
+                  <th className="py-3 px-4 text-right text-xs font-bold text-zinc-600 uppercase tracking-wide">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {filteredCategories.map((cat) => (
+                  <tr key={cat.id} className="hover:bg-zinc-50 transition-colors">
+                    <td className="py-3 px-4">
+                      <div className="w-10 h-10 rounded-lg bg-zinc-100 flex items-center justify-center overflow-hidden">
+                        {cat.image ? (
+                          <img 
+                            src={cat.image} 
+                            alt={cat.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as any).src = ""
+                            }}
+                          />
+                        ) : (
+                          <ImageIcon className="w-5 h-5 text-zinc-400" />
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="space-y-1">
+                        <p className="font-semibold text-zinc-900">{cat.name}</p>
+                        <p className="text-xs text-zinc-500">{cat.slug}</p>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => handleToggleFeatured(cat.id)}
+                        className={cn(
+                          "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-xs font-semibold",
+                          cat.isFeatured
+                            ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                            : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                        )}
+                      >
+                        <Star className="w-3 h-3" />
+                        {cat.isFeatured ? "Featured" : "Not Featured"}
+                      </button>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-zinc-600">
+                      {new Date(cat.createdAt).toLocaleDateString("en-IN")}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <EditCategoryButton
+                          category={cat}
+                          onUpdate={handleUpdateImage}
+                          isUpdating={updatingId === cat.id}
+                        />
+                        <button
+                          onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                          disabled={deletingId === cat.id}
+                          className="p-2 hover:bg-red-50 text-red-600 hover:text-red-700 rounded-lg transition-all disabled:opacity-50"
+                          title="Delete"
+                        >
+                          {deletingId === cat.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-function CategoryCard({ category, onUpdate, onDelete, onToggleFeatured, isUpdating, isDeleting }: { category: any, onUpdate: (id: string, url: string) => void, onDelete: (id: string, name: string) => void, onToggleFeatured: (id: string) => void, isUpdating: boolean, isDeleting: boolean }) {
+function EditCategoryButton({ category, onUpdate, isUpdating }: { category: any, onUpdate: (id: string, url: string) => void, isUpdating: boolean }) {
+  const [showModal, setShowModal] = useState(false);
   const [tempUrl, setTempUrl] = useState(category.image || "");
-  const [isModified, setIsModified] = useState(false);
-
-  useEffect(() => {
-    setTempUrl(category.image || "");
-    setIsModified(false);
-  }, [category.image]);
 
   return (
-    <div className="bg-white rounded-[32px] border border-zinc-100 shadow-sm overflow-hidden group hover:shadow-xl hover:shadow-zinc-200/50 transition-all duration-500 flex flex-col h-full">
-      {/* Visual Preview */}
-      <div className="relative aspect-square overflow-hidden bg-zinc-50">
-        {tempUrl ? (
-          <img 
-            src={tempUrl} 
-            alt={category.name} 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            onError={(e) => {
-              (e.target as any).src = "https://placehold.co/600/400/f4f4f5/9ca3af?text=Invalid+Image+Address";
-            }}
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center space-y-3">
-             <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-zinc-100">
-               <ImageIcon className="w-6 h-6 text-zinc-300" />
-             </div>
-             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">No Visual Assigned</p>
+    <>
+      <button
+        onClick={() => {
+          setTempUrl(category.image || "");
+          setShowModal(true);
+        }}
+        className="p-2 hover:bg-blue-50 text-blue-600 hover:text-blue-700 rounded-lg transition-all"
+        title="Edit"
+      >
+        <Edit2 className="w-4 h-4" />
+      </button>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg text-zinc-900">Edit {category.name}</h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-1 hover:bg-zinc-100 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-zinc-700">Image URL</label>
+              <Input 
+                value={tempUrl}
+                onChange={(e) => setTempUrl(e.target.value)}
+                placeholder="https://..."
+                className="h-10 rounded-lg border-zinc-200"
+              />
+            </div>
+
+            {tempUrl && (
+              <div className="w-full h-32 rounded-lg bg-zinc-100 overflow-hidden flex items-center justify-center">
+                <img
+                  src={tempUrl}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as any).style.display = "none"
+                  }}
+                />
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 pt-4">
+              <Button
+                onClick={() => {
+                  onUpdate(category.id, tempUrl);
+                  setShowModal(false);
+                }}
+                disabled={isUpdating || tempUrl === category.image}
+                className="h-10 rounded-lg bg-brand hover:bg-brand/90 gap-2"
+              >
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => setShowModal(false)}
+                variant="outline"
+                className="h-10 rounded-lg"
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
-        )}
-        <div className="absolute top-4 left-4">
-           <span className="bg-zinc-950/80 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/10 shadow-lg">
-             {category.name}
-           </span>
         </div>
-      </div>
-
-      {/* Orchestration Controls */}
-      <div className="p-6 space-y-5 flex-1 flex flex-col">
-        <div className="space-y-2.5">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1">
-             Asset Orchestration (Image Address)
-          </label>
-          <div className="relative group/input">
-             <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300 group-focus-within/input:text-brand transition-colors" />
-             <Input 
-               value={tempUrl}
-               onChange={(e) => {
-                 setTempUrl(e.target.value);
-                 setIsModified(e.target.value !== category.image);
-               }}
-               placeholder="e.g. https://domain.com/image.jpg"
-               className="h-12 pl-12 rounded-2xl border-zinc-100 bg-zinc-50/30 text-xs font-bold text-zinc-900 focus:bg-white transition-all shadow-sm"
-             />
-          </div>
-        </div>
-
-        <div className="mt-auto pt-4 flex flex-col gap-3">
-           <div className="flex items-center justify-between gap-4">
-             <div className="flex items-center gap-2">
-               {isModified ? (
-                 <div className="flex items-center gap-1.5 text-[9px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
-                   <AlertCircle className="w-3 h-3" />
-                   Unsaved Changes
-                 </div>
-               ) : (
-                 <div className="flex items-center gap-1.5 text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
-                   <CheckCircle2 className="w-3 h-3" />
-                   Synchronized
-                 </div>
-               )}
-             </div>
-
-             <Button
-               disabled={!isModified || isUpdating}
-               onClick={() => onUpdate(category.id, tempUrl)}
-               className={cn(
-                 "rounded-2xl h-11 px-6 font-bold text-xs uppercase tracking-widest transition-all",
-                 isModified 
-                   ? "bg-zinc-900 text-white hover:bg-zinc-800 shadow-lg shadow-zinc-200 active:scale-95" 
-                   : "bg-zinc-50 text-zinc-300"
-               )}
-             >
-               {isUpdating ? (
-                 <Loader2 className="w-4 h-4 animate-spin" />
-               ) : (
-                 <div className="flex items-center gap-2">
-                   <Save className="w-4 h-4" />
-                   Save Visual
-                 </div>
-               )}
-             </Button>
-           </div>
-
-           {/* Delete Button */}
-           <Button
-             disabled={isDeleting}
-             onClick={() => onDelete(category.id, category.name)}
-             variant="outline"
-             className="h-11 rounded-2xl border-red-200 hover:bg-red-50 text-red-600 hover:text-red-700 font-bold text-xs uppercase tracking-widest gap-2 transition-all active:scale-95"
-           >
-             {isDeleting ? (
-               <>
-                 <Loader2 className="w-4 h-4 animate-spin" />
-                 Deleting...
-               </>
-             ) : (
-               <>
-                 <Trash2 className="w-4 h-4" />
-                 Delete Category
-               </>
-             )}
-           </Button>
-
-           {/* Featured Toggle Button */}
-           <Button
-             onClick={() => onToggleFeatured(category.id)}
-             className={cn(
-               "h-11 rounded-2xl font-bold text-xs uppercase tracking-widest gap-2 transition-all active:scale-95",
-               category.isFeatured
-                 ? "bg-amber-100 hover:bg-amber-200 text-amber-700 border border-amber-200"
-                 : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-200"
-             )}
-           >
-             <Star className={cn("w-4 h-4", category.isFeatured && "fill-current")} />
-             {category.isFeatured ? "Featured" : "Not Featured"}
-           </Button>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
