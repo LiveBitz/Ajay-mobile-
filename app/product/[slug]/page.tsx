@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { ProductSelection } from "@/components/catalog/ProductSelection";
 
-export const revalidate = 3600;
+export const revalidate = 300; // 5 minutes - real-time updates
 
 async function getProduct(slug: string) {
   return await prisma.product.findUnique({

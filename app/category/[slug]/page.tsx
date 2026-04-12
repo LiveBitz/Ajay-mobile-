@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 
-export const revalidate = 3600;
+export const revalidate = 300; // 5 minutes - real-time updates
 
 // ✅ Dynamic metadata per category
 export async function generateMetadata({

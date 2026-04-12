@@ -43,12 +43,13 @@ const nextConfig: NextConfig = {
   },
 
   // ============================================
-  // SECURITY HEADERS
+  // SECURITY HEADERS & CACHE CONTROL
   // ============================================
   async headers() {
     return [
+      // HTML pages - short cache for real-time updates
       {
-        source: "/:path*",
+        source: "/((?!api|_next/static|_next/image|favicon\\.ico).*)",
         headers: [
           {
             key: "X-Frame-Options",
@@ -70,12 +71,44 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "geolocation=(self), microphone=(), camera=()",
           },
+          // ✅ Short cache for HTML pages (5 minutes) + revalidate + CDN
+          {
+            key: "Cache-Control",
+            value: "public, max-age=300, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400",
+          },
+        ],
+      },
+      // Static assets - long cache (immutable)
+      {
+        source: "/static/:path*",
+        headers: [
           {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
           },
         ],
       },
+      // Next.js static files - long cache
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      // Images - moderate cache
+      {
+        source: "/images/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=2592000",
+          },
+        ],
+      },
+      // API routes - no cache by default
       {
         source: "/api/:path*",
         headers: [
@@ -90,6 +123,10 @@ const nextConfig: NextConfig = {
           {
             key: "Access-Control-Max-Age",
             value: "86400",
+          },
+          {
+            key: "Cache-Control",
+            value: "private, no-store, must-revalidate",
           },
         ],
       },

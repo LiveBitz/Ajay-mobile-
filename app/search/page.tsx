@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { SearchCatalog } from "@/components/catalog/SearchCatalog";
 
 // ✅ Static regeneration - cache search results for 30 minutes
-export const revalidate = 1800;
+export const revalidate = 300; // 5 minutes - real-time updates
 
 export default async function SearchPage({
   searchParams,
