@@ -4,8 +4,7 @@ import React from "react";
 import { useProductFilter, Product } from "@/hooks/useProductFilter";
 import { CatalogHeader } from "@/components/catalog/CatalogHeader";
 import { FilterSidebar } from "@/components/catalog/FilterSidebar";
-import { FilterDrawer } from "@/components/catalog/FilterDrawer";
-import { SortDropdown } from "@/components/catalog/SortDropdown";
+import { MobileFilterBar } from "@/components/catalog/MobileFilterBar";
 import { ActiveFilters } from "@/components/catalog/ActiveFilters";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
 
@@ -37,7 +36,7 @@ export function CategoryCatalog({ initialProducts, slug }: CategoryCatalogProps)
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pb-24 lg:pb-0">
       {/* Header Section */}
       <div className="container mx-auto px-4 md:px-6 lg:px-8 pt-6 md:pt-8 pb-8">
         <CatalogHeader 
@@ -48,20 +47,18 @@ export function CategoryCatalog({ initialProducts, slug }: CategoryCatalogProps)
         />
       </div>
 
-      {/* Mobile Filter & Sort Bar (Sticky) */}
-      <div className="lg:hidden sticky top-[72px] md:top-[84px] z-30 border-b bg-white/95 backdrop-blur-sm">
-        <div className="flex items-center">
-          <FilterDrawer 
-            filters={filters} 
-            setFilters={setFilters} 
-            clearAll={clearAll} 
-            activeFilterCount={activeFilterCount}
-            counts={counts}
-            slug={slug}
-          />
-          <SortDropdown sortBy={sortBy} setSortBy={setSortBy} />
-        </div>
-      </div>
+      {/* Mobile Filter & Sort Bar (Fixed Bottom) */}
+      <MobileFilterBar 
+        filters={filters} 
+        setFilters={setFilters} 
+        clearAll={clearAll} 
+        activeFilterCount={activeFilterCount}
+        counts={counts}
+        slug={slug}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        productCount={filteredProducts.length}
+      />
 
       <div className="container mx-auto px-4 md:px-6 lg:px-8 pb-20">
         <div className="flex flex-col lg:flex-row gap-8">
