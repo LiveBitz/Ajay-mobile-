@@ -102,17 +102,114 @@ export function MobileFilterBar({
               )}
             </SheetHeader>
 
-            {/* Scrollable filter content - native CSS scroll */}
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <div className="px-6 py-5 space-y-3 pb-24">
-                <FilterSidebar
-                  filters={filters}
-                  setFilters={setFilters}
-                  clearAll={clearAll}
-                  counts={counts}
-                  slug={slug}
-                  className="border-0 shadow-none rounded-none !h-auto !bg-transparent"
-                />
+            {/* Scrollable filter content - use native scroll without nested ScrollArea */}
+            <div className="flex-1 overflow-y-scroll overscroll-contain">
+              <div className="px-6 py-5 pb-32 space-y-4">
+                {/* Price Range */}
+                <section className="space-y-3 pb-4 border-b border-zinc-100">
+                  <button 
+                    onClick={() => {}}
+                    className="flex items-center justify-between w-full"
+                  >
+                    <h4 className="text-sm font-bold text-zinc-900">Price Range</h4>
+                    <span className="text-xs font-medium text-brand">₹{filters.priceRange[0]}-₹{filters.priceRange[1]}</span>
+                  </button>
+                </section>
+
+                {/* Sizes */}
+                <section className="space-y-3 pb-4 border-b border-zinc-100">
+                  <h4 className="text-sm font-bold text-zinc-900">Size</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {Object.entries(counts.sizes).map(([size, count]) => (
+                      <label key={size} className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={filters.sizes.includes(size)}
+                          onChange={() => {
+                            const updated = filters.sizes.includes(size)
+                              ? filters.sizes.filter(s => s !== size)
+                              : [...filters.sizes, size];
+                            setFilters({ ...filters, sizes: updated });
+                          }}
+                          className="w-4 h-4 rounded border-zinc-300"
+                        />
+                        <div className="flex-1 text-sm">
+                          <div className="font-medium text-zinc-900">{size}</div>
+                          <div className="text-xs text-zinc-500">({count} units)</div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Colors */}
+                <section className="space-y-3 pb-4 border-b border-zinc-100">
+                  <h4 className="text-sm font-bold text-zinc-900">Color</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.keys(counts.colors).map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => {
+                          const updated = filters.colors.includes(color)
+                            ? filters.colors.filter(c => c !== color)
+                            : [...filters.colors, color];
+                          setFilters({ ...filters, colors: updated });
+                        }}
+                        className={`w-10 h-10 rounded-lg border-2 transition-all ${
+                          filters.colors.includes(color)
+                            ? 'border-brand ring-2 ring-brand ring-offset-2'
+                            : 'border-zinc-200'
+                        }`}
+                        title={color}
+                      />
+                    ))}
+                  </div>
+                </section>
+
+                {/* Discount */}
+                <section className="space-y-3 pb-4 border-b border-zinc-100">
+                  <h4 className="text-sm font-bold text-zinc-900">Discount</h4>
+                  <div className="space-y-2">
+                    {[10, 20, 30, 40, 50].map((discount) => (
+                      <label key={discount} className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="discount"
+                          checked={filters.discount === discount}
+                          onChange={() => setFilters({ ...filters, discount })}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm font-medium text-zinc-900">{discount}% and above</span>
+                      </label>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Categories */}
+                <section className="space-y-3 pb-4">
+                  <h4 className="text-sm font-bold text-zinc-900">Category</h4>
+                  <div className="space-y-2">
+                    {Object.entries(counts.subCategories).map(([category, count]) => (
+                      <label key={category} className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={filters.subCategories.includes(category)}
+                          onChange={() => {
+                            const updated = filters.subCategories.includes(category)
+                              ? filters.subCategories.filter(c => c !== category)
+                              : [...filters.subCategories, category];
+                            setFilters({ ...filters, subCategories: updated });
+                          }}
+                          className="w-4 h-4 rounded border-zinc-300"
+                        />
+                        <div className="flex-1 flex items-center justify-between">
+                          <span className="text-sm font-medium text-zinc-900">{category}</span>
+                          <span className="text-xs text-zinc-500">({count})</span>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </section>
               </div>
             </div>
 
