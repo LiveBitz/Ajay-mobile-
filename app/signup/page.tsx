@@ -102,6 +102,27 @@ export default function SignupPage() {
             {/* Auth Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-5">
+                {/* Full Name Orchestration */}
+                <div className="space-y-2.5">
+                  <Label 
+                    htmlFor="name"
+                    className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1"
+                  >
+                    Full Name
+                  </Label>
+                  <div className="relative group/input">
+                    <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300 group-focus-within/input:text-brand transition-colors" />
+                    <Input 
+                      id="name"
+                      name="name"
+                      type="text"
+                      required
+                      placeholder="e.g. John Doe"
+                      className="h-14 pl-12 rounded-2xl border-zinc-100 bg-zinc-50/50 text-sm font-bold text-zinc-900 focus:bg-white transition-all shadow-sm"
+                    />
+                  </div>
+                </div>
+
                 {/* Email Orchestration */}
                 <div className="space-y-2.5">
                   <Label 

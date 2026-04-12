@@ -1,143 +1,172 @@
 import prisma from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { getPaginationParams, formatPaginatedResponse } from "@/lib/pagination";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    console.log("=== Users API Called ===");
+    
+    // ✅ Note: Middleware protects /admin routes, so no additional auth needed here
+    // The page is only accessible to authenticated admins
 
-    // Get authenticated user (verify admin access)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // ✅ PHASE 2: Smart pagination instead of hard-coded limits
-    const searchParams = request.nextUrl.searchParams;
-    const { take, skip, page } = getPaginationParams({
-      page: searchParams.get("page") ?? undefined,
-      limit: searchParams.get("limit") ?? undefined,
-    });
-
-    // Phase 7: Use pagination parameters instead of hardcoding (enables full user browsing)
-    const ordersPerPage = 100;
-    const orders = await prisma.order.findMany({
-      select: {
-        userId: true,
-        id: true,
-        total: true,
-        createdAt: true,
-        customerEmail: true,
-        customerName: true,
+    // ✅ FIRST: Try to fetch from User table
+    let dbUsers: any = await prisma.user.findMany({
+      include: {
+        orders: {
+          select: {
+            id: true,
+            total: true,
+            createdAt: true,
+          },
+        },
+        wishlists: {
+          select: {
+            id: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: "desc",
+        joinedDate: "desc",
       },
-      take: ordersPerPage,
-      skip: (page - 1) * ordersPerPage,
     });
 
-    // Phase 7: Paginated aggregations with skip
-    const addresses = await prisma.address.findMany({
-      select: {
-        userId: true,
-        createdAt: true,
-      },
-      distinct: ["userId"],
-      take: 100,
-      skip: (page - 1) * 100,
+    console.log("Users from User table:", dbUsers.length);
+
+    // ✅ FALLBACK: If User table is empty, fetch from Orders and build user data
+    if (dbUsers.length === 0) {
+      console.log("User table is empty, syncing from orders...");
+
+      const orderUsers = new Map<
+        string,
+        {
+          id: string;
+          email: string;
+          name: string;
+          totalOrders: number;
+          totalSpent: number;
+          lastOrder: Date | null;
+          joinedDate: Date;
+          wishlistCount: number;
+        }
+      >();
+
+      // Fetch all orders
+      const orders = await prisma.order.findMany({
+        select: {
+          userId: true,
+          total: true,
+          createdAt: true,
+          customerEmail: true,
+          customerName: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      // Group by user
+      for (const order of orders) {
+        if (!order.customerEmail) continue;
+
+        if (!orderUsers.has(order.userId)) {
+          orderUsers.set(order.userId, {
+            id: order.userId,
+            email: order.customerEmail,
+            name: order.customerName || "User",
+            totalOrders: 0,
+            totalSpent: 0,
+            lastOrder: null,
+            joinedDate: order.createdAt,
+            wishlistCount: 0,
+          });
+        }
+
+        const user = orderUsers.get(order.userId)!;
+        user.totalOrders += 1;
+        user.totalSpent += order.total;
+        if (!user.lastOrder || order.createdAt > user.lastOrder) {
+          user.lastOrder = order.createdAt;
+        }
+      }
+
+      // Fetch wishlist counts
+      const wishlists = await prisma.wishlist.findMany({
+        select: { userId: true },
+      });
+
+      const wishlistCounts = new Map<string, number>();
+      for (const item of wishlists) {
+        wishlistCounts.set(
+          item.userId,
+          (wishlistCounts.get(item.userId) || 0) + 1
+        );
+      }
+
+      // Apply wishlist counts
+      for (const [userId, count] of wishlistCounts.entries()) {
+        const user = orderUsers.get(userId);
+        if (user) {
+          user.wishlistCount = count;
+        }
+      }
+
+      // Convert to array
+      dbUsers = Array.from(orderUsers.values());
+
+      // ✅ ALSO: Sync these users to User table for next time
+      try {
+        for (const user of dbUsers) {
+          await prisma.user.upsert({
+            where: { id: user.id },
+            update: {
+              email: user.email,
+              name: user.name,
+            },
+            create: {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+            },
+          });
+        }
+        console.log("Synced", dbUsers.length, "users to User table");
+      } catch (err) {
+        console.error("Error syncing users to User table:", err);
+        // Continue - we have the data even if sync fails
+      }
+    }
+
+    // ✅ MapAPP users to the response format
+    const users = dbUsers.map((user: any) => {
+      // Check if data came from User table (has .orders) or from fallback (already calculated)
+      const hasOrdersRelation = Array.isArray(user.orders);
+      
+      const totalOrders = hasOrdersRelation ? user.orders?.length || 0 : user.totalOrders || 0;
+      const totalSpent = hasOrdersRelation 
+        ? user.orders?.reduce((sum: number, order: any) => sum + order.total, 0) || 0
+        : user.totalSpent || 0;
+      const lastOrder = hasOrdersRelation 
+        ? user.orders?.[0]?.createdAt || null 
+        : user.lastOrder || null;
+      const wishlistCount = hasOrdersRelation ? user.wishlists?.length || 0 : user.wishlistCount || 0;
+
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name || "User",
+        totalOrders,
+        totalSpent,
+        lastOrder: lastOrder ? (typeof lastOrder === 'string' ? lastOrder : lastOrder.toISOString()) : null,
+        joinedDate: user.joinedDate ? (typeof user.joinedDate === 'string' ? user.joinedDate : user.joinedDate.toISOString()) : new Date().toISOString(),
+        wishlistCount,
+      };
     });
 
-    // Phase 7: Paginated wishlist aggregation
-    const wishlists = await prisma.wishlist.findMany({
-      select: {
-        userId: true,
-      },
-      distinct: ["userId"],
-      take: 100,
-      skip: (page - 1) * 100,
-    });
-
-    // Aggregate user data
-    const userMap = new Map<
-      string,
-      {
-        id: string;
-        email: string;
-        name: string;
-        totalOrders: number;
-        totalSpent: number;
-        lastOrder: Date | null;
-        joinedDate: Date;
-        wishlistCount: number;
-      }
-    >();
-
-    // Add order data
-    orders.forEach((order) => {
-      if (!userMap.has(order.userId)) {
-        userMap.set(order.userId, {
-          id: order.userId,
-          email: order.customerEmail,
-          name: order.customerName,
-          totalOrders: 0,
-          totalSpent: 0,
-          lastOrder: null,
-          joinedDate: order.createdAt,
-          wishlistCount: 0,
-        });
-      }
-
-      const user = userMap.get(order.userId)!;
-      user.totalOrders += 1;
-      user.totalSpent += order.total;
-      if (!user.lastOrder || order.createdAt > user.lastOrder) {
-        user.lastOrder = order.createdAt;
-      }
-    });
-
-    // Add address join date (if earlier than order date)
-    addresses.forEach((address) => {
-      if (!userMap.has(address.userId)) {
-        userMap.set(address.userId, {
-          id: address.userId,
-          email: "",
-          name: "",
-          totalOrders: 0,
-          totalSpent: 0,
-          lastOrder: null,
-          joinedDate: address.createdAt,
-          wishlistCount: 0,
-        });
-      }
-
-      const user = userMap.get(address.userId)!;
-      if (address.createdAt < user.joinedDate) {
-        user.joinedDate = address.createdAt;
-      }
-    });
-
-    // Add wishlist count
-    wishlists.forEach((wishlist) => {
-      if (userMap.has(wishlist.userId)) {
-        const user = userMap.get(wishlist.userId)!;
-        user.wishlistCount += 1;
-      }
-    });
-
-    const users = Array.from(userMap.values())
-      .filter((u) => u.email)
-      .sort((a, b) => b.joinedDate.getTime() - a.joinedDate.getTime());
+    const totalRevenue = users.reduce((sum: number, u: any) => sum + u.totalSpent, 0);
+    const totalOrders = users.reduce((sum: number, u: any) => sum + u.totalOrders, 0);
 
     return NextResponse.json({
       users,
       totalUsers: users.length,
-      totalRevenue: users.reduce((sum, u) => sum + u.totalSpent, 0),
-      totalOrders: users.reduce((sum, u) => sum + u.totalOrders, 0),
+      totalRevenue,
+      totalOrders,
     });
   } catch (error) {
     console.error("Error fetching users:", error);

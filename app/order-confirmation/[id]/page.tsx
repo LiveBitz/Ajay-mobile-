@@ -330,7 +330,7 @@ export default function OrderConfirmationPage() {
                     {item.color && <span>Color: {item.color}</span>}
                   </div>
                   <p className="text-sm font-bold text-zinc-950 mt-3">
-                    ₹{(item.price * item.quantity).toLocaleString()}
+                    ₹{((item.price ?? 0) * (item.quantity ?? 0)).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -343,7 +343,7 @@ export default function OrderConfirmationPage() {
           <div className="space-y-4">
             <div className="flex justify-between text-sm">
               <span className="text-zinc-600">Subtotal</span>
-              <span className="font-bold">₹{order.subtotal.toLocaleString()}</span>
+              <span className="font-bold">₹{(order.subtotal ?? 0).toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-zinc-600">Shipping</span>
@@ -351,12 +351,12 @@ export default function OrderConfirmationPage() {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-zinc-600">Tax</span>
-              <span className="font-bold">₹{order.tax}</span>
+              <span className="font-bold">₹{(order.tax ?? 0).toLocaleString()}</span>
             </div>
             <div className="border-t border-zinc-100 pt-4 flex justify-between">
               <span className="font-bold text-zinc-600">TOTAL</span>
               <span className="text-2xl font-black text-zinc-950">
-                ₹{order.total.toLocaleString()}
+                ₹{(order.total ?? 0).toLocaleString()}
               </span>
             </div>
           </div>

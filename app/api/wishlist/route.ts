@@ -107,68 +107,114 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ✅ USE ATOMIC OPERATION: Try to create. If unique constraint exists, delete instead.
-    // This prevents TOCTOU race conditions.
+    // ✅ Ensure User record exists (for foreign key constraint)
+    if (!user.email) {
+      console.warn("User has no email, cannot create User record");
+      return NextResponse.json(
+        { error: "User email is required" },
+        { status: 400 }
+      );
+    }
+
+    const userName = user.user_metadata?.name || user.email.split("@")[0] || "User";
+
+    // ✅ STEP 1: Ensure User exists in database first
     try {
-      const wishlistItem = await prisma.wishlist.create({
-        data: {
-          userId: user.id,
-          productId,
+      // Use a direct upsert, not in transaction
+      const createdUser = await prisma.user.upsert({
+        where: { id: user.id },
+        update: {
+          email: user.email,
+          name: userName,
         },
-        select: {
-          id: true,
-          productId: true,
-          product: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              image: true,
-              price: true,
-              originalPrice: true,
-              discount: true,
-              stock: true,
-            }
-          }
+        create: {
+          id: user.id,
+          email: user.email,
+          name: userName,
+        },
+      });
+      console.log("User record ensured:", createdUser.id);
+    } catch (err: any) {
+      console.error("Error ensuring user record:", {
+        error: err.message,
+        code: err.code,
+        userId: user.id,
+        userEmail: user.email,
+      });
+      // Still try to proceed - user might already exist but with an error
+    }
+
+    // ✅ STEP 2: Now handle wishlist (user should exist)
+    try {
+      // Check if already in wishlist
+      const existing = await prisma.wishlist.findUnique({
+        where: {
+          userId_productId: {
+            userId: user.id,
+            productId,
+          },
         },
       });
 
-      return NextResponse.json({
-        success: true,
-        message: "Added to wishlist",
-        action: "added",
-        data: wishlistItem,
-      });
-    } catch (error: any) {
-      // If unique constraint violation, item already exists - remove it
-      if (error.code === "P2002") {
-        try {
-          await prisma.wishlist.delete({
-            where: {
-              userId_productId: {
-                userId: user.id,
-                productId,
-              },
+      if (existing) {
+        // Remove from wishlist
+        await prisma.wishlist.delete({
+          where: {
+            userId_productId: {
+              userId: user.id,
+              productId,
             },
-          });
+          },
+        });
 
-          return NextResponse.json({
-            success: true,
-            message: "Removed from wishlist",
-            action: "removed",
-          });
-        } catch (deleteError) {
-          // Item might have been deleted by another request - this is ok
-          console.error("Error deleting wishlist item:", deleteError);
-          return NextResponse.json({
-            success: true,
-            message: "Wishlist state synchronized",
-            action: "removed",
-          });
-        }
+        return NextResponse.json({
+          success: true,
+          message: "Removed from wishlist",
+          action: "removed",
+        });
+      } else {
+        // Add to wishlist
+        const wishlistItem = await prisma.wishlist.create({
+          data: {
+            userId: user.id,
+            productId,
+          },
+          select: {
+            id: true,
+            productId: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                image: true,
+                price: true,
+                originalPrice: true,
+                discount: true,
+                stock: true,
+              }
+            }
+          },
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: "Added to wishlist",
+          action: "added",
+          data: wishlistItem,
+        });
       }
-      // Re-throw other errors
-      throw error;
+    } catch (error: any) {
+      console.error("Wishlist operation error:", {
+        error: error.message,
+        code: error.code,
+        userId: user.id,
+        productId,
+      });
+      return NextResponse.json(
+        { error: "Failed to update wishlist: " + error.message },
+        { status: 500 }
+      );
     }
   } catch (error) {
     console.error("Wishlist POST error:", error);

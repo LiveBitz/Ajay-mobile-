@@ -206,6 +206,27 @@ export async function POST(request: NextRequest) {
     // Generate unique order number
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
+    // ✅ Ensure User record exists (for foreign key constraint)
+    if (data.user.email) {
+      try {
+        await prisma.user.upsert({
+          where: { id: userId },
+          update: {
+            email: data.user.email,
+            name: data.user.user_metadata?.name || data.user.email.split("@")[0] || "User",
+          },
+          create: {
+            id: userId,
+            email: data.user.email,
+            name: data.user.user_metadata?.name || data.user.email.split("@")[0] || "User",
+          },
+        });
+      } catch (err) {
+        console.error("Error ensuring user exists:", err);
+        // Continue even if user creation fails
+      }
+    }
+
     // ✅ USE TRANSACTION TO ENSURE ATOMICITY: Order + Stock deduction must both succeed or both fail
     const order = await prisma.$transaction(async (tx) => {
       // Create order with items

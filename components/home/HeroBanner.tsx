@@ -57,7 +57,7 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
   }, [api, onSelect]);
 
   return (
-    <section className="w-full bg-black">
+    <section className="w-full bg-red-800">
       {/* Hero Carousel */}
       <div
         className="w-full overflow-hidden"

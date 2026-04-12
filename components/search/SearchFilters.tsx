@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, X, Trending2, Clock } from "lucide-react";
+import { Search, X, TrendingUp, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -133,7 +133,7 @@ export function SearchFilters({
                 {recentSearches.length === 0 && (
                   <div className="p-4 space-y-3">
                     <div className="flex items-center gap-2 text-sm font-semibold text-stone-900 mb-2">
-                      <Trending2 className="h-4 w-4 text-brand" />
+                      <TrendingUp className="h-4 w-4 text-brand" />
                       Trending Now
                     </div>
                     <div className="space-y-2">

@@ -1,65 +1,137 @@
-"use client";
-
-import { BadgeIndianRupee, TrendingUp, ArrowUpRight, ArrowDownRight, Package, Store, Users } from "lucide-react";
+// app/admin/page.tsx
+import { BadgeIndianRupee, Package, Store, Users } from "lucide-react";
 import DashboardContent from "@/components/admin/DashboardContent";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import prisma from "@/lib/prisma";
 
-export default function AdminPage() {
+// ✅ Server component — no "use client"
+export default async function AdminPage() {
+
+  // ✅ Fetch all dashboard data in parallel
+  const [
+    totalProducts,
+    totalOrders,
+    totalUsers,
+    totalCategories,
+    recentOrders,
+    totalRevenue,
+  ] = await Promise.all([
+    prisma.product.count(),
+    prisma.order.count(),
+    prisma.user.count(),        // ✅ This was missing — users never fetched
+    prisma.category.count(),
+    prisma.order.findMany({
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        createdAt: true,
+        total: true,
+        status: true,
+        user: { select: { name: true, email: true } },
+      },
+    }),
+    prisma.order.aggregate({
+      _sum: { total: true },
+    }),
+  ]);
+
+  const stats = {
+    totalProducts,
+    totalOrders,
+    totalUsers,
+    totalCategories,
+    recentOrders,
+    totalRevenue: totalRevenue._sum.total ?? 0,
+  };
+
+  const quickLinks = [
+    {
+      href: "/admin/products",
+      icon: Package,
+      label: "Product Management",
+      sub: "View and manage all products",
+      color: "text-blue-600",
+      hover: "hover:border-blue-200",
+      count: totalProducts,
+    },
+    {
+      href: "/admin/orders",
+      icon: BadgeIndianRupee,
+      label: "Order Management",
+      sub: "Process and track orders",
+      color: "text-emerald-600",
+      hover: "hover:border-emerald-200",
+      count: totalOrders,
+    },
+    {
+      href: "/admin/users",
+      icon: Users,
+      label: "Users Management",
+      sub: "View customer accounts",
+      color: "text-orange-600",
+      hover: "hover:border-orange-200",
+      count: totalUsers,       // ✅ Now shows real user count
+    },
+    {
+      href: "/admin/categories",
+      icon: Store,
+      label: "Categories",
+      sub: "Organize product categories",
+      color: "text-purple-600",
+      hover: "hover:border-purple-200",
+      count: totalCategories,
+    },
+  ];
+
   return (
-    <div className="space-y-6 sm:space-y-12">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8 overflow-hidden">
-        <div className="space-y-1 sm:space-y-2">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-heading tracking-tight text-zinc-900">
-            Dashboard Overview
-          </h1>
-          <p className="text-zinc-500 font-medium text-sm sm:text-base leading-relaxed max-w-xl">
-            Welcome back, <span className="text-zinc-900 font-bold">Admin</span>! Real-time analytics and business insights.
-          </p>
+    <div className="space-y-6 sm:space-y-10 pb-16 px-3 sm:px-4 lg:px-0">
+
+      {/* ── Header ── */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-0.5 bg-red-600 rounded-full" />
+          <span className="text-red-600 text-[10px] font-bold uppercase tracking-[0.2em]">
+            Admin
+          </span>
         </div>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900">
+          Dashboard Overview
+        </h1>
+        <p className="text-zinc-500 text-sm">
+          Welcome back,{" "}
+          <span className="text-zinc-900 font-bold">Admin</span>! Real-time analytics and business insights.
+        </p>
       </div>
 
-      {/* Main Dashboard Content */}
-      <DashboardContent />
-
-      {/* Quick Access Links */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Link
-          href="/admin/products"
-          className="bg-white p-6 rounded-xl border border-zinc-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all group"
-        >
-          <Package className="w-6 h-6 text-blue-600 mb-3 group-hover:scale-110 transition-transform" />
-          <h3 className="font-bold text-gray-900">Product Management</h3>
-          <p className="text-sm text-gray-600 mt-1">View and manage all products</p>
-        </Link>
-
-        <Link
-          href="/admin/orders"
-          className="bg-white p-6 rounded-xl border border-zinc-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group"
-        >
-          <BadgeIndianRupee className="w-6 h-6 text-emerald-600 mb-3 group-hover:scale-110 transition-transform" />
-          <h3 className="font-bold text-gray-900">Order Management</h3>
-          <p className="text-sm text-gray-600 mt-1">Process and track orders</p>
-        </Link>
-
-        <Link
-          href="/admin/users"
-          className="bg-white p-6 rounded-xl border border-zinc-100 shadow-sm hover:shadow-md hover:border-orange-200 transition-all group"
-        >
-          <Users className="w-6 h-6 text-orange-600 mb-3 group-hover:scale-110 transition-transform" />
-          <h3 className="font-bold text-gray-900">Users Management</h3>
-          <p className="text-sm text-gray-600 mt-1">View customer accounts</p>
-        </Link>
-
-        <Link
-          href="/admin/categories"
-          className="bg-white p-6 rounded-xl border border-zinc-100 shadow-sm hover:shadow-md hover:border-purple-200 transition-all group"
-        >
-          <Store className="w-6 h-6 text-purple-600 mb-3 group-hover:scale-110 transition-transform" />
-          <h3 className="font-bold text-gray-900">Categories</h3>
-          <p className="text-sm text-gray-600 mt-1">Organize product categories</p>
-        </Link>
+      {/* ── Quick Access Cards ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        {quickLinks.map(({ href, icon: Icon, label, sub, color, hover, count }) => (
+          <Link
+            key={href}
+            href={href}
+            className={`bg-white p-4 md:p-5 rounded-2xl border border-zinc-100 shadow-sm hover:shadow-md ${hover} transition-all duration-200 group flex flex-col gap-3`}
+          >
+            <div className="flex items-start justify-between">
+              <div className={`w-9 h-9 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}>
+                <Icon className={`w-4 h-4 ${color}`} />
+              </div>
+              {/* ✅ Live count badge */}
+              <span className="text-xs font-black text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full tabular-nums">
+                {count.toLocaleString("en-IN")}
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-zinc-900 text-sm leading-tight">{label}</h3>
+              <p className="text-xs text-zinc-400 mt-0.5">{sub}</p>
+            </div>
+          </Link>
+        ))}
       </div>
+
+      {/* ── Main Dashboard Content ── */}
+      {/* ✅ Pass fetched stats as props so DashboardContent doesn't re-fetch */}
+      <DashboardContent stats={stats} />
     </div>
   );
 }

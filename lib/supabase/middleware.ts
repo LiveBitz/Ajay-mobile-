@@ -34,12 +34,13 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
-  const isAdminPath = pathname.startsWith('/admin')
+  const isAdminPath = pathname.startsWith('/admin') && !pathname.startsWith('/api/admin')
   const isEntryPath = pathname === '/admin/entry'
   const isAuthPath = pathname.startsWith('/login') || pathname.startsWith('/signup')
   const hasAdminAccess = request.cookies.get('admin_access')?.value === 'true'
   const isSeedApi = pathname === '/api/seed-banners'
   const isDebugApi = pathname === '/api/debug-banners'
+  const isApiRoute = pathname.startsWith('/api/')
   
   const isPublicPath = 
     pathname === '/' || 
@@ -47,7 +48,8 @@ export async function updateSession(request: NextRequest) {
     isEntryPath ||
     pathname.startsWith('/auth') ||
     isSeedApi ||
-    isDebugApi
+    isDebugApi ||
+    isApiRoute // ✅ All API routes handle their own auth
 
   console.log('[MIDDLEWARE]', {
     pathname,

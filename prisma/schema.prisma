@@ -7,8 +7,25 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // ✅ PHASE 1: Connection pool - requires DATABASE_DIRECT_URL env var for pooling
-  // This allows 20 concurrent connections instead of default 2-5
+}
+
+// ✅ NEW: User model to store user details from Supabase Auth
+model User {
+  id        String   @id // Supabase User ID
+  email     String   @unique
+  name      String?
+  phone     String?
+  avatar    String?
+  joinedDate DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  addresses Address[]
+  wishlists Wishlist[]
+  orders    Order[]
+
+  @@index([email])
+  @@index([joinedDate])
 }
 
 model Category {
@@ -76,7 +93,8 @@ model Banner {
 }
 model Address {
   id        String   @id @default(cuid())
-  userId    String   // Link to Supabase User ID
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   phone     String
   street    String
@@ -92,7 +110,8 @@ model Address {
 
 model Wishlist {
   id        String   @id @default(cuid())
-  userId    String   // Link to Supabase User ID
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
   createdAt DateTime @default(now())
@@ -104,7 +123,8 @@ model Wishlist {
 
 model Order {
   id            String      @id @default(cuid())
-  userId        String      // Link to Supabase User ID
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderNumber   String      @unique
   
   // Customer Info
