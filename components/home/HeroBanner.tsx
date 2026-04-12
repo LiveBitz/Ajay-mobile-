@@ -57,10 +57,10 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
   }, [api, onSelect]);
 
   return (
-    <section className="w-full bg-red-800">
+    <section className="w-full bg-black">
       {/* Hero Carousel */}
       <div
-        className="w-full overflow-hidden"
+        className="w-full overflow-hidden relative"
         onMouseEnter={() => pluginRef.current?.stop?.()}
         onMouseLeave={() => pluginRef.current?.reset?.()}
       >
@@ -73,16 +73,16 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
           <CarouselContent className="m-0 w-full">
             {banners.map((slide) => (
               <CarouselItem key={slide.id} className="pl-0 basis-full w-full">
-                <Link href={(slide as any).link || "/"} className="block w-full h-full">
-                  <div className="relative w-full h-[200px] sm:h-[280px] md:h-[360px] lg:h-[420px] overflow-hidden">
+                <Link href={(slide as any).link || "/"} className="block w-full">
+                  <div className="relative w-full bg-zinc-900" style={{ aspectRatio: "16 / 6" }}>
                     <Image
                       src={slide.image}
                       alt={slide.title}
                       fill
-                      className="object-cover transition-transform duration-700 hover:scale-105 w-full h-full"
+                      className="object-cover"
                       priority
-                      quality={90}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 100vw"
+                      quality={85}
+                      sizes="100vw"
                     />
                   </div>
                 </Link>
@@ -94,7 +94,7 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
 
       {/* Pagination Dots */}
       {scrollSnaps.length > 1 && (
-        <div className="flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 px-4 bg-white">
+        <div className="flex items-center justify-center gap-2 py-3 px-4 bg-white">
           {scrollSnaps.map((_, index) => (
             <button
               key={index}
@@ -105,8 +105,8 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
                 height: "10px",
                 backgroundColor:
                   selectedIndex === index
-                    ? "rgb(220, 38, 38)" // brand red
-                    : "rgb(229, 231, 235)", // light gray
+                    ? "rgb(220, 38, 38)"
+                    : "rgb(229, 231, 235)",
                 boxShadow:
                   selectedIndex === index
                     ? "0 2px 8px rgba(220, 38, 38, 0.3)"

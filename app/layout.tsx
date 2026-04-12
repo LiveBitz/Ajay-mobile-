@@ -39,7 +39,10 @@ export default function RootLayout({
           <WishlistProvider>
             <Navbar />
             <StickyMobileSearch />
-            <main className="flex-1 pt-[72px] md:pt-[84px] lg:pt-[92px]">
+            <main
+              className="md:pt-[68px] pt-4"
+              style={{ paddingTop: "calc(var(--navbar-height, 152px) + 2.5rem)" }}
+            >
               {children}
             </main>
             <Footer />
