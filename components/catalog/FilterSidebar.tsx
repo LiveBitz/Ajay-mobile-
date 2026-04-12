@@ -119,8 +119,8 @@ export function FilterSidebar({ filters, setFilters, clearAll, counts, className
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-5 space-y-3">
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="p-5 space-y-3 pr-4 pb-8 lg:pb-2">
           {/* Price Range */}
           <section className="space-y-3 py-4 border-b border-zinc-100">
             <button 

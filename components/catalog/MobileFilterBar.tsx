@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { SlidersHorizontal, ArrowUpDown, X } from "lucide-react";
+import { SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -11,7 +11,6 @@ import {
   SheetTrigger,
   SheetFooter,
 } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { FilterSidebar } from "./FilterSidebar";
 import { Filters } from "@/hooks/useProductFilter";
 import { cn } from "@/lib/utils";
@@ -103,17 +102,16 @@ export function MobileFilterBar({
               )}
             </SheetHeader>
 
-            <div className="flex-1 overflow-y-auto bg-white">
-              <ScrollArea className="h-full">
-                <FilterSidebar
-                  filters={filters}
-                  setFilters={setFilters}
-                  clearAll={clearAll}
-                  counts={counts}
-                  slug={slug}
-                  className="border-0 shadow-none rounded-none"
-                />
-              </ScrollArea>
+            {/* Scrollable filter content */}
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <FilterSidebar
+                filters={filters}
+                setFilters={setFilters}
+                clearAll={clearAll}
+                counts={counts}
+                slug={slug}
+                className="border-0 shadow-none rounded-none"
+              />
             </div>
 
             <SheetFooter className="p-4 border-t bg-white shrink-0 gap-2">
