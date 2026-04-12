@@ -26,21 +26,21 @@ export function FeaturesStrip() {
   ];
 
   return (
-    <section className="py-10 md:py-12 lg:py-16 bg-[#FFE4EB] border-y border-zinc-100">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+    <section className="py-12 md:py-14 lg:py-16 bg-gradient-to-r from-stone-50 via-white to-stone-50 border-y-2 border-stone-100">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10">
         {features.map((feature, idx) => (
-          <div 
-            key={idx} 
-            className="flex flex-col items-center text-center space-y-3"
+          <div
+            key={idx}
+            className="group flex flex-col items-center text-center space-y-3 p-4 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300"
           >
-            <div className="p-3 rounded-lg bg-brand/10">
+            <div className="p-3 md:p-4 rounded-2xl bg-brand/10 group-hover:bg-brand/15 transition-colors duration-300">
               {feature.icon}
             </div>
-            <div className="space-y-1">
-              <h4 className="text-sm md:text-base font-semibold text-zinc-900">
+            <div className="space-y-2">
+              <h4 className="text-sm md:text-base font-bold text-stone-900">
                 {feature.title}
               </h4>
-              <p className="text-xs text-zinc-600 font-medium">
+              <p className="text-xs md:text-sm text-stone-600 font-medium">
                 {feature.subtitle}
               </p>
             </div>

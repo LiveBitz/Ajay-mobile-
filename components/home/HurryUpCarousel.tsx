@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HurryUpProductCard } from "./HurryUpProductCard";
+import { cn } from "@/lib/utils";
 
 interface HurryUpCarouselProps {
   products: any[];
@@ -45,59 +46,124 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
 
   return (
     <div>
-      {/* Header with Navigation */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-zinc-900 tracking-tight mb-2">
-            Limited Time Offers!
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 relative z-10 gap-6">
+        <div className="flex-1">
+          {/* Main Heading */}
+          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-stone-900 tracking-tighter mb-3 drop-shadow-lg leading-tight">
+            Flash Sale! 🔥
           </h2>
-          <p className="text-lg md:text-xl font-bold text-zinc-700">
-            Save Up to 40% on Premium Phones
+          
+          {/* Subheading */}
+          <p className="text-lg md:text-xl font-semibold text-stone-800 drop-shadow-md max-w-2xl">
+            Save up to <span className="font-black text-3xl bg-gradient-to-r from-brand via-red-600 to-red-700 bg-clip-text text-transparent">40%</span> on premium phones
+            <br className="hidden md:block" />
+            <span className="text-stone-700 text-base md:text-lg font-medium">While stock lasts • Limited time only</span>
           </p>
         </div>
 
-        {/* Navigation Arrows */}
-        <div className="flex gap-2">
+        {/* Navigation Arrows - Desktop/Tablet Only */}
+        <div className="hidden md:flex gap-3 items-center relative">
+          {/* Left Indicator */}
+          {canScrollLeft && (
+            <div className="absolute -left-8 h-12 w-1 rounded-full bg-gradient-to-b from-stone-900/50 to-stone-900/0 animate-pulse" />
+          )}
+          
           <Button
             variant="outline"
             size="icon"
             onClick={() => scroll("left")}
             disabled={!canScrollLeft}
-            className="h-10 w-10 rounded-full border-orange-200 hover:border-orange-400 hover:bg-orange-50 disabled:opacity-30 transition-all"
+            className={cn(
+              "h-12 w-12 rounded-full border-2 shadow-md transition-all duration-300 hover:scale-110 active:scale-95",
+              canScrollLeft
+                ? "border-stone-900/80 bg-white hover:shadow-xl hover:bg-stone-900/10 hover:text-stone-900 text-stone-900"
+                : "border-stone-900/40 bg-stone-100 text-stone-300 opacity-40 cursor-not-allowed"
+            )}
           >
-            <ChevronLeft className="h-5 w-5 text-zinc-700" />
+            <ChevronLeft className="h-6 w-6" />
           </Button>
+          
           <Button
             variant="outline"
             size="icon"
             onClick={() => scroll("right")}
             disabled={!canScrollRight}
-            className="h-10 w-10 rounded-full border-orange-200 hover:border-orange-400 hover:bg-orange-50 disabled:opacity-30 transition-all"
+            className={cn(
+              "h-12 w-12 rounded-full border-2 shadow-md transition-all duration-300 hover:scale-110 active:scale-95",
+              canScrollRight
+                ? "border-stone-900/80 bg-white hover:shadow-xl hover:bg-stone-900/10 hover:text-stone-900 text-stone-900"
+                : "border-stone-900/40 bg-stone-100 text-stone-300 opacity-40 cursor-not-allowed"
+            )}
           >
-            <ChevronRight className="h-5 w-5 text-zinc-700" />
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+
+          {/* Right Indicator */}
+          {canScrollRight && (
+            <div className="absolute -right-8 h-12 w-1 rounded-full bg-gradient-to-b from-stone-900/50 to-stone-900/0 animate-pulse" />
+          )}
+        </div>
+      </div>
+
+      {/* Carousel Container */}
+      <div className="relative group">
+        <div
+          ref={carouselRef}
+          onScroll={checkScroll}
+          className="flex gap-5 md:gap-6 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"
+          style={{ scrollBehavior: "smooth" }}
+        >
+          {products.map((product: any) => (
+            <div
+              key={product.id}
+              className="flex-shrink-0 transform transition-all duration-300 hover:translate-y-[-8px]"
+              style={{
+                width: "clamp(160px, calc(50vw - 100px), 260px)",
+                minWidth: "160px",
+              }}
+            >
+              <HurryUpProductCard product={product} />
+            </div>
+          ))}
+        </div>
+
+        {/* Mobile Navigation Buttons - Below Header, Above Carousel */}
+        <div className="md:hidden absolute -top-16 left-0 right-0 flex items-center justify-between px-4 pointer-events-none z-10 w-full gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => scroll("left")}
+            disabled={!canScrollLeft}
+            className={cn(
+              "h-11 w-11 rounded-full border-2 transition-all duration-300 pointer-events-auto flex-shrink-0 font-semibold shadow-xl hover:shadow-2xl active:shadow-md",
+              canScrollLeft
+                ? "border-stone-800/30 bg-gradient-to-br from-stone-800/20 to-stone-700/10 hover:from-stone-800/30 hover:to-stone-700/20 text-stone-800 hover:scale-110 active:scale-95 backdrop-blur-sm"
+                : "border-stone-300/40 bg-stone-200/30 text-stone-300 opacity-30 cursor-not-allowed backdrop-blur-sm"
+            )}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => scroll("right")}
+            disabled={!canScrollRight}
+            className={cn(
+              "h-11 w-11 rounded-full border-2 transition-all duration-300 pointer-events-auto flex-shrink-0 font-semibold shadow-xl hover:shadow-2xl active:shadow-md",
+              canScrollRight
+                ? "border-stone-800/30 bg-gradient-to-br from-stone-800/20 to-stone-700/10 hover:from-stone-800/30 hover:to-stone-700/20 text-stone-800 hover:scale-110 active:scale-95 backdrop-blur-sm"
+                : "border-stone-300/40 bg-stone-200/30 text-stone-300 opacity-30 cursor-not-allowed backdrop-blur-sm"
+            )}
+          >
+            <ChevronRight className="h-6 w-6" />
           </Button>
         </div>
       </div>
-      {/* Carousel Container */}
-      <div
-        ref={carouselRef}
-        onScroll={checkScroll}
-        className="flex gap-4 md:gap-5 overflow-x-auto scroll-smooth pb-2 scrollbar-hide"
-        style={{ scrollBehavior: "smooth" }}
-      >
-        {products.map((product: any) => (
-          <div
-            key={product.id}
-            className="flex-shrink-0"
-            style={{
-              width: "clamp(150px, calc(50vw - 100px), 240px)",
-              minWidth: "150px",
-            }}
-          >
-            <HurryUpProductCard product={product} />
-          </div>
-        ))}
-      </div>
+
+      {/* Decorative Line */}
+      <div className="mt-8 h-1 bg-gradient-to-r from-brand/0 via-brand/40 to-brand/0 rounded-full" />
 
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar {

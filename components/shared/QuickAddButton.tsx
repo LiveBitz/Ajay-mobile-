@@ -50,16 +50,16 @@ export function QuickAddButton({ product, className = "" }: QuickAddButtonProps)
     <button
       onClick={handleQuickAdd}
       disabled={isLoading || product.stock <= 0}
-      className={`w-full h-9 md:h-10 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xs md:text-sm transition-all active:scale-95 gap-1.5 flex items-center justify-center ${className}`}
+      className={`w-full h-10 md:h-11 rounded-xl bg-white hover:bg-stone-50 active:bg-white text-stone-900 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-xs md:text-sm transition-all active:scale-95 gap-2 flex items-center justify-center shadow-md hover:shadow-lg border-2 border-stone-200 hover:border-stone-300 ${className}`}
     >
       {isLoading ? (
         <>
-          <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" />
+          <Loader2 className="w-4 h-4 md:w-4.5 md:h-4.5 animate-spin" />
           <span className="hidden sm:inline">Adding...</span>
         </>
       ) : (
         <>
-          <ShoppingBag className="w-3.5 h-3.5 md:w-4 md:h-4" />
+          <ShoppingBag className="w-4 h-4 md:w-4.5 md:h-4.5" />
           <span className="hidden sm:inline">Add</span>
         </>
       )}

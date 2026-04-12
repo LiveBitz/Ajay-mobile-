@@ -12,8 +12,14 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
   if (!categories || categories.length === 0) return null;
 
   return (
-    <section className="py-12 md:py-16 lg:py-20 bg-gradient-to-r from-pink-100 via-pink-50 to-pink-100">
+    <section className="py-6 md:py-12 lg:py-16 bg-gradient-to-b from-white to-stone-50">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="mb-10 md:mb-12 lg:mb-14">
+          <h2 className="hidden md:block text-3xl md:text-4xl font-black text-stone-900 mb-2">Shop by Category</h2>
+          <p className="hidden md:block text-stone-600 font-medium">Explore our premium collection of devices</p>
+        </div>
+
         {/* Carousel Container */}
         <div>
           {/* Carousel Content */}
@@ -27,14 +33,14 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                 href={`/category/${category.slug}`}
                 className="flex-shrink-0 group cursor-pointer"
               >
-                <div className="flex flex-col items-center gap-2 md:gap-3">
+                <div className="flex flex-col items-center gap-3 md:gap-4">
                   {/* Category Icon Container */}
-                  <div className="relative h-20 w-20 md:h-24 md:w-24 lg:h-28 lg:w-28 rounded-full overflow-hidden bg-gradient-to-br from-zinc-50 to-zinc-100 border border-zinc-200 group-hover:border-brand transition-all duration-300 shadow-sm group-hover:shadow-md flex items-center justify-center flex-shrink-0">
+                  <div className="relative h-20 w-20 md:h-28 md:w-28 lg:h-32 lg:w-32 rounded-2xl overflow-hidden bg-gradient-to-br from-stone-100 via-stone-50 to-stone-100 border-2 border-stone-200 group-hover:border-brand transition-all duration-300 shadow-md group-hover:shadow-xl flex items-center justify-center flex-shrink-0">
                     {category.image ? (
                       <img
                         src={category.image}
                         alt={category.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         loading="lazy"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
@@ -42,7 +48,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                       />
                     ) : null}
                     {!category.image && (
-                      <div className="text-zinc-400 text-center px-2">
+                      <div className="text-stone-400 text-center px-2">
                         <span className="text-xs md:text-sm font-semibold">
                           {category.name.split(" ")[0]}
                         </span>
@@ -52,7 +58,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
 
                   {/* Category Name */}
                   <div className="text-center">
-                    <p className="text-xs md:text-sm lg:text-base font-semibold text-zinc-900 group-hover:text-brand transition-colors duration-300 line-clamp-2 w-20 md:w-24 lg:w-28">
+                    <p className="text-xs md:text-sm lg:text-base font-semibold text-stone-900 group-hover:text-brand transition-colors duration-300 line-clamp-2 w-20 md:w-28 lg:w-32">
                       {category.name}
                     </p>
                   </div>

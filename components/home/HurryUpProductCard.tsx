@@ -2,10 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Heart } from "lucide-react";
-import { QuickAddButton } from "@/components/shared/QuickAddButton";
+import { Heart, ShoppingBag } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/context/CartContext";
 import { cn } from "@/lib/utils";
 
 interface HurryUpProductCardProps {
@@ -14,8 +16,10 @@ interface HurryUpProductCardProps {
 
 export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { toast } = useToast();
+  const { addItem } = useCart();
   
   const discount = product.discount || Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 
@@ -56,69 +60,107 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
     }
   };
 
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsAddingToCart(true);
+
+    try {
+      addItem({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+      });
+
+      toast({
+        title: "Added to Cart",
+        description: `${product.name} has been added to your cart.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add product to cart",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
   return (
-    <Link
-      href={`/product/${product.slug}`}
-      className="group"
-    >
-      <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-        {/* Product Image */}
-        <div className="relative overflow-hidden bg-zinc-100 aspect-square">
-          {/* Discount Badge */}
-          {discount > 0 && (
-            <div className="absolute top-3 left-3 z-10 bg-red-500 text-white px-2.5 py-1.5 rounded-md font-black text-xs md:text-sm flex items-center gap-1">
-              <span>{discount}%</span>
-              <span className="hidden sm:inline">off</span>
-            </div>
-          )}
+    <Link href={`/product/${product.slug}`} className="group">
+      <div className="relative overflow-hidden rounded-2xl border-2 border-stone-100 shadow-md hover:shadow-2xl transition-all duration-500 h-full flex flex-col hover:border-brand hover:scale-105 group-hover:bg-stone-50/50">
+        {/* Image Container */}
+        <div className="p-0 flex-1 group-hover:opacity-95 transition-opacity duration-300">
+          <div className="block relative aspect-square overflow-hidden bg-stone-100">
+            {/* Product Image */}
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+              onError={(e) => {
+                (e.target as any).src = "https://placehold.co/300/f4f4f5/9ca3af?text=" + encodeURIComponent(product.name);
+              }}
+            />
 
-          {/* Wishlist Button */}
-          <button 
-            onClick={handleWishlistClick}
-            disabled={isAddingToWishlist}
-            className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-all active:scale-90 group-hover:scale-110 disabled:opacity-50"
-            aria-label={isWishlisted(String(product.id)) ? "Remove from wishlist" : "Add to wishlist"}
-          >
-            <Heart className={cn(
-              "w-5 h-5 transition-colors",
-              isWishlisted(String(product.id)) ? "fill-brand stroke-brand" : "stroke-zinc-400 hover:stroke-red-500"
-            )} />
-          </button>
+            {/* Wishlist Button Overlay */}
+            <button
+              onClick={handleWishlistClick}
+              disabled={isAddingToWishlist}
+              className="absolute top-3 right-3 p-2 rounded-full bg-white/95 backdrop-blur-sm shadow-lg hover:bg-white hover:scale-125 hover:shadow-xl transition-all z-10 disabled:opacity-50 active:scale-90"
+              aria-label={isWishlisted(String(product.id)) ? "Remove from wishlist" : "Add to wishlist"}
+            >
+              <Heart
+                className={cn(
+                  "w-5 h-5 transition-colors",
+                  isWishlisted(String(product.id)) ? "fill-brand stroke-brand" : "stroke-stone-600"
+                )}
+              />
+            </button>
 
-          {/* Image */}
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            onError={(e) => {
-              (e.target as any).src = "https://placehold.co/300/f4f4f5/9ca3af?text=" + encodeURIComponent(product.name);
-            }}
-          />
-        </div>
-
-        {/* Product Info */}
-        <div className="p-3 md:p-4 flex-1 flex flex-col gap-3">
-          {/* Name */}
-          <div className="flex-1">
-            <p className="text-xs md:text-sm font-bold text-zinc-900 line-clamp-2 group-hover:text-brand transition-colors">
-              {product.name}
-            </p>
-          </div>
-
-          {/* Price */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm md:text-base font-black text-zinc-900">
-              ₹{product.price.toLocaleString("en-IN")}
-            </span>
-            {product.originalPrice > product.price && (
-              <span className="text-xs md:text-sm text-zinc-400 line-through">
-                ₹{product.originalPrice.toLocaleString("en-IN")}
-              </span>
+            {/* Discount Badge */}
+            {discount > 0 && (
+              <Badge className="absolute bottom-3 left-3 bg-gradient-to-r from-brand to-red-700 text-white hover:shadow-lg hover:scale-110 font-bold px-2 py-1 rounded-full shadow-md z-10 transition-all duration-300">
+                {discount}% OFF
+              </Badge>
             )}
           </div>
+        </div>
 
-          {/* Add to Cart Button */}
-          <QuickAddButton product={product} />
+        {/* Product Info Section */}
+        <div className="flex flex-col items-start p-4 space-y-3">
+          {/* Product Name */}
+          <div className="w-full">
+            <h3 className="font-bold text-sm line-clamp-1 group-hover:text-brand transition-colors duration-300 text-stone-900">
+              {product.name}
+            </h3>
+
+            {/* Price */}
+            <div className="flex items-center gap-2 mt-2 tabular-nums">
+              <span className="font-black text-lg text-stone-900">
+                ₹{product.price.toLocaleString("en-IN")}
+              </span>
+              {product.originalPrice > product.price && (
+                <span className="text-xs text-stone-500 line-through decoration-stone-400/60">
+                  ₹{product.originalPrice.toLocaleString("en-IN")}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Add to Cart Button - Light Theme */}
+          <Button
+            onClick={handleAddToCart}
+            disabled={isAddingToCart || product.stock <= 0}
+            className={cn(
+              "w-full rounded-xl gap-2 h-10 font-bold text-xs uppercase tracking-widest transition-all duration-300 hover:scale-105 active:scale-95 bg-stone-100 text-stone-900 border-2 border-stone-200 hover:bg-brand hover:text-white hover:border-brand hover:shadow-lg disabled:opacity-50"
+            )}
+          >
+            <ShoppingBag className="w-4 h-4" />
+            <span className="hidden sm:inline">{isAddingToCart ? "Adding..." : "Add to Cart"}</span>
+            <span className="sm:hidden">{isAddingToCart ? "..." : "Add"}</span>
+          </Button>
         </div>
       </div>
     </Link>
