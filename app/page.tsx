@@ -19,9 +19,6 @@ export default async function Home() {
   const newsletterBanners = await getBanners("NEWSLETTER");
   const dbCategories = await getCategories();
 
-  // Use the first active promo banner for the section
-  const activePromo = promoBanners.length > 0 ? promoBanners[0] : null;
-
   // Use the first active newsletter banner
   const activeNewsletter = newsletterBanners.length > 0 ? newsletterBanners[0] : null;
 
@@ -74,7 +71,7 @@ export default async function Home() {
       <div className="h-px bg-zinc-100" />
 
       <div className="animate-fade-in-up">
-        <PromoBanner banner={activePromo} />
+        <PromoBanner banners={promoBanners} />
       </div>
 
       <div className="h-px bg-zinc-100" />
