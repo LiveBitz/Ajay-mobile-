@@ -165,7 +165,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
           ref={carouselRef}
           onScroll={checkScroll}
           className="flex gap-4 md:gap-5 lg:gap-6 overflow-x-auto pb-3 scrollbar-hide"
-          style={{ touchAction: "pan-x" }}
+          style={{ touchAction: "pan-y" }}
         >
           {products.map((product, index) => (
             <BestSellerCard key={product.id} product={product} index={index} />

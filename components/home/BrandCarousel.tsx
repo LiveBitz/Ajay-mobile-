@@ -92,7 +92,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
         <div
           ref={carouselRef}
           className="flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-hide pb-2"
-          style={{ touchAction: "pan-x", scrollBehavior: "smooth" }}
+          style={{ touchAction: "pan-y", scrollBehavior: "smooth" }}
         >
           {categories.map((category) => (
             <BrandCard key={category.id} category={category} />
