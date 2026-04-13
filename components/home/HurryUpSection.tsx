@@ -26,7 +26,7 @@ export async function HurryUpSection() {
       style={{ backgroundColor: '#0a0a0a' }}
     >
       {/* Layered background for depth */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         {/* Red top-left glow */}
         <div
           className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none"
