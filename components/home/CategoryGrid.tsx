@@ -32,6 +32,11 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
     const el = scrollRef.current;
     if (!el) return;
 
+    // On touch devices, auto-scrolling can cancel taps; keep links reliable.
+    if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+      return;
+    }
+
     const tick = () => {
       if (!isPausedRef.current && el) {
         el.scrollLeft += 1;
@@ -139,7 +144,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           WebkitOverflowScrolling: "touch",
-          touchAction: "pan-x",
+          touchAction: "manipulation",
         }}
       >
         {items.map((category, idx) => (
