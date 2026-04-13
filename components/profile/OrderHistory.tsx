@@ -118,8 +118,8 @@ export function OrderHistory() {
     <section className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-brand/10 rounded-lg">
-          <Package className="w-5 h-5 text-brand" />
+        <div className="p-2 bg-zinc-100 rounded-lg">
+          <Package className="w-5 h-5 text-zinc-600" />
         </div>
         <div>
           <h2 className="text-lg font-bold text-zinc-900">Order History</h2>
@@ -137,7 +137,7 @@ export function OrderHistory() {
           <Link href="/">
             <Button
               variant="outline"
-              className="gap-2 rounded-lg border-zinc-200 hover:bg-brand/5"
+              className="gap-2 rounded-xl border-zinc-200 hover:bg-zinc-50 font-semibold"
             >
               Start Shopping
             </Button>

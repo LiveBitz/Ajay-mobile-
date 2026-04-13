@@ -65,7 +65,7 @@ export function ProductGallery({
           />
 
           {/* Floating Badges */}
-          <div className="absolute top-6 left-6 flex flex-col gap-2.5 pointer-events-none">
+          <div className="absolute top-6 left-6 flex flex-col gap-2.5 pointer-events-none z-40">
             {isNew && (
               <Badge className="bg-zinc-950 text-white hover:bg-zinc-950 px-4 py-2 rounded-full text-[9px] font-bold tracking-[0.15em] shadow-xl animate-in fade-in slide-in-from-left duration-700">
                 NEW ARRIVAL

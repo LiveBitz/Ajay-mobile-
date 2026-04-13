@@ -129,62 +129,8 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
             </div>
           </div>
 
-          {/* Desktop nav arrows */}
-          <div className="hidden md:flex gap-2 items-center">
-            <button
-              onClick={() => scroll("left")}
-              disabled={!canScrollLeft}
-              className={cn(
-                "h-10 w-10 rounded-full border flex items-center justify-center transition-all duration-200",
-                canScrollLeft
-                  ? "border-zinc-700 bg-zinc-900 text-zinc-300 md:hover:border-zinc-500 md:hover:bg-zinc-800"
-                  : "border-zinc-800 bg-zinc-900/50 text-zinc-700 opacity-40 cursor-not-allowed"
-              )}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              disabled={!canScrollRight}
-              className={cn(
-                "h-10 w-10 rounded-full border flex items-center justify-center transition-all duration-200",
-                canScrollRight
-                  ? "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500 hover:bg-zinc-800"
-                  : "border-zinc-800 bg-zinc-900/50 text-zinc-700 opacity-40 cursor-not-allowed"
-              )}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
 
-      {/* Mobile nav */}
-      <div className="md:hidden flex items-center justify-end gap-2 mb-5">
-        <button
-          onClick={() => scroll("left")}
-          disabled={!canScrollLeft}
-          className={cn(
-            "h-9 w-9 rounded-full border flex items-center justify-center transition-all duration-200",
-            canScrollLeft
-              ? "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500"
-              : "border-zinc-800 bg-zinc-900/50 text-zinc-700 opacity-40 cursor-not-allowed"
-          )}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <button
-          onClick={() => scroll("right")}
-          disabled={!canScrollRight}
-          className={cn(
-            "h-9 w-9 rounded-full border flex items-center justify-center transition-all duration-200",
-            canScrollRight
-              ? "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500"
-              : "border-zinc-800 bg-zinc-900/50 text-zinc-700 opacity-40 cursor-not-allowed"
-          )}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
+        </div>
       </div>
 
       {/* ─── Carousel ─── */}

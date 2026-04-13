@@ -62,48 +62,58 @@ export function ProductGrid({ products, isLoading, clearFilters }: ProductGridPr
 
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 md:py-32 text-center space-y-6">
-        <div className="p-6 md:p-8 rounded-2xl bg-zinc-50">
-          <PackageSearch className="w-12 h-12 md:w-16 md:h-16 text-zinc-300 mx-auto" />
+      <div className="flex flex-col items-center justify-center py-20 md:py-32 text-center space-y-5">
+        <div className="w-16 h-16 rounded-full bg-zinc-100 flex items-center justify-center">
+          <PackageSearch className="w-7 h-7 text-zinc-400" />
         </div>
-        <div className="space-y-3">
-          <h3 className="text-lg md:text-xl font-bold text-zinc-900">No products found</h3>
-          <p className="text-zinc-600 text-sm md:text-base max-w-sm mx-auto">No products available</p>
-          <Button onClick={clearFilters} variant="outline" className="mt-4">Clear Filters</Button>
+        <div className="space-y-2">
+          <h3 className="text-lg font-bold text-zinc-900">No products found</h3>
+          <p className="text-sm text-zinc-500 max-w-xs mx-auto">Try adjusting your filters to see more results.</p>
         </div>
+        <Button
+          onClick={clearFilters}
+          className="h-10 px-6 rounded-xl bg-zinc-900 text-white text-sm font-semibold hover:bg-zinc-800 transition-colors"
+        >
+          Clear Filters
+        </Button>
       </div>
     );
   }
 
   if (availableProducts.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 md:py-32 text-center space-y-6">
-        <div className="p-6 md:p-8 rounded-2xl bg-yellow-50">
-          <PackageSearch className="w-12 h-12 md:w-16 md:h-16 text-yellow-300 mx-auto" />
+      <div className="flex flex-col items-center justify-center py-20 md:py-32 text-center space-y-5">
+        <div className="w-16 h-16 rounded-full bg-zinc-100 flex items-center justify-center">
+          <PackageSearch className="w-7 h-7 text-zinc-400" />
         </div>
-        <div className="space-y-3">
-          <h3 className="text-lg md:text-xl font-bold text-zinc-900">Out of Stock</h3>
-          <p className="text-zinc-600 text-sm md:text-base max-w-sm mx-auto">All items matching your criteria are currently out of stock</p>
-          <Button onClick={clearFilters} variant="outline" className="mt-4">View All Available Products</Button>
+        <div className="space-y-2">
+          <h3 className="text-lg font-bold text-zinc-900">Out of Stock</h3>
+          <p className="text-sm text-zinc-500 max-w-xs mx-auto">All items matching your criteria are currently out of stock.</p>
         </div>
+        <Button
+          onClick={clearFilters}
+          className="h-10 px-6 rounded-xl bg-zinc-900 text-white text-sm font-semibold hover:bg-zinc-800 transition-colors"
+        >
+          View All Products
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-12">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
+    <div className="space-y-10">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
         {visibleProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
 
       {hasMore && (
-        <div className="flex justify-center pt-8">
+        <div className="flex justify-center pt-4">
           <Button
             variant="outline"
             size="lg"
-            className="w-full md:w-auto min-w-[240px] rounded-lg font-semibold text-sm h-11 border-zinc-200 hover:bg-zinc-50 hover:border-brand/20 transition-all active:scale-95"
+            className="w-full md:w-auto min-w-[240px] h-12 rounded-xl font-semibold text-sm border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 transition-all active:scale-95 shadow-sm"
             onClick={handleLoadMore}
             disabled={isMoreLoading}
           >
@@ -113,7 +123,7 @@ export function ProductGrid({ products, isLoading, clearFilters }: ProductGridPr
                 Loading more...
               </>
             ) : (
-              `Load More Products (${products.length - displayCount} remaining)`
+              `Load More (${availableProducts.length - displayCount} remaining)`
             )}
           </Button>
         </div>

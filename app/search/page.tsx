@@ -53,6 +53,29 @@ export default async function SearchPage({
 
   return (
     <div className="min-h-screen bg-white transition-opacity duration-300 pt-8 md:pt-0">
+      {/* Section header */}
+      <div className="border-b border-zinc-100 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">
+            Results
+          </p>
+          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
+            {q ? (
+              <>
+                Search Results for{" "}
+                <span style={{ color: '#dc2626' }}>&ldquo;{q}&rdquo;</span>
+              </>
+            ) : (
+              "All Products"
+            )}
+          </h1>
+          {products.length > 0 && (
+            <p className="text-sm text-zinc-500 mt-1">
+              {products.length} {products.length === 1 ? "product" : "products"} found
+            </p>
+          )}
+        </div>
+      </div>
       <SearchCatalog
         initialProducts={products as any}
         initialQuery={q}

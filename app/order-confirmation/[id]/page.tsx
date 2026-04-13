@@ -230,16 +230,21 @@ export default function OrderConfirmationPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 pt-8 md:pt-0">
-      {/* Header */}
-      <div className="bg-white border-b border-zinc-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+      {/* Hero Section */}
+      <div style={{ backgroundColor: '#0a0a0a' }} className="py-14 px-4">
+        <div className="max-w-4xl mx-auto text-center">
           <div className="flex justify-center mb-6">
-            <CheckCircle className="w-16 h-16 text-green-500" />
+            <div className="w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center">
+              <CheckCircle className="w-10 h-10 text-white" strokeWidth={2.5} />
+            </div>
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-zinc-950">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
             Order Confirmed!
           </h1>
-          <p className="text-zinc-500 mt-2">
+          {order.orderNumber && (
+            <p className="text-zinc-400 text-sm mt-2 font-mono">#{order.orderNumber}</p>
+          )}
+          <p className="text-zinc-500 text-sm mt-3 max-w-sm mx-auto leading-relaxed">
             Thank you for your order. Your package will be with you very soon.
           </p>
         </div>
@@ -312,7 +317,7 @@ export default function OrderConfirmationPage() {
           <div className="space-y-4">
             {order.items.map((item) => (
               <div key={item.id} className="flex gap-4 pb-4 border-b border-zinc-100 last:border-b-0 last:pb-0">
-                <div className="relative w-20 h-24 rounded-lg overflow-hidden bg-zinc-100 shrink-0">
+                <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-zinc-50 shrink-0">
                   <Image
                     src={item.product.image}
                     alt={item.product.name}
@@ -353,9 +358,9 @@ export default function OrderConfirmationPage() {
               <span className="text-zinc-600">Tax</span>
               <span className="font-bold">₹{(order.tax ?? 0).toLocaleString()}</span>
             </div>
-            <div className="border-t border-zinc-100 pt-4 flex justify-between">
-              <span className="font-bold text-zinc-600">TOTAL</span>
-              <span className="text-2xl font-black text-zinc-950">
+            <div className="border-t border-zinc-100 pt-4 flex justify-between items-center">
+              <span className="text-sm font-bold text-zinc-600 uppercase tracking-wider">Total</span>
+              <span className="text-xl font-black text-zinc-900">
                 ₹{(order.total ?? 0).toLocaleString()}
               </span>
             </div>
@@ -412,36 +417,20 @@ export default function OrderConfirmationPage() {
           </Card>
         )}
 
-        {/* Next Steps */}
-        <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 mb-8">
-          <div className="flex gap-4">
-            <Truck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-bold text-blue-900 mb-2">What's Next?</h3>
-              <p className="text-sm text-blue-800">
-                {order.paymentMethod === "whatsapp" 
-                  ? "After you send your order on WhatsApp, our team will confirm the payment and details. We'll then prepare and ship your order within 1-2 business days."
-                  : "You will receive a confirmation email shortly with tracking details. Our team will prepare and ship your order within 1-2 business days."
-                }
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
           <Link href="/profile" className="flex-1">
-            <Button
-              variant="outline"
-              className="w-full h-12 rounded-full border-zinc-100 font-bold text-sm uppercase tracking-widest"
-            >
+            <button className="w-full h-12 rounded-xl border border-zinc-200 text-zinc-700 font-semibold text-sm hover:bg-zinc-50 transition-colors">
               View All Orders
-            </Button>
+            </button>
           </Link>
           <Link href="/" className="flex-1">
-            <Button className="w-full h-12 rounded-full bg-zinc-950 hover:bg-zinc-800 text-white font-bold text-sm uppercase tracking-widest">
+            <button
+              style={{ backgroundColor: '#dc2626' }}
+              className="w-full h-12 rounded-xl text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+            >
               Continue Shopping
-            </Button>
+            </button>
           </Link>
         </div>
       </div>

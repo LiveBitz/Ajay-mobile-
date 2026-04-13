@@ -33,21 +33,21 @@ export default function CartPage() {
   const OrderSummaryCard = ({ className = "", isMobile = false }: { className?: string; isMobile?: boolean }) => (
     <div
       className={cn(
-        "bg-white rounded-3xl p-6 sm:p-8 border border-zinc-100 shadow-sm space-y-6",
+        "bg-white rounded-2xl p-6 border border-zinc-100 shadow-sm space-y-5",
         className
       )}
     >
-      <div className="space-y-1">
-        <h2 className="text-lg sm:text-xl font-bold text-zinc-950 tracking-tight">
+      <div className="space-y-0.5">
+        <h2 className="text-lg font-bold text-zinc-900 tracking-tight">
           Order Summary
         </h2>
         <p className="text-xs text-zinc-400 font-medium">Secure checkout with encrypted payment</p>
       </div>
 
-      <div className="space-y-3.5">
+      <div className="space-y-3">
         {/* Breakdown rows */}
-        <div className="flex justify-between items-center pb-3.5 border-b border-zinc-100">
-          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
+        <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
+          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
             Subtotal
           </span>
           <span className="text-sm font-bold text-zinc-900 tabular-nums">
@@ -56,7 +56,7 @@ export default function CartPage() {
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
+          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
             Delivery
           </span>
           <span className="text-sm font-bold text-emerald-600">
@@ -65,19 +65,19 @@ export default function CartPage() {
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
+          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
             Tax
           </span>
-          <span className="text-sm font-bold text-zinc-900">
-            Calculated at checkout
+          <span className="text-sm font-semibold text-zinc-500">
+            At checkout
           </span>
         </div>
 
-        <div className="flex justify-between items-center pt-3.5 border-t-2 border-zinc-100">
-          <span className="text-sm font-bold uppercase tracking-widest text-zinc-950">
-            Total Amount
+        <div className="flex justify-between items-center pt-3 border-t border-zinc-100">
+          <span className="text-sm font-bold uppercase tracking-wider text-zinc-900">
+            Total
           </span>
-          <span className="text-2xl sm:text-3xl font-black tabular-nums text-zinc-950 tracking-tight">
+          <span className="text-xl font-black tabular-nums text-zinc-900 tracking-tight">
             ₹{totalPrice.toLocaleString("en-IN")}
           </span>
         </div>
@@ -85,24 +85,25 @@ export default function CartPage() {
 
       {/* CTA Button */}
       <Link href="/checkout" className="block w-full">
-        <Button 
+        <button
           disabled={items.length === 0}
-          className="w-full h-13 sm:h-14 rounded-2xl bg-zinc-950 text-white hover:bg-zinc-800 active:bg-zinc-900 font-bold uppercase tracking-widest text-xs sm:text-sm transition-all active:scale-95 gap-2.5 shadow-lg shadow-zinc-950/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-zinc-300"
+          style={{ backgroundColor: items.length === 0 ? undefined : '#dc2626' }}
+          className="w-full h-12 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-zinc-300 hover:opacity-90"
         >
-          Secure Checkout Now
-          <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-        </Button>
+          Proceed to Checkout
+          <ArrowRight className="w-4 h-4" />
+        </button>
       </Link>
 
       {/* Trust indicators */}
-      <div className="flex items-center justify-center gap-3 pt-2">
-        <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+      <div className="flex items-center justify-center gap-3 pt-1">
+        <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
+          <ShieldCheck className="w-3.5 h-3.5 text-zinc-400" />
           <span>Secure Payment</span>
         </div>
-        <span className="text-zinc-300">•</span>
-        <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-medium">
-          <Truck className="w-4 h-4 text-blue-600" />
+        <span className="text-zinc-200">•</span>
+        <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
+          <Truck className="w-3.5 h-3.5 text-zinc-400" />
           <span>Free Delivery</span>
         </div>
       </div>
@@ -114,28 +115,24 @@ export default function CartPage() {
   /* ── Empty State ── */
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white via-zinc-50/30 to-white flex flex-col pt-8 md:pt-0">
+      <div className="min-h-screen bg-white flex flex-col pt-8 md:pt-0">
         {/* Stepper (skeleton) */}
         <div className="border-b border-zinc-100 bg-white sticky top-0 z-40">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-6 sm:py-8">
-            <div className="flex items-center justify-between gap-6">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl py-5">
+            <div className="relative flex items-center justify-center max-w-sm mx-auto">
+              <div className="absolute top-[20px] inset-x-0 h-0.5 bg-zinc-100 z-0" />
               {[
-                { label: "My Bag", status: "pending" },
-                { label: "Order Review", status: "pending" },
-                { label: "Checkout", status: "pending" },
+                { label: "My Bag" },
+                { label: "Order Review" },
+                { label: "Checkout" },
               ].map((step, index) => (
-                <div key={index} className="flex items-center flex-1">
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 border-zinc-200 flex items-center justify-center bg-zinc-50">
-                      <span className="text-xs font-bold text-zinc-400">{index + 1}</span>
-                    </div>
-                    <span className="text-sm sm:text-base font-bold text-zinc-400 tracking-tight hidden sm:inline">
-                      {step.label}
-                    </span>
+                <div key={index} className="relative z-10 flex flex-col items-center gap-1.5 flex-1">
+                  <div className="w-10 h-10 rounded-full border-2 border-zinc-200 flex items-center justify-center bg-white">
+                    <span className="text-xs font-bold text-zinc-400">{index + 1}</span>
                   </div>
-                  {index < 2 && (
-                    <div className="h-0.5 flex-1 bg-zinc-200 mx-2" />
-                  )}
+                  <span className="text-xs font-semibold text-zinc-400 tracking-wide hidden sm:inline">
+                    {step.label}
+                  </span>
                 </div>
               ))}
             </div>
@@ -143,51 +140,29 @@ export default function CartPage() {
         </div>
 
         {/* Empty state content */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-20 sm:py-24 lg:py-32">
-          {/* Icon section with glow effect */}
-          <div className="relative mb-12 sm:mb-16">
-            <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 to-transparent rounded-full scale-125 blur-3xl opacity-40" />
-            <div className="relative w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 rounded-3xl sm:rounded-4xl bg-gradient-to-br from-zinc-50 to-white border-2 border-zinc-100 flex items-center justify-center shadow-xl shadow-zinc-950/5">
-              <PackageOpen className="w-14 h-14 sm:w-20 sm:h-20 lg:w-28 lg:h-28 text-zinc-200 stroke-1" />
-            </div>
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-24">
+          <div className="w-24 h-24 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-center mb-8">
+            <ShoppingBag className="w-10 h-10 text-zinc-300" strokeWidth={1.5} />
           </div>
 
-          {/* Text content with improved hierarchy */}
-          <div className="text-center space-y-5 max-w-lg">
-            <div className="space-y-2">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-zinc-950 tracking-tight leading-tight">
-                Your Bag is Empty
-              </h1>
-              <p className="text-base sm:text-lg text-zinc-400 font-medium leading-relaxed">
-                Time to explore our curated collections and add some style to your wardrobe.
-              </p>
-            </div>
+          <div className="text-center space-y-3 max-w-sm">
+            <h1 className="text-3xl font-black text-zinc-900 tracking-tight">
+              Your cart is empty
+            </h1>
+            <p className="text-sm text-zinc-500 leading-relaxed">
+              Looks like you haven't added anything yet. Explore our collection and find something you love.
+            </p>
 
-            {/* CTA Button with enhanced styling */}
-            <div className="pt-6">
+            <div className="pt-5">
               <Link href="/">
-                <Button className="h-13 sm:h-14 lg:h-16 px-8 sm:px-12 lg:px-16 rounded-2xl sm:rounded-3xl bg-zinc-950 hover:bg-zinc-800 active:bg-zinc-900 text-white font-bold uppercase tracking-widest text-xs sm:text-sm transition-all active:scale-95 gap-3 shadow-lg shadow-zinc-950/15 group">
-                  Explore Collections
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
+                <button
+                  style={{ backgroundColor: '#dc2626' }}
+                  className="h-12 px-8 rounded-xl text-white font-semibold text-sm inline-flex items-center gap-2 hover:opacity-90 transition-opacity"
+                >
+                  Start Shopping
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </Link>
-            </div>
-
-            {/* Trust indicators */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 pt-8 text-xs font-medium text-zinc-500">
-              <div className="flex items-center gap-2">
-                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1.5" />
-                  Free Delivery
-                </Badge>
-              </div>
-              <div className="hidden sm:block w-px h-4 bg-zinc-200" />
-              <div className="flex items-center gap-2">
-                <Badge className="bg-blue-50 text-blue-700 border-blue-200 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1.5" />
-                  Easy Returns
-                </Badge>
-              </div>
             </div>
           </div>
         </div>
@@ -217,16 +192,17 @@ export default function CartPage() {
                 {/* Dot */}
                 <div
                   className={cn(
-                    "w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 font-bold transition-all duration-300",
+                    "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border-2 font-bold transition-all duration-300",
                     step.status === "complete"
-                      ? "bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm"
+                      ? "border-transparent text-white"
                       : step.status === "current"
-                        ? "bg-zinc-950 border-zinc-950 text-white shadow-lg shadow-zinc-950/20"
+                        ? "bg-zinc-900 border-zinc-900 text-white shadow-md"
                         : "bg-white border-zinc-200 text-zinc-400"
                   )}
+                  style={step.status === "complete" ? { backgroundColor: '#dc2626', borderColor: '#dc2626' } : undefined}
                 >
                   {step.status === "complete" ? (
-                    <Check className="w-5 h-5" />
+                    <Check className="w-4 h-4" />
                   ) : (
                     <span className="text-sm">{idx + 1}</span>
                   )}
@@ -235,11 +211,11 @@ export default function CartPage() {
                 {/* Label */}
                 <span
                   className={cn(
-                    "text-[10px] sm:text-xs font-bold uppercase tracking-widest text-center transition-colors",
+                    "text-xs font-semibold uppercase tracking-wider text-center transition-colors",
                     step.status === "current"
-                      ? "text-zinc-950"
+                      ? "text-zinc-900"
                       : step.status === "complete"
-                        ? "text-emerald-600"
+                        ? "text-zinc-500"
                         : "text-zinc-400"
                   )}
                 >
@@ -311,32 +287,28 @@ export default function CartPage() {
         </div>
       </div>
 
-      {/* ── Mobile sticky bottom bar with enhanced design ── */}
-      <div className="fixed bottom-0 inset-x-0 z-50 lg:hidden">
-        <div className="bg-gradient-to-t from-white via-white/99 to-white border-t border-zinc-200 px-4 sm:px-6 py-4 shadow-2xl shadow-black/5 backdrop-blur-sm">
-          <div className="max-w-lg mx-auto flex items-center gap-3 sm:gap-4">
-            {/* Price display */}
-            <div className="flex flex-col justify-center py-2 min-w-fit">
-              <span className="text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest">
-                Total Amount
-              </span>
-              <span className="text-xl sm:text-2xl font-black text-zinc-950 tracking-tight tabular-nums leading-none">
-                ₹{totalPrice.toLocaleString("en-IN")}
-              </span>
-            </div>
-
-            {/* Checkout button */}
-            <Link href="/checkout" className="flex-1">
-              <Button 
-                disabled={items.length === 0}
-                className="w-full h-13 sm:h-14 rounded-2xl sm:rounded-3xl bg-zinc-950 text-white hover:bg-zinc-800 active:bg-zinc-900 font-bold uppercase tracking-widest text-xs sm:text-sm shadow-lg shadow-zinc-950/10 active:scale-95 gap-2.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-zinc-950 disabled:hover:text-white"
-              >
-                Checkout
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
+      {/* ── Mobile sticky bottom bar ── */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-100 p-4 flex items-center justify-between z-40 lg:hidden">
+        <div className="flex flex-col justify-center min-w-fit">
+          <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
+            Total Amount
+          </span>
+          <span className="text-xl font-black text-zinc-900 tracking-tight tabular-nums leading-none">
+            ₹{totalPrice.toLocaleString("en-IN")}
+          </span>
         </div>
+
+        {/* Checkout button */}
+        <Link href="/checkout" className="flex-1 ml-4">
+          <button
+            disabled={items.length === 0}
+            style={items.length > 0 ? { backgroundColor: '#dc2626' } : undefined}
+            className="w-full h-12 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-zinc-300 hover:opacity-90"
+          >
+            Checkout
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </Link>
       </div>
 
       {/* Bottom padding so content clears the sticky bar on mobile */}

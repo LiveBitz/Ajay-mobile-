@@ -56,8 +56,11 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
   };
 
   return (
-    <section className="py-14 md:py-20 lg:py-24 bg-white">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8">
+    <section
+      className="relative py-14 md:py-20 lg:py-24 overflow-hidden"
+      style={{ backgroundColor: "#ffffff" }}
+    >
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
 
         {/* ── Header ── */}
         <div className="flex items-end justify-between gap-6 mb-8 md:mb-10">
@@ -73,73 +76,16 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-zinc-900 tracking-tight leading-tight">
+            <h2
+              className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight"
+              style={{ color: "#18181b" }}
+            >
               Shop by Brand
             </h2>
-            <p className="text-sm text-zinc-500 font-medium mt-1.5">
+            <p className="text-sm font-medium mt-1.5" style={{ color: "#71717a" }}>
               Genuine products · Best prices · Warranty included
             </p>
           </div>
-
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={() => scroll("left")}
-              disabled={!canScrollLeft}
-              aria-label="Scroll left"
-              className={cn(
-                "h-10 w-10 rounded-full border flex items-center justify-center transition-all duration-200",
-                canScrollLeft
-                  ? "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white shadow-sm"
-                  : "border-zinc-100 bg-zinc-50 text-zinc-300 cursor-not-allowed"
-              )}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              disabled={!canScrollRight}
-              aria-label="Scroll right"
-              className={cn(
-                "h-10 w-10 rounded-full border flex items-center justify-center transition-all duration-200",
-                canScrollRight
-                  ? "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white shadow-sm"
-                  : "border-zinc-100 bg-zinc-50 text-zinc-300 cursor-not-allowed"
-              )}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* ── Mobile nav ── */}
-        <div className="md:hidden flex items-center justify-end gap-2 mb-5">
-          <button
-            onClick={() => scroll("left")}
-            disabled={!canScrollLeft}
-            aria-label="Scroll left"
-            className={cn(
-              "h-9 w-9 rounded-full border flex items-center justify-center transition-all duration-200",
-              canScrollLeft
-                ? "border-zinc-200 bg-white text-zinc-700"
-                : "border-zinc-100 bg-zinc-50 text-zinc-300 opacity-50 cursor-not-allowed"
-            )}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => scroll("right")}
-            disabled={!canScrollRight}
-            aria-label="Scroll right"
-            className={cn(
-              "h-9 w-9 rounded-full border flex items-center justify-center transition-all duration-200",
-              canScrollRight
-                ? "border-zinc-200 bg-white text-zinc-700"
-                : "border-zinc-100 bg-zinc-50 text-zinc-300 opacity-50 cursor-not-allowed"
-            )}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
         </div>
 
         {/* ── Brand Cards Carousel ── */}
@@ -154,7 +100,10 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
         </div>
 
         {/* ── Scroll Progress Bar ── */}
-        <div className="mt-6 h-px w-full bg-zinc-100 rounded-full overflow-hidden">
+        <div
+          className="mt-6 h-px w-full rounded-full overflow-hidden"
+          style={{ backgroundColor: "#f4f4f5" }}
+        >
           <div
             className="h-full rounded-full transition-all duration-300"
             style={{
@@ -185,14 +134,15 @@ function BrandCard({ category }: { category: Category }) {
       style={{ width: "clamp(140px, 20vw, 200px)" }}
     >
       <div
-        className="rounded-2xl overflow-hidden transition-all duration-300"
+        className="rounded-2xl overflow-hidden"
         style={{
-          border: hovered ? "1px solid #fecaca" : "1px solid #f4f4f5",
+          border: hovered ? "1px solid #e4e4e7" : "1px solid #f4f4f5",
           boxShadow: hovered
-            ? "0 16px 40px rgba(220,38,38,0.08), 0 4px 12px rgba(0,0,0,0.06)"
+            ? "0 20px 48px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.05)"
             : "0 1px 4px rgba(0,0,0,0.04)",
-          transform: hovered ? "translateY(-4px)" : "translateY(0)",
-          backgroundColor: "#fff",
+          transform: hovered ? "translateY(-5px)" : "translateY(0)",
+          backgroundColor: hovered ? "#fafafa" : "#ffffff",
+          transition: "all 0.3s ease",
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -203,7 +153,7 @@ function BrandCard({ category }: { category: Category }) {
           className="flex items-center justify-center overflow-hidden"
           style={{
             aspectRatio: "1 / 1",
-            backgroundColor: hovered ? "#fff7f7" : "#fafafa",
+            backgroundColor: hovered ? "#f4f4f5" : "#fafafa",
             transition: "background-color 0.3s ease",
             padding: "20px",
           }}
@@ -222,10 +172,10 @@ function BrandCard({ category }: { category: Category }) {
                 objectFit: "contain",
                 transform: hovered ? "scale(1.08)" : "scale(1)",
                 transition: "transform 0.4s ease",
+                filter: hovered ? "brightness(1.0)" : "brightness(0.95)",
               }}
             />
           ) : (
-            /* Fallback: first letter of brand name */
             <div className="flex items-center justify-center w-full h-full">
               <span
                 className="font-black text-4xl tracking-tighter"
@@ -244,14 +194,14 @@ function BrandCard({ category }: { category: Category }) {
         <div
           className="flex items-center justify-between px-4 py-3"
           style={{
-            borderTop: hovered ? "1px solid #fee2e2" : "1px solid #f4f4f5",
+            borderTop: hovered ? "1px solid #e4e4e7" : "1px solid #f4f4f5",
             transition: "border-color 0.3s ease",
           }}
         >
           <span
             className="font-bold text-sm leading-tight line-clamp-1"
             style={{
-              color: hovered ? "#dc2626" : "#18181b",
+              color: hovered ? "#18181b" : "#71717a",
               transition: "color 0.3s ease",
             }}
           >

@@ -12,11 +12,16 @@ import { getCategories } from "@/lib/actions/category-actions";
 
 export const revalidate = 300;
 
-// ✅ Reusable divider component
-function Divider({ className = "" }: { className?: string }) {
+// ✅ Reusable divider — dark variant for between dark sections, light for between light sections
+function Divider({ dark = false, className = "" }: { dark?: boolean; className?: string }) {
   return (
     <div
-      className={`h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent ${className}`}
+      className={`h-px ${className}`}
+      style={{
+        background: dark
+          ? "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)"
+          : "linear-gradient(90deg, transparent, #e4e4e7, transparent)",
+      }}
     />
   );
 }
@@ -55,84 +60,79 @@ export default async function Home() {
   const activeNewsletter = newsletterBanners[0] ?? null;
 
   return (
-    <main className="flex flex-col w-full bg-white overflow-x-hidden">
+    <main className="flex flex-col w-full overflow-x-hidden" style={{ backgroundColor: "#0a0a0a" }}>
 
-      {/* ── 1. Featured Categories ── above fold, no delay */}
+      {/* ── 1. Featured Categories ── dark */}
       <Section className="mt-8 md:mt-10">
         <FeaturedCategoriesSection />
       </Section>
 
-      <Divider />
+      <Divider dark />
 
-      {/* ── 2. Hero Banner ── */}
+      {/* ── 2. Hero Banner ── dark */}
       <Section>
         {heroBanners.length > 0 ? (
           <HeroBanner banners={heroBanners} />
         ) : (
-          // ✅ Proper empty state — matches real banner height so layout doesn't jump
-          <div className="w-full flex items-center justify-center bg-zinc-50 border-y border-zinc-100"
-            style={{ minHeight: "320px" }}
+          <div className="w-full flex items-center justify-center border-y border-zinc-800"
+            style={{ minHeight: "320px", backgroundColor: "#0a0a0a" }}
           >
             <div className="text-center space-y-1 px-4">
-              <p className="text-zinc-500 font-semibold text-sm">
-                No hero banners configured
-              </p>
-              <p className="text-zinc-400 text-xs">
-                Add banners from the admin dashboard
-              </p>
+              <p className="text-zinc-500 font-semibold text-sm">No hero banners configured</p>
+              <p className="text-zinc-600 text-xs">Add banners from the admin dashboard</p>
             </div>
           </div>
         )}
       </Section>
 
-      <Divider />
+      <Divider dark />
 
-      {/* ── 3. Hurry Up / Flash Sale ── */}
+      {/* ── 3. Flash Sale ── dark */}
       <Section delay={0}>
         <HurryUpSection />
       </Section>
 
-      <Divider />
+      <Divider dark />
 
-      {/* ── 4. Brand / Category Carousel ── */}
+      <Divider dark />
+
+      {/* ── 4. Brand Carousel ── light: white */}
       <Section delay={100}>
         <BrandCarousel categories={dbCategories} />
       </Section>
 
       <Divider />
 
-      {/* ── 5. Best Sellers ── */}
+      {/* ── 5. Best Sellers ── dark */}
       <Section delay={150}>
         <BestSellersSection />
       </Section>
 
-      <Divider />
+      <Divider dark />
 
-      {/* ── 6. New Arrivals ── */}
+      {/* ── 6. New Arrivals ── light: white */}
       <Section delay={200}>
         <NewArrivals />
       </Section>
 
-      <Divider />
-
-      {/* ── 7. Promo Banner ── only render if banners exist */}
+      {/* ── 7. Promo Banner ── light: zinc-50 (conditional) */}
       {promoBanners.length > 0 && (
         <>
+          <Divider />
           <Section delay={250}>
             <PromoBanner banners={promoBanners} />
           </Section>
-          <Divider />
         </>
       )}
 
-      {/* ── 8. Features Strip ── */}
+      <Divider />
+
+      {/* ── 8. Features Strip ── light: white */}
       <Section delay={300}>
         <FeaturesStrip />
       </Section>
 
-      <Divider />
-
-      {/* ── 9. Newsletter ── only render if banner exists */}
+      {/* ── 9. Newsletter ── dark: bookends the page */}
       {activeNewsletter && (
         <Section delay={350}>
           <NewsletterBanner banner={activeNewsletter} />

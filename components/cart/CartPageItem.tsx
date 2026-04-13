@@ -41,7 +41,7 @@ export function CartPageItem({ item }: CartPageItemProps) {
                 <h4 className="text-base sm:text-lg lg:text-xl font-black text-zinc-950 leading-tight tracking-tight">
                   {item.name}
                 </h4>
-                <span className="text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-full bg-zinc-900/5 border border-zinc-200 text-zinc-600 uppercase tracking-widest">
+                <span className="text-xs font-bold px-2 py-1 rounded-full bg-zinc-900/5 border border-zinc-200 text-zinc-500 uppercase tracking-widest">
                   SKU_{item.productId.slice(-4).toUpperCase()}
                 </span>
               </div>
@@ -49,12 +49,12 @@ export function CartPageItem({ item }: CartPageItemProps) {
               {/* Size and Color badges */}
               <div className="flex items-center gap-2.5 flex-wrap">
                 {item.size && (
-                  <span className="text-[11px] sm:text-xs font-semibold text-zinc-600 px-3 py-1.5 rounded-lg bg-zinc-50/80 border border-zinc-200">
-                    Size: <span className="font-bold text-zinc-950">{item.size.toUpperCase()}</span>
+                  <span className="text-xs font-semibold text-zinc-600 px-3 py-1.5 rounded-lg bg-zinc-50 border border-zinc-200">
+                    Size: <span className="font-bold text-zinc-900">{item.size.toUpperCase()}</span>
                   </span>
                 )}
                 {item.color && (
-                  <div className="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-zinc-600 px-3 py-1.5 rounded-lg bg-zinc-50/80 border border-zinc-200">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-zinc-600 px-3 py-1.5 rounded-lg bg-zinc-50 border border-zinc-200">
                     <span 
                       className="w-3 h-3 rounded-full ring-2 ring-white ring-offset-1 flex-shrink-0" 
                       style={{ backgroundColor: item.color.toLowerCase(), boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.1)' }} 

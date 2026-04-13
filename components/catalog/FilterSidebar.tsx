@@ -125,12 +125,12 @@ export function FilterSidebar({
       onClick={() => toggleExpanded(sectionKey)}
       className="flex items-center justify-between w-full py-1 group"
     >
-      <span className="text-[13px] font-semibold text-zinc-800 tracking-wide uppercase">
+      <span className="text-sm font-semibold text-zinc-900 tracking-tight">
         {label}
       </span>
       <div className="flex items-center gap-2">
         {!expanded[sectionKey] && badge && (
-          <span className="text-[11px] font-semibold text-brand">{badge}</span>
+          <span className="text-xs font-semibold text-zinc-500">{badge}</span>
         )}
         <ChevronDown
           className={cn(
@@ -197,15 +197,15 @@ export function FilterSidebar({
               />
               <div className="flex items-center gap-3">
                 <div className="flex-1">
-                  <p className="text-[10px] font-medium text-zinc-400 mb-1 uppercase tracking-wide">Min</p>
-                  <div className="border border-zinc-200 rounded-lg px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50">
+                  <p className="text-xs font-medium text-zinc-400 mb-1 uppercase tracking-widest">Min</p>
+                  <div className="border border-zinc-200 rounded-xl px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50">
                     ₹{filters.priceRange[0].toLocaleString("en-IN")}
                   </div>
                 </div>
                 <div className="mt-4 w-3 h-px bg-zinc-300 shrink-0" />
                 <div className="flex-1">
-                  <p className="text-[10px] font-medium text-zinc-400 mb-1 uppercase tracking-wide text-right">Max</p>
-                  <div className="border border-zinc-200 rounded-lg px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50 text-right">
+                  <p className="text-xs font-medium text-zinc-400 mb-1 uppercase tracking-widest text-right">Max</p>
+                  <div className="border border-zinc-200 rounded-xl px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50 text-right">
                     ₹{filters.priceRange[1].toLocaleString("en-IN")}
                   </div>
                 </div>
@@ -239,11 +239,11 @@ export function FilterSidebar({
                         className="data-[state=checked]:bg-zinc-900 data-[state=checked]:border-zinc-900 rounded-[4px]"
                       />
                       <span className={cn(
-                        "text-[13px] font-medium flex-1 flex items-center justify-between transition-colors",
+                        "text-sm font-medium flex-1 flex items-center justify-between transition-colors",
                         checked ? "text-zinc-900" : "text-zinc-600 group-hover:text-zinc-900"
                       )}>
                         {size}
-                        <span className="text-[11px] text-zinc-400 font-normal">{count}</span>
+                        <span className="text-xs text-zinc-400 font-normal">{count}</span>
                       </span>
                     </label>
                   );
@@ -292,7 +292,7 @@ export function FilterSidebar({
                           />
                         )}
                       </button>
-                      <span className="text-[9px] font-medium text-zinc-400 truncate max-w-[40px] text-center leading-tight">
+                      <span className="text-xs font-medium text-zinc-400 truncate max-w-[40px] text-center leading-tight">
                         {colorName}
                       </span>
                     </div>
@@ -324,7 +324,7 @@ export function FilterSidebar({
                       className="data-[state=checked]:bg-zinc-900 data-[state=checked]:border-zinc-900 rounded-[4px]"
                     />
                     <span className={cn(
-                      "text-[13px] font-medium transition-colors",
+                      "text-sm font-medium transition-colors",
                       checked ? "text-zinc-900" : "text-zinc-600 group-hover:text-zinc-900"
                     )}>
                       {d}% and above
@@ -357,11 +357,11 @@ export function FilterSidebar({
                         className="data-[state=checked]:bg-zinc-900 data-[state=checked]:border-zinc-900 rounded-[4px]"
                       />
                       <span className={cn(
-                        "text-[13px] font-medium flex-1 flex items-center justify-between transition-colors",
+                        "text-sm font-medium flex-1 flex items-center justify-between transition-colors",
                         checked ? "text-zinc-900" : "text-zinc-600 group-hover:text-zinc-900"
                       )}>
                         {sub}
-                        <span className="text-[11px] text-zinc-400 font-normal">({count})</span>
+                        <span className="text-xs text-zinc-400 font-normal">({count})</span>
                       </span>
                     </label>
                   );

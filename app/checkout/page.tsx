@@ -323,87 +323,87 @@ export default function CheckoutPage() {
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide block mb-1.5">
                     Full Name
-                  </Label>
-                  <Input
+                  </label>
+                  <input
                     placeholder="Enter your full name"
                     value={address.name}
                     onChange={(e) =>
                       handleAddressChange("name", e.target.value)
                     }
-                    className="rounded-xl border-zinc-100"
+                    className="h-11 rounded-xl bg-zinc-50 border border-zinc-200 focus:border-zinc-400 focus:bg-white px-4 text-sm w-full focus:outline-none"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide block mb-1.5">
                     Phone Number
-                  </Label>
-                  <Input
+                  </label>
+                  <input
                     placeholder="Enter your phone number"
                     value={address.phone}
                     onChange={(e) =>
                       handleAddressChange("phone", e.target.value)
                     }
-                    className="rounded-xl border-zinc-100"
+                    className="h-11 rounded-xl bg-zinc-50 border border-zinc-200 focus:border-zinc-400 focus:bg-white px-4 text-sm w-full focus:outline-none"
                   />
                 </div>
 
-                <div className="sm:col-span-2 space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide block mb-1.5">
                     Street Address
-                  </Label>
-                  <Input
+                  </label>
+                  <input
                     placeholder="Enter your street address"
                     value={address.street}
                     onChange={(e) =>
                       handleAddressChange("street", e.target.value)
                     }
-                    className="rounded-xl border-zinc-100"
+                    className="h-11 rounded-xl bg-zinc-50 border border-zinc-200 focus:border-zinc-400 focus:bg-white px-4 text-sm w-full focus:outline-none"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide block mb-1.5">
                     City
-                  </Label>
-                  <Input
+                  </label>
+                  <input
                     placeholder="Enter your city"
                     value={address.city}
                     onChange={(e) =>
                       handleAddressChange("city", e.target.value)
                     }
-                    className="rounded-xl border-zinc-100"
+                    className="h-11 rounded-xl bg-zinc-50 border border-zinc-200 focus:border-zinc-400 focus:bg-white px-4 text-sm w-full focus:outline-none"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide block mb-1.5">
                     State
-                  </Label>
-                  <Input
+                  </label>
+                  <input
                     placeholder="Enter your state"
                     value={address.state}
                     onChange={(e) =>
                       handleAddressChange("state", e.target.value)
                     }
-                    className="rounded-xl border-zinc-100"
+                    className="h-11 rounded-xl bg-zinc-50 border border-zinc-200 focus:border-zinc-400 focus:bg-white px-4 text-sm w-full focus:outline-none"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide block mb-1.5">
                     ZIP Code
-                  </Label>
-                  <Input
+                  </label>
+                  <input
                     placeholder="Enter your ZIP code"
                     value={address.zipCode}
                     onChange={(e) =>
                       handleAddressChange("zipCode", e.target.value)
                     }
-                    className="rounded-xl border-zinc-100"
+                    className="h-11 rounded-xl bg-zinc-50 border border-zinc-200 focus:border-zinc-400 focus:bg-white px-4 text-sm w-full focus:outline-none"
                   />
                 </div>
               </div>
@@ -411,32 +411,30 @@ export default function CheckoutPage() {
             )}
 
             {/* Payment Method */}
-            <Card className="p-6 border-zinc-100 rounded-2xl">
-              <div className="flex items-center gap-3 mb-6">
-                <Lock className="w-5 h-5 text-zinc-950" />
-                <h2 className="text-lg font-black uppercase tracking-tight">
+            <Card className="p-5 md:p-6 border border-zinc-100 rounded-2xl">
+              <div className="flex items-center gap-3 mb-5">
+                <Lock className="w-4 h-4 text-zinc-500" />
+                <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide">
                   Payment Method
                 </h2>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-200">
-                  <input
-                    type="radio"
-                    id="whatsapp"
-                    name="payment"
-                    defaultChecked
-                    disabled
-                    className="w-5 h-5"
-                  />
-                  <label htmlFor="whatsapp" className="flex-1 cursor-pointer">
-                    <p className="font-bold text-sm text-zinc-950">
+              <div className="space-y-3">
+                <div className="flex items-center gap-4 p-4 bg-zinc-50 rounded-xl border border-zinc-200">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#25D366' }}>
+                    <MessageCircle className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm text-zinc-900">
                       Order via WhatsApp
                     </p>
-                    <p className="text-xs text-zinc-500 mt-1">
+                    <p className="text-xs text-zinc-500 mt-0.5">
                       Direct communication with our team for payment confirmation
                     </p>
-                  </label>
+                  </div>
+                  <div className="w-5 h-5 rounded-full border-2 border-zinc-900 flex items-center justify-center shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-zinc-900" />
+                  </div>
                 </div>
               </div>
             </Card>
@@ -511,15 +509,16 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-3">
-                {/* WhatsApp Button - Only Payment Option */}
-                <Button
+                {/* Place Order Button */}
+                <button
                   onClick={handlePlaceOrderViaWhatsApp}
                   disabled={isLoading || items.length === 0}
-                  className="w-full h-14 rounded-full bg-green-600 hover:bg-green-700 text-white font-black text-sm uppercase tracking-[0.15em] transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
+                  style={(isLoading || items.length === 0) ? undefined : { backgroundColor: '#dc2626' }}
+                  className="w-full h-12 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-zinc-300 hover:opacity-90"
                 >
-                  <MessageCircle className="w-5 h-5" />
-                  {isLoading ? "Processing..." : "Order via WhatsApp"}
-                </Button>
+                  <MessageCircle className="w-4 h-4" />
+                  {isLoading ? "Processing..." : "Place Order via WhatsApp"}
+                </button>
               </div>
 
               <p className="text-center text-xs text-zinc-500 leading-relaxed">

@@ -55,18 +55,18 @@ export function CatalogHeader({ slug, count, sortBy, setSortBy }: CatalogHeaderP
           </p>
         </div>
         
-        <div className="hidden lg:flex items-center gap-4">
-          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Sort:</span>
+        <div className="hidden lg:flex items-center gap-3">
+          <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Sort by</span>
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[200px] rounded-lg bg-white border border-zinc-200 h-10 text-black">
-              <SelectValue placeholder="Sort by" className="text-black" />
+            <SelectTrigger className="w-[200px] rounded-xl bg-white border border-zinc-200 h-10 text-sm font-medium text-zinc-900 shadow-sm hover:border-zinc-300 transition-colors">
+              <SelectValue placeholder="Sort by" />
             </SelectTrigger>
-            <SelectContent className="rounded-lg bg-black border-slate-800">
-              <SelectItem value="relevance" className="bg-black text-white hover:bg-slate-900 focus:bg-slate-900">Relevance</SelectItem>
-              <SelectItem value="price-asc" className="bg-black text-white hover:bg-slate-900 focus:bg-slate-900">Price: Low to High</SelectItem>
-              <SelectItem value="price-desc" className="bg-black text-white hover:bg-slate-900 focus:bg-slate-900">Price: High to Low</SelectItem>
-              <SelectItem value="newest" className="bg-black text-white hover:bg-slate-900 focus:bg-slate-900">Newest First</SelectItem>
-              <SelectItem value="discount" className="bg-black text-white hover:bg-slate-900 focus:bg-slate-900">Best Discount</SelectItem>
+            <SelectContent className="rounded-xl bg-white border border-zinc-100 shadow-lg">
+              <SelectItem value="relevance" className="text-sm text-zinc-700 hover:bg-zinc-50 focus:bg-zinc-50 rounded-lg">Relevance</SelectItem>
+              <SelectItem value="price-asc" className="text-sm text-zinc-700 hover:bg-zinc-50 focus:bg-zinc-50 rounded-lg">Price: Low to High</SelectItem>
+              <SelectItem value="price-desc" className="text-sm text-zinc-700 hover:bg-zinc-50 focus:bg-zinc-50 rounded-lg">Price: High to Low</SelectItem>
+              <SelectItem value="newest" className="text-sm text-zinc-700 hover:bg-zinc-50 focus:bg-zinc-50 rounded-lg">Newest First</SelectItem>
+              <SelectItem value="discount" className="text-sm text-zinc-700 hover:bg-zinc-50 focus:bg-zinc-50 rounded-lg">Best Discount</SelectItem>
             </SelectContent>
           </Select>
         </div>

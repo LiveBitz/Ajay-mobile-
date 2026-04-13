@@ -146,12 +146,12 @@ export function ProductSelection({ product }: ProductSelectionProps) {
         <div className="space-y-5">
           <div className="flex items-center justify-between">
             <p className={cn(
-              "text-[11px] font-black uppercase tracking-[0.2em] transition-colors",
+              "text-xs font-bold uppercase tracking-widest transition-colors",
               showError && !selectedSize ? "text-rose-500" : "text-zinc-400"
             )}>
               Select Storage
             </p>
-            <button className="text-[10px] font-bold text-zinc-400 underline underline-offset-4 hover:text-zinc-900 transition-colors uppercase tracking-widest">
+            <button className="text-xs font-semibold text-zinc-400 underline underline-offset-4 hover:text-zinc-900 transition-colors uppercase tracking-widest">
               Storage Guide
             </button>
           </div>
@@ -175,7 +175,7 @@ export function ProductSelection({ product }: ProductSelectionProps) {
                     setShowError(false);
                   }}
                   className={cn(
-                    "relative group h-14 rounded-2xl border-2 flex flex-col items-center justify-center transition-all duration-300 overflow-hidden",
+                    "relative group h-12 rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-300 overflow-hidden",
                     !hasInventory
                       ? "bg-zinc-50 border-zinc-100 text-zinc-200 cursor-not-allowed"
                       : isSelected
@@ -183,7 +183,7 @@ export function ProductSelection({ product }: ProductSelectionProps) {
                       : "bg-white border-zinc-100 text-zinc-900 hover:border-zinc-200 active:scale-95"
                   )}
                 >
-                  <span className="text-[13px] font-black tracking-tight z-10">
+                  <span className="text-sm font-bold tracking-tight z-10">
                     {size}
                   </span>
                   {!hasInventory && (
@@ -202,10 +202,10 @@ export function ProductSelection({ product }: ProductSelectionProps) {
       {hasColors && (
         <div className="space-y-5">
           <p className={cn(
-            "text-[11px] font-black uppercase tracking-[0.2em] transition-colors",
+            "text-xs font-bold uppercase tracking-widest transition-colors",
             showError && !selectedColor ? "text-rose-500" : "text-zinc-400"
           )}>
-            Visual Palette (Color) {selectedSize && `• Available for ${selectedSize}`}
+            Select Color {selectedSize && `• Available for ${selectedSize}`}
           </p>
           <div className="flex flex-wrap gap-4">
             {availableColors.map((color: string) => (
@@ -239,37 +239,38 @@ export function ProductSelection({ product }: ProductSelectionProps) {
       )}
 
       {/* ── Call to Action ── */}
-      <div className="flex flex-col gap-4 pt-4">
+      <div className="flex flex-col gap-3 pt-4">
         <div className="flex gap-3">
-          <Button 
+          <Button
             onClick={handleAddToCart}
-            className="flex-1 h-16 rounded-[2rem] bg-zinc-950 hover:bg-zinc-800 text-white font-black text-sm uppercase tracking-[0.15em] shadow-2xl shadow-zinc-200 transition-all duration-300 active:scale-95 gap-3 group"
+            className="flex-1 h-12 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm tracking-wide shadow-sm transition-all duration-200 active:scale-95 gap-2.5 group"
           >
-            <ShoppingBag className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
-            Add to Collective
+            <ShoppingBag className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+            Add to Cart
           </Button>
           <Button
             onClick={handleWishlistClick}
             disabled={isAddingToWishlist}
             className={cn(
-              "h-16 w-16 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center p-0 shrink-0",
+              "h-12 w-12 rounded-xl transition-all duration-200 active:scale-90 flex items-center justify-center p-0 shrink-0 border-2",
               isWishlisted(product.id)
-                ? "border-brand border-2 bg-brand/10 hover:bg-brand/15 text-brand shadow-sm hover:shadow-md"
-                : "border-zinc-200 border-2 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-zinc-400 hover:text-zinc-600 shadow-sm hover:shadow-md"
+                ? "border-red-200 bg-red-50 hover:bg-red-100 text-red-600 shadow-sm"
+                : "border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-zinc-400 hover:text-zinc-600 shadow-sm"
             )}
           >
             <Heart className={cn(
-              "w-5 h-5 transition-all duration-300 ease-out",
+              "w-5 h-5 transition-all duration-200",
               isWishlisted(product.id)
-                ? "fill-brand stroke-brand scale-110"
-                : "scale-100 hover:scale-105"
+                ? "fill-red-600 stroke-red-600"
+                : ""
             )} />
           </Button>
         </div>
-        
+
         <Button
           onClick={handleAddToCart}
-          className="w-full h-14 rounded-full bg-brand hover:bg-brand/90 text-white font-black text-sm uppercase tracking-[0.15em] transition-all duration-300 active:scale-95"
+          className="w-full h-12 rounded-xl text-white font-bold text-sm tracking-wide transition-all duration-200 active:scale-95"
+          style={{ backgroundColor: "#dc2626" }}
         >
           Buy Now
         </Button>

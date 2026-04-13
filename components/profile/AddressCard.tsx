@@ -15,18 +15,19 @@ interface AddressCardProps {
 
 export function AddressCard({ address, onEdit, onDelete, onSetDefault }: AddressCardProps) {
   return (
-    <div className={cn(
-      "p-6 md:p-7 rounded-lg border transition-all",
-      address.isDefault 
-        ? "border-brand bg-brand/5" 
-        : "border-zinc-200 bg-white hover:border-zinc-300"
-    )}>
+    <div
+      className="p-5 md:p-6 rounded-2xl border transition-all"
+      style={address.isDefault
+        ? { borderColor: "#dc2626", backgroundColor: "rgba(220,38,38,0.04)" }
+        : { borderColor: "#e4e4e7", backgroundColor: "#ffffff" }
+      }
+    >
       {/* Content */}
       <div className="space-y-4">
         {/* Name and Phone */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-brand" />
+            <User className="w-4 h-4 text-red-600" />
             <p className="font-bold text-sm text-zinc-900">
               {address.name}
             </p>
@@ -54,7 +55,7 @@ export function AddressCard({ address, onEdit, onDelete, onSetDefault }: Address
             variant="ghost"
             size="sm"
             onClick={() => onEdit(address)}
-            className="gap-2 rounded-lg h-8 px-3 text-zinc-600 hover:text-brand hover:bg-brand/10"
+            className="gap-2 rounded-lg h-8 px-3 text-zinc-600 hover:text-red-600 hover:bg-red-50"
           >
             <Edit2 className="w-4 h-4" />
             <span className="text-xs font-medium hidden sm:inline">Edit</span>

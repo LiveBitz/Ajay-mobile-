@@ -25,6 +25,7 @@ export async function NewArrivals() {
 
   return (
     <section id="new-arrivals" className="py-12 md:py-16 lg:py-20 bg-white">
+
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="mb-8 md:mb-10 lg:mb-12">
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-zinc-900 mb-1.5 tracking-tight">

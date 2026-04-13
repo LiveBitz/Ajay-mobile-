@@ -44,11 +44,10 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
   const scroll = (direction: "left" | "right") => {
     if (carouselRef.current) {
       const scrollAmount = 400;
-      const newPosition =
-        direction === "left"
-          ? scrollPosition - scrollAmount
-          : scrollPosition + scrollAmount;
-      carouselRef.current.scrollTo({ left: newPosition, behavior: "smooth" });
+      carouselRef.current.scrollTo({
+        left: direction === "left" ? scrollPosition - scrollAmount : scrollPosition + scrollAmount,
+        behavior: "smooth",
+      });
       setTimeout(checkScroll, 300);
     }
   };
@@ -56,88 +55,116 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
   if (!products || products.length === 0) return null;
 
   return (
-    <section className="py-12 md:py-16 lg:py-20 bg-white">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8">
+    <section
+      className="relative py-14 md:py-20 lg:py-24 overflow-hidden"
+      style={{ backgroundColor: "#0a0a0a" }}
+    >
+      {/* Subtle red glow — top centre */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] pointer-events-none"
+        style={{ background: "radial-gradient(ellipse at top, rgba(220,38,38,0.12) 0%, transparent 70%)" }}
+      />
+      {/* Thin red hairline at top */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{ background: "linear-gradient(90deg, transparent, rgba(220,38,38,0.5), transparent)" }}
+      />
 
-        {/* Header Row */}
-        <div className="flex items-end justify-between mb-8 md:mb-10">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
+
+        {/* ── Header ── */}
+        <div className="flex items-end justify-between mb-8 md:mb-12">
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-0.5 bg-red-600 rounded-full" />
-              <span className="text-red-600 text-xs font-bold uppercase tracking-[0.18em]">
+            {/* Eyebrow */}
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-5 h-0.5 rounded-full" style={{ backgroundColor: "#dc2626" }} />
+              <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: "#dc2626" }}>
                 Trending Now
               </span>
             </div>
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-zinc-900 tracking-tight leading-tight">
+            <h2
+              className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight"
+              style={{ color: "#ffffff" }}
+            >
               Best Selling Phones
             </h2>
-            <p className="text-sm text-zinc-500 font-medium mt-1.5">
+            <p className="text-sm font-medium mt-1.5" style={{ color: "#71717a" }}>
               The most loved devices this season
             </p>
           </div>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex gap-2">
+          <div className="hidden md:flex items-center gap-2 shrink-0">
             <button
               onClick={() => scroll("left")}
               disabled={!canScrollLeft}
-              className={cn(
-                "h-11 w-11 rounded-full flex items-center justify-center border transition-all duration-200",
-                canScrollLeft
-                  ? "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white shadow-sm"
-                  : "border-zinc-200 bg-zinc-50 text-zinc-300 cursor-not-allowed"
-              )}
+              aria-label="Scroll left"
+              style={{
+                height: 40, width: 40, borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                border: `1px solid ${canScrollLeft ? "#3f3f46" : "#27272a"}`,
+                backgroundColor: canScrollLeft ? "#18181b" : "#111111",
+                color: canScrollLeft ? "#a1a1aa" : "#3f3f46",
+                cursor: canScrollLeft ? "pointer" : "not-allowed",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={e => { if (canScrollLeft) { Object.assign((e.currentTarget as HTMLButtonElement).style, { backgroundColor: "#dc2626", borderColor: "#dc2626", color: "#fff" }); } }}
+              onMouseLeave={e => { if (canScrollLeft) { Object.assign((e.currentTarget as HTMLButtonElement).style, { backgroundColor: "#18181b", borderColor: "#3f3f46", color: "#a1a1aa" }); } }}
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft style={{ width: 16, height: 16 }} />
             </button>
             <button
               onClick={() => scroll("right")}
               disabled={!canScrollRight}
-              className={cn(
-                "h-11 w-11 rounded-full flex items-center justify-center border transition-all duration-200",
-                canScrollRight
-                  ? "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white shadow-sm"
-                  : "border-zinc-200 bg-zinc-50 text-zinc-300 cursor-not-allowed"
-              )}
+              aria-label="Scroll right"
+              style={{
+                height: 40, width: 40, borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                border: `1px solid ${canScrollRight ? "#3f3f46" : "#27272a"}`,
+                backgroundColor: canScrollRight ? "#18181b" : "#111111",
+                color: canScrollRight ? "#a1a1aa" : "#3f3f46",
+                cursor: canScrollRight ? "pointer" : "not-allowed",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={e => { if (canScrollRight) { Object.assign((e.currentTarget as HTMLButtonElement).style, { backgroundColor: "#dc2626", borderColor: "#dc2626", color: "#fff" }); } }}
+              onMouseLeave={e => { if (canScrollRight) { Object.assign((e.currentTarget as HTMLButtonElement).style, { backgroundColor: "#18181b", borderColor: "#3f3f46", color: "#a1a1aa" }); } }}
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight style={{ width: 16, height: 16 }} />
             </button>
           </div>
         </div>
 
         {/* Mobile Nav */}
-        <div className="md:hidden flex justify-end gap-2 mb-4">
-          <button
-            onClick={() => scroll("left")}
-            disabled={!canScrollLeft}
-            className={cn(
-              "h-9 w-9 rounded-full border flex items-center justify-center transition-all duration-200",
-              canScrollLeft
-                ? "border-zinc-300 bg-white text-zinc-700"
-                : "border-zinc-200 bg-zinc-50 text-zinc-300 cursor-not-allowed opacity-50"
-            )}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => scroll("right")}
-            disabled={!canScrollRight}
-            className={cn(
-              "h-9 w-9 rounded-full border flex items-center justify-center transition-all duration-200",
-              canScrollRight
-                ? "border-zinc-300 bg-white text-zinc-700"
-                : "border-zinc-200 bg-zinc-50 text-zinc-300 cursor-not-allowed opacity-50"
-            )}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
+        <div className="md:hidden flex justify-end gap-2 mb-5">
+          {(["left", "right"] as const).map((dir) => {
+            const can = dir === "left" ? canScrollLeft : canScrollRight;
+            return (
+              <button
+                key={dir}
+                onClick={() => scroll(dir)}
+                disabled={!can}
+                style={{
+                  height: 36, width: 36, borderRadius: "50%",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  border: `1px solid ${can ? "#3f3f46" : "#27272a"}`,
+                  backgroundColor: can ? "#18181b" : "#111111",
+                  color: can ? "#a1a1aa" : "#3f3f46",
+                  cursor: can ? "pointer" : "not-allowed",
+                }}
+              >
+                {dir === "left"
+                  ? <ChevronLeft style={{ width: 14, height: 14 }} />
+                  : <ChevronRight style={{ width: 14, height: 14 }} />}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Carousel */}
+        {/* ── Carousel ── */}
         <div
           ref={carouselRef}
           onScroll={checkScroll}
-          className="flex gap-5 md:gap-6 overflow-x-auto pb-4 scrollbar-hide"
+          className="flex gap-4 md:gap-5 lg:gap-6 overflow-x-auto pb-3 scrollbar-hide"
           style={{ touchAction: "pan-x" }}
         >
           {products.map((product, index) => (
@@ -154,7 +181,9 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
   );
 }
 
+/* ── Individual Card ── */
 function BestSellerCard({ product, index }: { product: Product; index: number }) {
+  const [hovered, setHovered] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { isWishlisted, toggleWishlist } = useWishlist();
@@ -180,12 +209,7 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
       });
     } catch (error: any) {
       if (error?.message?.includes("login")) {
-        toast({
-          title: "Login Required",
-          description: "Please login to add items to your wishlist",
-          variant: "destructive",
-          duration: 3000,
-        });
+        toast({ title: "Login Required", description: "Please login to add items to your wishlist", variant: "destructive", duration: 3000 });
       }
     } finally {
       setIsAddingToWishlist(false);
@@ -195,148 +219,168 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) return;
     setIsAddingToCart(true);
     try {
-      addItem({
-        productId: String(product.id),
-        name: product.name,
-        price: product.price,
-        image: product.image,
-      });
-      toast({
-        title: "Added to Cart",
-        description: `${product.name} has been added to your cart.`,
-      });
+      addItem({ productId: String(product.id), name: product.name, price: product.price, image: product.image });
+      toast({ title: "Added to Cart", description: `${product.name} has been added to your cart.` });
     } catch {
-      toast({
-        title: "Error",
-        description: "Failed to add product to cart",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to add product to cart", variant: "destructive" });
     } finally {
       setTimeout(() => setIsAddingToCart(false), 700);
     }
   };
 
   return (
-    <div className="flex-shrink-0 group w-[280px] md:w-[300px] lg:w-[320px]">
-      <div className="flex flex-col h-full rounded-2xl overflow-hidden bg-white border border-zinc-100 shadow-sm md:hover:shadow-xl md:hover:shadow-zinc-200/80 md:hover:-translate-y-1.5 transition-all duration-300">
-
-        {/* Image — Link wraps only the image, buttons are siblings */}
-        <div className="relative overflow-hidden bg-zinc-50" style={{ paddingBottom: "95%" }}>
-          <Link
-            href={`/product/${product.slug}`}
-            className="absolute inset-0 block"
-          >
+    <div
+      className="flex-shrink-0"
+      style={{ width: "clamp(220px, 28vw, 300px)" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div
+        className="flex flex-col h-full rounded-2xl overflow-hidden"
+        style={{
+          backgroundColor: hovered ? "#1c1c1e" : "#18181b",
+          border: hovered ? "1px solid #3f3f46" : "1px solid #27272a",
+          boxShadow: hovered
+            ? "0 20px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(220,38,38,0.1)"
+            : "0 2px 8px rgba(0,0,0,0.3)",
+          transform: hovered ? "translateY(-6px)" : "translateY(0)",
+          transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
+        }}
+      >
+        {/* ── Image ── */}
+        <div className="relative overflow-hidden" style={{ paddingBottom: "90%", backgroundColor: "#212121" }}>
+          <Link href={`/product/${product.slug}`} className="absolute inset-0 block">
             <Image
               src={product.image}
               alt={product.name}
               fill
-              className="object-cover transition-transform duration-500 md:group-hover:scale-105"
+              className="object-cover"
+              style={{ transform: hovered ? "scale(1.06)" : "scale(1)", transition: "transform 0.5s ease" }}
               quality={85}
               loading="lazy"
             />
-            {/* Hover gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
+            {/* Bottom gradient on hover */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: "linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 50%)",
+                opacity: hovered ? 1 : 0,
+                transition: "opacity 0.3s ease",
+              }}
+            />
           </Link>
 
-          {/* Discount Badge */}
+          {/* Discount badge — top left */}
           {product.discount > 0 && (
-            <div className="absolute top-3 left-3 z-10 pointer-events-none">
-              <div
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white font-black text-xs tracking-wide shadow-lg"
-                style={{
-                  background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
-                  boxShadow: "0 2px 8px rgba(220, 38, 38, 0.45)",
-                }}
-              >
-                <Zap size={10} style={{ fill: "#fbbf24", stroke: "none" }} />
-                <span>{product.discount}% OFF</span>
-              </div>
+            <div
+              className="absolute top-3 left-3 z-10 pointer-events-none flex items-center gap-1 px-2 py-1 rounded-lg"
+              style={{
+                background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+                boxShadow: "0 2px 8px rgba(220,38,38,0.4)",
+              }}
+            >
+              <Zap style={{ width: 9, height: 9, fill: "#fbbf24", stroke: "none" }} />
+              <span className="text-white font-black text-[10px] tracking-wide">{product.discount}% OFF</span>
             </div>
           )}
 
-          {/* Bestseller tag */}
-          {product.isBestSeller && !product.isNew && !product.discount && (
-            <div className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full uppercase tracking-wider pointer-events-none">
-              🔥 Hot
+          {/* New badge */}
+          {product.isNew && !product.discount && (
+            <div className="absolute top-3 left-3 z-10 pointer-events-none px-2 py-1 rounded-lg"
+              style={{ backgroundColor: "#27272a", border: "1px solid #3f3f46" }}>
+              <span className="text-white font-bold text-[10px] uppercase tracking-wider">New</span>
             </div>
           )}
 
-          {/* Wishlist — outside Link, z-20 so it intercepts its own taps */}
+          {/* Wishlist */}
           <button
             onClick={handleWishlistClick}
             disabled={isAddingToWishlist}
-            className="absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 disabled:opacity-50 bg-white/80 backdrop-blur-md md:hover:bg-white shadow-sm md:hover:shadow-md"
+            className="absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 active:scale-90 disabled:opacity-50"
+            style={{
+              backgroundColor: "rgba(9,9,11,0.7)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(255,255,255,0.1)",
+            }}
             aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           >
             <Heart
-              size={14}
+              size={13}
               strokeWidth={2}
               style={{
                 fill: wishlisted ? "#ef4444" : "none",
-                stroke: wishlisted ? "#ef4444" : "#9f9f9f",
-                transition: "all 0.3s ease",
+                stroke: wishlisted ? "#ef4444" : "#a1a1aa",
+                transition: "all 0.2s ease",
               }}
             />
           </button>
 
-          {/* Out of stock overlay */}
+          {/* Out of stock */}
           {isOutOfStock && (
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center z-20 pointer-events-none">
-              <span className="text-zinc-700 text-xs font-bold uppercase tracking-widest border border-zinc-300 px-4 py-2 rounded-full bg-white shadow-sm">
+            <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center"
+              style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(2px)" }}>
+              <span className="text-zinc-300 text-xs font-bold uppercase tracking-widest border border-zinc-600 px-3 py-1.5 rounded-full"
+                style={{ backgroundColor: "rgba(9,9,11,0.8)" }}>
                 Out of Stock
               </span>
             </div>
           )}
         </div>
 
-        {/* Info */}
-        <div className="flex flex-col flex-1 p-5 gap-4">
-          <Link href={`/product/${product.slug}`} className="flex-1 space-y-2">
-            <h3 className="font-semibold text-zinc-900 text-base leading-snug line-clamp-2 md:group-hover:text-red-600 transition-colors duration-200">
+        {/* ── Info ── */}
+        <div className="flex flex-col flex-1 p-4 gap-3">
+          <Link href={`/product/${product.slug}`} className="flex-1 space-y-1.5">
+            <h3
+              className="font-semibold text-sm leading-snug line-clamp-2"
+              style={{ color: hovered ? "#ffffff" : "#e4e4e7", transition: "color 0.2s ease" }}
+            >
               {product.name}
             </h3>
 
             <div className="flex items-baseline gap-2 tabular-nums">
-              <span className="font-black text-xl text-zinc-900">
+              <span className="font-black text-lg" style={{ color: "#ffffff" }}>
                 ₹{product.price.toLocaleString("en-IN")}
               </span>
-              <span className="text-sm text-zinc-400 line-through">
-                ₹{product.originalPrice.toLocaleString("en-IN")}
-              </span>
+              {product.originalPrice > product.price && (
+                <span className="text-xs line-through" style={{ color: "#52525b" }}>
+                  ₹{product.originalPrice.toLocaleString("en-IN")}
+                </span>
+              )}
             </div>
 
-            {/* Savings pill */}
             {savings > 0 && (
-              <div className="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
-                You save ₹{savings.toLocaleString("en-IN")}
+              <div
+                className="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                style={{ color: "#34d399", backgroundColor: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.2)" }}
+              >
+                Save ₹{savings.toLocaleString("en-IN")}
               </div>
             )}
           </Link>
 
-          {/* Add to Cart — outside Link */}
+          {/* Add to Cart */}
           <button
             onClick={handleAddToCart}
             disabled={isOutOfStock || isAddingToCart}
-            className={cn(
-              "w-full flex items-center justify-center gap-2 h-11 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all duration-200",
+            className="w-full h-10 rounded-xl flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider transition-all duration-200"
+            style={
               isOutOfStock
-                ? "bg-zinc-50 border-zinc-200 text-zinc-400 cursor-not-allowed"
+                ? { backgroundColor: "#111111", border: "1px solid #27272a", color: "#52525b", cursor: "not-allowed" }
                 : isAddingToCart
-                ? "bg-red-600 border-red-600 text-white scale-[0.98]"
-                : "bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white hover:shadow-md"
-            )}
+                ? { backgroundColor: "#dc2626", border: "1px solid #dc2626", color: "#fff" }
+                : hovered
+                ? { backgroundColor: "#dc2626", border: "1px solid #dc2626", color: "#fff" }
+                : { backgroundColor: "#27272a", border: "1px solid #3f3f46", color: "#a1a1aa" }
+            }
           >
             <ShoppingBag
-              className={cn("w-4 h-4", isAddingToCart && "animate-bounce")}
+              className={cn("w-3.5 h-3.5", isAddingToCart && "animate-bounce")}
             />
             <span>
-              {isOutOfStock
-                ? "Out of Stock"
-                : isAddingToCart
-                ? "Adding..."
-                : "Add to Cart"}
+              {isOutOfStock ? "Out of Stock" : isAddingToCart ? "Adding..." : "Add to Cart"}
             </span>
           </button>
         </div>

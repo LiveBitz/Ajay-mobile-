@@ -52,7 +52,7 @@ export function PromoBanner({ banners = [] }: PromoBannerProps) {
   if (!banners || banners.length === 0) return null;
 
   return (
-    <section className="w-full py-12 md:py-16 lg:py-20 bg-white">
+    <section className="w-full py-12 md:py-16 lg:py-20 bg-zinc-50">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
         {/* Section Header */}
         <div className="mb-10 md:mb-12">

@@ -1,16 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-  UserPlus, 
-  Mail, 
-  Lock, 
-  ArrowRight, 
-  Store, 
-  Loader2,
-  CheckCircle2,
-  AlertCircle
-} from "lucide-react";
+import { UserPlus, Mail, Lock, Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
 import { signUp } from "@/lib/actions/auth-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +24,7 @@ export default function SignupPage() {
 
     if (result?.error) {
       toast({
-        title: "Registration Strategy Failure",
+        title: "Something went wrong",
         description: result.error,
         variant: "destructive",
       });
@@ -41,33 +32,31 @@ export default function SignupPage() {
     } else {
       setIsSuccess(true);
       toast({
-        title: "Registry Entry Created",
-        description: "Please verify your email to synchronize your session.",
+        title: "Account created!",
+        description: "Please check your email to verify your account.",
       });
     }
   };
 
   if (isSuccess) {
     return (
-      <div className="min-h-[90vh] flex items-center justify-center p-4 pt-8 md:pt-0">
+      <div className="min-h-[90vh] flex items-center justify-center bg-zinc-50 p-4 pt-8 md:pt-0">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md text-center space-y-8 bg-white rounded-[48px] border border-zinc-100 p-12 shadow-2xl"
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-md bg-white border border-zinc-100 rounded-3xl shadow-xl p-8 md:p-10 text-center"
         >
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-emerald-50 rounded-[40px]">
-            <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-zinc-50 rounded-full p-6 mb-6">
+            <CheckCircle2 className="w-8 h-8 text-emerald-500" />
           </div>
-          <div className="space-y-4">
-            <h1 className="text-3xl font-extrabold font-heading tracking-tight text-zinc-900">Registration Complete</h1>
-            <p className="text-zinc-500 font-medium leading-relaxed">
-              We&apos;ve sent a verification link to your identity address. 
-              Please confirm to synchronize your <span className="text-zinc-900 font-bold">Curator Session</span>.
-            </p>
-          </div>
-          <Link href="/login" className="block w-full">
-            <Button className="w-full h-14 rounded-2xl bg-zinc-900 text-white hover:bg-zinc-800 font-bold text-sm uppercase tracking-widest gap-2">
-              Proceed to Identification
+          <h1 className="text-2xl font-bold text-zinc-900 mb-2">Account created!</h1>
+          <p className="text-zinc-500 text-sm leading-relaxed mb-8">
+            We&apos;ve sent a verification link to your email address. Please confirm it to get started.
+          </p>
+          <Link href="/login" className="block">
+            <Button className="w-full h-12 rounded-xl bg-zinc-900 text-white hover:bg-zinc-800 font-semibold text-sm gap-2">
+              Sign in now
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
@@ -77,135 +66,113 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center p-4 pt-8 md:pt-0">
+    <div className="min-h-[90vh] flex items-center justify-center bg-zinc-50 p-4 pt-8 md:pt-0">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full max-w-md"
       >
-        <div className="bg-white rounded-[48px] border border-zinc-100 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] overflow-hidden">
-          <div className="p-8 sm:p-12 space-y-10">
-            {/* Branding Orchestration */}
-            <div className="space-y-4 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-brand/5 rounded-3xl mb-4">
-                <UserPlus className="w-8 h-8 text-brand" />
+        <div className="bg-white border border-zinc-100 rounded-3xl shadow-xl p-8 md:p-10">
+          {/* Logo + Heading */}
+          <div className="text-center mb-8">
+            <div
+              className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4"
+              style={{ backgroundColor: "#dc2626" }}
+            >
+              <span className="text-white text-xl font-black">N</span>
+            </div>
+            <h1 className="text-2xl font-bold text-zinc-900">Create your account</h1>
+            <p className="text-zinc-500 text-sm mt-1">Join NEXUS and start shopping</p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium text-zinc-700">
+                Full name
+              </Label>
+              <div className="relative">
+                <UserPlus className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  placeholder="John Doe"
+                  className="h-12 pl-10 rounded-xl bg-zinc-50 border border-zinc-200 focus:border-zinc-400 focus:bg-white text-sm text-zinc-900 transition-all"
+                />
               </div>
-              <h1 className="text-3xl font-extrabold font-heading tracking-tight text-zinc-900">
-                Curator Registry
-              </h1>
-              <p className="text-zinc-500 font-medium text-sm">
-                 Establish your flagship <span className="text-zinc-900 font-bold underline decoration-brand/30">Registry Identity</span>.
-              </p>
             </div>
 
-            {/* Auth Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-5">
-                {/* Full Name Orchestration */}
-                <div className="space-y-2.5">
-                  <Label 
-                    htmlFor="name"
-                    className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1"
-                  >
-                    Full Name
-                  </Label>
-                  <div className="relative group/input">
-                    <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300 group-focus-within/input:text-brand transition-colors" />
-                    <Input 
-                      id="name"
-                      name="name"
-                      type="text"
-                      required
-                      placeholder="e.g. John Doe"
-                      className="h-14 pl-12 rounded-2xl border-zinc-100 bg-zinc-50/50 text-sm font-bold text-zinc-900 focus:bg-white transition-all shadow-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Email Orchestration */}
-                <div className="space-y-2.5">
-                  <Label 
-                    htmlFor="email"
-                    className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1"
-                  >
-                    Curator Identity (Email)
-                  </Label>
-                  <div className="relative group/input">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300 group-focus-within/input:text-brand transition-colors" />
-                    <Input 
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      placeholder="e.g. curator@flagship.com"
-                      className="h-14 pl-12 rounded-2xl border-zinc-100 bg-zinc-50/50 text-sm font-bold text-zinc-900 focus:bg-white transition-all shadow-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Password Orchestration */}
-                <div className="space-y-2.5">
-                  <Label 
-                    htmlFor="password"
-                    className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1"
-                  >
-                    Secure Key (Password)
-                  </Label>
-                  <div className="relative group/input">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300 group-focus-within/input:text-brand transition-colors" />
-                    <Input 
-                      id="password"
-                      name="password"
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      className="h-14 pl-12 rounded-2xl border-zinc-100 bg-zinc-50/50 text-sm font-bold text-zinc-900 focus:bg-white transition-all shadow-sm"
-                    />
-                  </div>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium text-zinc-700">
+                Email address
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="you@example.com"
+                  className="h-12 pl-10 rounded-xl bg-zinc-50 border border-zinc-200 focus:border-zinc-400 focus:bg-white text-sm text-zinc-900 transition-all"
+                />
               </div>
+            </div>
 
-              <Button 
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-14 rounded-2xl bg-zinc-900 text-white hover:bg-zinc-800 font-bold text-sm uppercase tracking-widest gap-2 shadow-lg shadow-zinc-200 active:scale-95 transition-all"
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium text-zinc-700">
+                Password
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  className="h-12 pl-10 rounded-xl bg-zinc-50 border border-zinc-200 focus:border-zinc-400 focus:bg-white text-sm text-zinc-900 transition-all"
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-12 rounded-xl bg-zinc-900 text-white hover:bg-zinc-800 font-semibold text-sm gap-2 transition-all active:scale-95"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                <>
+                  Create account
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </Button>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-6 pt-6 border-t border-zinc-100 text-center">
+            <p className="text-sm text-zinc-500">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="font-semibold text-zinc-900 hover:underline underline-offset-4"
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Creating Registry...
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4" />
-                    Establish Registry
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </Button>
-            </form>
-
-            {/* Navigation Strategy */}
-            <div className="pt-6 border-t border-zinc-50 text-center space-y-4">
-              <p className="text-zinc-500 text-xs font-semibold">
-                Already registered? 
-                <Link 
-                  href="/login" 
-                  className="ml-2 text-brand font-black hover:underline underline-offset-4"
-                >
-                  Identitify Session →
-                </Link>
-              </p>
-            </div>
+                Sign in
+              </Link>
+            </p>
           </div>
         </div>
 
-        {/* Security Overlay */}
-        <div className="mt-8 flex items-center justify-center gap-2 text-zinc-400">
-           <AlertCircle className="w-3 h-3" />
-           <span className="text-[9px] font-black uppercase tracking-widest">Flagship Security Protocol Active</span>
-        </div>
+        <p className="text-center text-xs text-zinc-400 mt-6">Your data is safe with us 🔒</p>
       </motion.div>
     </div>
   );

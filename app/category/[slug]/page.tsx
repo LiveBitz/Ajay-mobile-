@@ -163,8 +163,8 @@ export default async function CategoryPage({
             <div>
               {/* Eyebrow */}
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-4 h-0.5 bg-red-600 rounded-full" />
-                <span className="text-red-600 text-[10px] font-bold uppercase tracking-[0.2em]">
+                <div className="w-4 h-0.5 rounded-full" style={{ backgroundColor: "#dc2626" }} />
+                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#dc2626" }}>
                   {eyebrowLabel}
                 </span>
               </div>

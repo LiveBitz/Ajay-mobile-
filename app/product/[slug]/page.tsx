@@ -125,28 +125,24 @@ export default async function ProductDetailsPage({
     <div className="bg-white min-h-screen pt-8 md:pt-0">
 
       {/* ── Breadcrumb ── */}
-      <div className="border-b border-zinc-100 sticky md:top-0 top-[calc(var(--navbar-height,0px)+28px)] z-20 backdrop-blur-sm bg-white/90">
+      <div className="border-b border-zinc-100 relative md:sticky md:top-0 md:z-20 z-10 backdrop-blur-sm bg-white/90">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <nav className="flex items-center gap-1.5 py-3.5 text-[11px] font-semibold text-zinc-400 overflow-x-auto whitespace-nowrap scrollbar-none">
+          <nav className="flex items-center gap-1.5 py-3.5 text-xs text-zinc-400 overflow-x-auto whitespace-nowrap scrollbar-none">
             <a
               href="/"
-              className={cn(
-                "hover:text-zinc-700 transition-colors shrink-0"
-              )}
+              className="hover:text-zinc-600 transition-colors shrink-0"
             >
               Home
             </a>
             <ChevronRight className="w-3 h-3 shrink-0 text-zinc-300" />
             <a
               href={`/category/${product.category.slug}`}
-              className={cn(
-                "hover:text-zinc-700 transition-colors shrink-0"
-              )}
+              className="hover:text-zinc-600 transition-colors shrink-0"
             >
               {product.category.name}
             </a>
             <ChevronRight className="w-3 h-3 shrink-0 text-zinc-300" />
-            <span className="text-zinc-600 font-bold truncate max-w-[200px] sm:max-w-sm">
+            <span className="text-zinc-600 font-medium truncate max-w-[200px] sm:max-w-sm">
               {product.name}
             </span>
           </nav>
@@ -154,7 +150,7 @@ export default async function ProductDetailsPage({
       </div>
 
       {/* ── Main Product Grid ── */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-8 md:py-12 lg:py-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-10 md:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-16">
 
           {/* ─── Left · Gallery ─── */}
@@ -175,17 +171,17 @@ export default async function ProductDetailsPage({
               {/* ── Identity ── */}
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-bold text-zinc-500 bg-zinc-100 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-zinc-500 bg-zinc-100 px-2.5 py-1 rounded-lg uppercase tracking-wider">
                     {product.subCategory || product.category.name}
                   </span>
                   {product.isBestSeller && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 border border-red-100 px-2.5 py-1 rounded-lg">
-                      🔥 Bestseller
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 border border-red-100 px-2.5 py-1 rounded-lg">
+                      Bestseller
                     </span>
                   )}
                   {product.isNew && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-zinc-700 bg-zinc-100 px-2.5 py-1 rounded-lg">
-                      ✦ New Arrival
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-700 bg-zinc-100 px-2.5 py-1 rounded-lg">
+                      New Arrival
                     </span>
                   )}
                 </div>
@@ -202,41 +198,31 @@ export default async function ProductDetailsPage({
               </div>
 
               {/* ── Pricing ── */}
-              <div className="bg-zinc-50 rounded-2xl p-4 space-y-2 border border-zinc-100">
+              <div className="bg-zinc-50 rounded-2xl p-5 space-y-3 border border-zinc-100">
                 <div className="flex items-baseline flex-wrap gap-3">
-                  <span className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 tabular-nums">
+                  <span className="text-4xl sm:text-5xl font-black tracking-tight text-zinc-900 tabular-nums">
                     ₹{product.price.toLocaleString("en-IN")}
                   </span>
                   {product.discount > 0 && (
                     <>
-                      <span className="text-lg text-zinc-400 line-through font-medium tabular-nums">
+                      <span className="text-xl text-zinc-400 line-through font-medium tabular-nums">
                         ₹{product.originalPrice.toLocaleString("en-IN")}
                       </span>
-                      <span
-                        className="inline-flex items-center gap-1 text-xs font-black text-white px-2.5 py-1 rounded-lg shadow-sm"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
-                          boxShadow: "0 2px 8px rgba(220,38,38,0.35)",
-                        }}
-                      >
-                        <Zap
-                          size={10}
-                          style={{ fill: "#fbbf24", stroke: "none" }}
-                        />
+                      <span className="inline-flex items-center gap-1 text-xs font-black text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-lg">
+                        <Zap size={11} className="text-emerald-500" />
                         {discountPct}% OFF
                       </span>
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-zinc-200">
                   {savings > 0 && (
                     <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
                       You save ₹{savings.toLocaleString("en-IN")}
                     </span>
                   )}
-                  <p className="text-[10px] text-zinc-400 font-medium">
+                  <p className="text-xs text-zinc-400 font-medium">
                     Inclusive of all taxes
                   </p>
                 </div>
@@ -249,15 +235,13 @@ export default async function ProductDetailsPage({
               <ProductSelection product={product as any} />
 
               {/* ── Delivery Strip ── */}
-              <div className="flex items-start gap-3 p-3.5 rounded-xl border border-zinc-100 bg-zinc-50/50">
+              <div className="flex items-start gap-3 p-4 rounded-xl border border-zinc-100 bg-zinc-50/50">
                 <Package className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
                 <p className="text-xs text-zinc-500 leading-relaxed">
                   Order within{" "}
                   <span className="text-zinc-800 font-bold">4 hrs 23 mins</span>{" "}
                   to get it by{" "}
-                  <span className="text-zinc-800 font-bold">
-                    Tomorrow, 10 AM
-                  </span>{" "}
+                  <span className="text-zinc-800 font-bold">Tomorrow, 10 AM</span>{" "}
                   · Free shipping above ₹499
                 </p>
               </div>
@@ -267,16 +251,16 @@ export default async function ProductDetailsPage({
                 {trustBadges.map(({ icon: Icon, label, sub }) => (
                   <div
                     key={label}
-                    className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white border border-zinc-100 shadow-sm hover:shadow-md hover:border-zinc-200 transition-all duration-200"
+                    className="flex flex-col items-center text-center gap-2.5 p-3.5 rounded-xl bg-white border border-zinc-100 shadow-sm hover:shadow-md hover:border-zinc-200 transition-all duration-200"
                   >
-                    <div className="w-8 h-8 rounded-full bg-zinc-50 border border-zinc-100 flex items-center justify-center">
-                      <Icon className="w-3.5 h-3.5 text-zinc-700" />
+                    <div className="w-9 h-9 rounded-full bg-zinc-50 border border-zinc-100 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-zinc-400" />
                     </div>
                     <div>
-                      <p className="text-[9px] font-black text-zinc-900 uppercase tracking-tight leading-tight">
+                      <p className="text-xs font-semibold text-zinc-600 leading-snug">
                         {label}
                       </p>
-                      <p className="text-[8px] text-zinc-400 font-medium mt-0.5 leading-tight">
+                      <p className="text-xs text-zinc-400 font-medium mt-0.5 leading-snug">
                         {sub}
                       </p>
                     </div>
@@ -288,7 +272,7 @@ export default async function ProductDetailsPage({
         </div>
 
         {/* ── Bottom Details Section ── */}
-        <div className="mt-16 md:mt-24 pt-12 border-t border-zinc-100">
+        <div className="mt-16 md:mt-24 pt-10 md:pt-16 border-t border-zinc-100">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
 
             {/* ─── Description + Features ─── */}
@@ -334,7 +318,7 @@ export default async function ProductDetailsPage({
 
               {/* In the Box */}
               <div className="p-5 rounded-2xl border border-zinc-100 bg-zinc-50/50 space-y-3">
-                <p className="text-xs font-black text-zinc-400 uppercase tracking-widest">
+                <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
                   In the Box
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -347,7 +331,7 @@ export default async function ProductDetailsPage({
                   ].map((item) => (
                     <span
                       key={item}
-                      className="text-[10px] font-semibold text-zinc-600 bg-white border border-zinc-200 px-2.5 py-1 rounded-lg"
+                      className="text-xs font-medium text-zinc-600 bg-white border border-zinc-200 px-2.5 py-1 rounded-lg"
                     >
                       {item}
                     </span>
@@ -362,22 +346,25 @@ export default async function ProductDetailsPage({
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-zinc-100 bg-zinc-50/80 flex items-center gap-2">
                   <div className="w-1 h-4 rounded-full bg-zinc-900" />
-                  <h3 className="text-xs font-black text-zinc-700 uppercase tracking-widest">
+                  <h3 className="text-xs font-bold text-zinc-700 uppercase tracking-widest">
                     Technical Specifications
                   </h3>
                 </div>
 
-                {/* Rows */}
-                <div className="divide-y divide-zinc-50">
+                {/* Rows — alternating background */}
+                <div className="divide-y divide-zinc-100">
                   {specRows.map((spec, idx) => (
                     <div
                       key={`${spec.label}-${idx}`}
-                      className="flex items-start justify-between gap-4 px-6 py-3.5 hover:bg-zinc-50/60 transition-colors group"
+                      className={cn(
+                        "flex items-start justify-between gap-4 px-6 py-4 transition-colors",
+                        idx % 2 === 0 ? "bg-white" : "bg-zinc-50/50"
+                      )}
                     >
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider shrink-0 pt-0.5 group-hover:text-zinc-600 transition-colors">
+                      <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wide shrink-0 pt-0.5 min-w-[90px]">
                         {spec.label}
                       </span>
-                      <span className="text-xs font-bold text-zinc-900 text-right leading-relaxed">
+                      <span className="text-sm font-semibold text-zinc-900 text-right leading-relaxed">
                         {spec.value}
                       </span>
                     </div>
@@ -386,7 +373,7 @@ export default async function ProductDetailsPage({
 
                 {/* Footer */}
                 <div className="px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
-                  <p className="text-[10px] text-zinc-400 text-center font-medium">
+                  <p className="text-xs text-zinc-400 text-center font-medium">
                     Specifications may vary by region or retailer
                   </p>
                 </div>

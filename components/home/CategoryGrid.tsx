@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Category } from "@prisma/client";
 
@@ -11,69 +11,194 @@ interface CategoryGridProps {
 export function CategoryGrid({ categories }: CategoryGridProps) {
   if (!categories || categories.length === 0) return null;
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const animFrameRef = useRef<number | null>(null);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isPausedRef = useRef(false);
+  const isUserScrollingRef = useRef(false);
+  const lastScrollLeft = useRef(0);
+
+  // Duplicate 3× for seamless infinite scroll
+  const items = [...categories, ...categories, ...categories];
+
+  const stopAuto = useCallback(() => {
+    isPausedRef.current = true;
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    // Resume after 2s of no interaction
+    resumeTimerRef.current = setTimeout(() => {
+      isPausedRef.current = false;
+      startAuto();
+    }, 2000);
+  }, []);
+
+  const startAuto = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const tick = () => {
+      if (!isPausedRef.current && el) {
+        el.scrollLeft += 1;
+        // Seamless loop: when we've scrolled past the first third, jump back
+        const oneThird = el.scrollWidth / 3;
+        if (el.scrollLeft >= oneThird * 2) {
+          el.scrollLeft -= oneThird;
+        }
+      }
+      animFrameRef.current = requestAnimationFrame(tick);
+    };
+    animFrameRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  useEffect(() => {
+    // Start at the middle third so looping works in both directions
+    const el = scrollRef.current;
+    if (el) {
+      el.scrollLeft = el.scrollWidth / 3;
+      lastScrollLeft.current = el.scrollLeft;
+    }
+    startAuto();
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    };
+  }, [startAuto]);
+
+  // Detect user scroll (mouse wheel or touch scroll on the element)
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    // Seamless loop on manual scroll too
+    const oneThird = el.scrollWidth / 3;
+    if (el.scrollLeft >= oneThird * 2) el.scrollLeft -= oneThird;
+    if (el.scrollLeft <= 0) el.scrollLeft += oneThird;
+
+    if (isUserScrollingRef.current) stopAuto();
+  }, [stopAuto]);
+
+  const handlePointerDown = useCallback(() => {
+    isUserScrollingRef.current = true;
+    stopAuto();
+  }, [stopAuto]);
+
+  const handlePointerUp = useCallback(() => {
+    isUserScrollingRef.current = false;
+  }, []);
+
+  const handleTouchStart = useCallback(() => {
+    isUserScrollingRef.current = true;
+    stopAuto();
+  }, [stopAuto]);
+
+  const handleTouchEnd = useCallback(() => {
+    isUserScrollingRef.current = false;
+  }, []);
+
   return (
-    <section className="bg-black border-b border-zinc-800">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8">
+    <section
+      className="relative overflow-hidden border-b border-zinc-800"
+      style={{ backgroundColor: "#0a0a0a" }}
+    >
+      {/* Red glows — same as Flash Sale */}
+      <div className="absolute inset-0 pointer-events-none">
         <div
-          className="flex items-center justify-between overflow-x-auto scrollbar-hide py-3 md:py-4 lg:py-5 gap-2"
-          style={{ scrollBehavior: "smooth" }}
-        >
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/category/${category.slug}`}
-              className="flex-1 min-w-[60px] max-w-[100px] group flex flex-col items-center gap-2"
+          className="absolute -top-16 -left-16 w-[300px] h-[300px] rounded-full blur-[80px]"
+          style={{ backgroundColor: "rgba(220,38,38,0.12)" }}
+        />
+        <div
+          className="absolute -bottom-16 -right-16 w-[250px] h-[250px] rounded-full blur-[80px]"
+          style={{ backgroundColor: "rgba(153,27,27,0.10)" }}
+        />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-50" />
+      </div>
+
+      {/* Fade edges */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
+        style={{ background: "linear-gradient(90deg, #0a0a0a, transparent)" }}
+      />
+      <div
+        className="absolute right-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
+        style={{ background: "linear-gradient(-90deg, #0a0a0a, transparent)" }}
+      />
+
+      {/* Scrollable track */}
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        onMouseDown={handlePointerDown}
+        onMouseUp={handlePointerUp}
+        onMouseLeave={handlePointerUp}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="relative z-[5] flex items-center gap-4 md:gap-6 lg:gap-8 overflow-x-auto py-3 md:py-4 lg:py-5 cursor-grab active:cursor-grabbing"
+        style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        {items.map((category, idx) => (
+          <Link
+            key={`${category.id}-${idx}`}
+            href={`/category/${category.slug}`}
+            draggable={false}
+            className="group flex flex-col items-center gap-2 shrink-0"
+            style={{ width: "clamp(64px, 7vw, 96px)" }}
+          >
+            {/* Icon */}
+            <div
+              className="relative rounded-xl overflow-hidden border border-zinc-800 group-hover:border-red-500 group-hover:-translate-y-0.5 transition-all duration-200 mx-auto"
+              style={{
+                width: "clamp(48px, 5vw, 72px)",
+                height: "clamp(48px, 5vw, 72px)",
+                backgroundColor: "#18181b",
+              }}
             >
-              {/* Icon — fixed px size per breakpoint via inline style */}
+              {category.image ? (
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  draggable={false}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                    userSelect: "none",
+                  }}
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center"
+                  style={{ backgroundColor: "#27272a" }}
+                >
+                  <span className="text-base font-black text-zinc-500 group-hover:text-red-500 transition-colors">
+                    {category.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
               <div
-                className="relative rounded-xl lg:rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 md:group-hover:border-red-500 md:group-hover:shadow-md md:group-hover:shadow-red-500/20 md:group-hover:-translate-y-0.5 transition-all duration-200 mx-auto shrink-0"
-                style={{
-                  width: "clamp(48px, 5vw, 80px)",
-                  height: "clamp(48px, 5vw, 80px)",
-                }}
-              >
-                {category.image ? (
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      display: "block",
-                    }}
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{ width: "100%", height: "100%" }}
-                    className="flex items-center justify-center bg-zinc-800 md:group-hover:bg-zinc-700 transition-colors"
-                  >
-                    <span className="text-lg font-black text-zinc-500 md:group-hover:text-red-500 transition-colors">
-                      {category.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                style={{ backgroundColor: "rgba(220,38,38,0.08)" }}
+              />
+            </div>
 
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-red-600/0 md:group-hover:bg-red-600/10 transition-colors duration-200" />
-              </div>
-
-              {/* Name */}
-              <p className="text-[10px] md:text-[11px] lg:text-xs font-semibold text-white md:group-hover:text-red-400 transition-colors duration-200 text-center leading-tight w-full line-clamp-1 px-1">
-                {category.name}
-              </p>
-            </Link>
-          ))}
-        </div>
+            {/* Name */}
+            <p className="text-xs font-semibold text-zinc-400 group-hover:text-red-400 transition-colors duration-200 text-center leading-tight w-full line-clamp-1 px-1 select-none">
+              {category.name}
+            </p>
+          </Link>
+        ))}
       </div>
 
       <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        div::-webkit-scrollbar { display: none; }
       `}</style>
     </section>
   );

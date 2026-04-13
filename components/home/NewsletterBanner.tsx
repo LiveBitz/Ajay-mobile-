@@ -19,10 +19,21 @@ export function NewsletterBanner({ banner }: NewsletterBannerProps) {
   const displayButtonText = banner.buttonText || "Subscribe";
 
   return (
-    <section className="py-16 md:py-20 px-4 md:px-6 lg:px-8 container mx-auto mb-8">
-      <div className="relative w-full overflow-hidden rounded-2xl bg-zinc-900 text-white p-8 md:p-12 lg:p-16 space-y-6 md:space-y-0 md:flex md:items-center md:justify-between gap-8 shadow-xl">
+    <section
+      className="py-16 md:py-20 px-4 md:px-6 lg:px-8 relative overflow-hidden"
+      style={{ backgroundColor: "#0a0a0a" }}
+    >
+      {/* Top red hairline — matches HurryUpSection and BrandCarousel */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{ background: "linear-gradient(90deg, transparent, rgba(220,38,38,0.5), transparent)" }}
+      />
+      <div className="container mx-auto">
+      <div className="relative w-full overflow-hidden rounded-2xl text-white p-8 md:p-12 lg:p-16 space-y-6 md:space-y-0 md:flex md:items-center md:justify-between gap-8"
+        style={{ backgroundColor: "#18181b", border: "1px solid #27272a" }}
+      >
         {/* Thin brand-red left accent */}
-        <div className="absolute left-0 top-8 bottom-8 w-1 bg-brand rounded-r-full" />
+        <div className="absolute left-0 top-8 bottom-8 w-1 rounded-r-full" style={{ backgroundColor: "#dc2626" }} />
 
         <div className="relative z-10 flex-1 space-y-3">
           <h2 className="text-3xl md:text-4xl font-black tracking-tight leading-tight text-white">
@@ -46,11 +57,12 @@ export function NewsletterBanner({ banner }: NewsletterBannerProps) {
                 required
               />
             </div>
-            <Button className="bg-brand text-white md:hover:bg-red-700 px-8 h-12 rounded-lg font-semibold text-sm transition-all duration-200 shrink-0">
+            <Button className="text-white px-8 h-12 rounded-lg font-semibold text-sm transition-all duration-200 shrink-0" style={{ backgroundColor: "#dc2626" }}>
               {displayButtonText}
             </Button>
           </form>
         </div>
+      </div>
       </div>
     </section>
   );
