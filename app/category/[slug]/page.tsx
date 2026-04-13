@@ -140,7 +140,7 @@ export default async function CategoryPage({
       : `${products.length} products`;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pt-8 md:pt-0">
 
       {/* ── Page Header ── */}
       <div className="w-full border-b border-zinc-100 bg-white">

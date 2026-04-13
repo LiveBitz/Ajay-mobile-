@@ -37,7 +37,7 @@ export default function RootLayout({
         <CartProvider>
           <WishlistProvider>
             <Navbar />
-            <main className="md:pt-0 pt-[calc(var(--navbar-height,0px)+28px)]">
+            <main>
 
               {children}
             </main>

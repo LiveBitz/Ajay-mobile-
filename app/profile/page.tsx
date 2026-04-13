@@ -33,7 +33,7 @@ export default async function ProfilePage() {
   const userName = user.email?.split('@')[0] || "User";
 
   return (
-    <div className="min-h-screen bg-white pt-24 pb-20 px-4 md:px-6 lg:px-8">
+    <div className="min-h-screen bg-white pt-8 md:pt-0 pb-20 px-4 md:px-6 lg:px-8">
       <div className="container mx-auto max-w-5xl">
         
         {/* Header Section */}

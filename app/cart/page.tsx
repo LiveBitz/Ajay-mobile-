@@ -114,7 +114,7 @@ export default function CartPage() {
   /* ── Empty State ── */
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white via-zinc-50/30 to-white flex flex-col">
+      <div className="min-h-screen bg-gradient-to-b from-white via-zinc-50/30 to-white flex flex-col pt-8 md:pt-0">
         {/* Stepper (skeleton) */}
         <div className="border-b border-zinc-100 bg-white sticky top-0 z-40">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-6 sm:py-8">
@@ -201,7 +201,7 @@ export default function CartPage() {
      * Mobile:  single column, sticky bottom CTA bar
      * Desktop: two columns (8/4), sticky sidebar
      */
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen pt-8 md:pt-0">
       {/* ── Stepper ── */}
       <div className="border-b border-zinc-100 bg-white sticky top-0 z-40">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl py-4 sm:py-6 lg:py-8">

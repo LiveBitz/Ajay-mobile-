@@ -49,8 +49,8 @@ export default function SignupPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-[90vh] flex items-center justify-center p-4">
-        <motion.div 
+      <div className="min-h-[90vh] flex items-center justify-center p-4 pt-8 md:pt-0">
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md text-center space-y-8 bg-white rounded-[48px] border border-zinc-100 p-12 shadow-2xl"
@@ -77,8 +77,8 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center p-4">
-      <motion.div 
+    <div className="min-h-[90vh] flex items-center justify-center p-4 pt-8 md:pt-0">
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}

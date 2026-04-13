@@ -14,7 +14,7 @@ import Link from "next/link";
 
 export default function AddressesPage() {
   return (
-    <div className="min-h-screen bg-zinc-50/50 pt-32 pb-20 px-4 md:px-8 lg:px-16">
+    <div className="min-h-screen bg-zinc-50/50 pt-8 md:pt-0 pb-20 px-4 md:px-8 lg:px-16">
       <div className="container mx-auto max-w-2xl">
         
         {/* Navigation Registry */}

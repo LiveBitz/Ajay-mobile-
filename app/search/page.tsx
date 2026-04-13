@@ -52,7 +52,7 @@ export default async function SearchPage({
   });
 
   return (
-    <div className="min-h-screen bg-white transition-opacity duration-300">
+    <div className="min-h-screen bg-white transition-opacity duration-300 pt-8 md:pt-0">
       <SearchCatalog
         initialProducts={products as any}
         initialQuery={q}

@@ -122,10 +122,10 @@ export default async function ProductDetailsPage({
   ].filter(Boolean) as { label: string; value: string }[];
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen pt-8 md:pt-0">
 
       {/* ── Breadcrumb ── */}
-      <div className="border-b border-zinc-100 sticky top-0 z-20 backdrop-blur-sm bg-white/90">
+      <div className="border-b border-zinc-100 sticky md:top-0 top-[calc(var(--navbar-height,0px)+28px)] z-20 backdrop-blur-sm bg-white/90">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           <nav className="flex items-center gap-1.5 py-3.5 text-[11px] font-semibold text-zinc-400 overflow-x-auto whitespace-nowrap scrollbar-none">
             <a
