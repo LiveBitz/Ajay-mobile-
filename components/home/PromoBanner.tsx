@@ -88,7 +88,7 @@ export function PromoBanner({ banners = [] }: PromoBannerProps) {
                         src={banner.image}
                         alt={banner.title || "Promotional Banner"}
                         fill
-                        className="object-cover hover:scale-105 transition-transform duration-700"
+                        className="object-cover md:hover:scale-105 transition-transform duration-700"
                         priority={index === 0}
                         quality={90}
                         sizes="100vw"

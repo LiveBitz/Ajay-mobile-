@@ -222,7 +222,7 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
       href={`/product/${product.slug}`}
       className="flex-shrink-0 group w-[280px] md:w-[300px] lg:w-[320px]"
     >
-      <div className="flex flex-col h-full rounded-2xl overflow-hidden bg-white border border-zinc-100 shadow-sm hover:shadow-xl hover:shadow-zinc-200/80 hover:-translate-y-1.5 transition-all duration-300">
+      <div className="flex flex-col h-full rounded-2xl overflow-hidden bg-white border border-zinc-100 shadow-sm md:hover:shadow-xl md:hover:shadow-zinc-200/80 md:hover:-translate-y-1.5 transition-all duration-300">
 
         {/* Image */}
         <div
@@ -233,13 +233,13 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
             src={product.image}
             alt={product.name}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-cover transition-transform duration-500 md:group-hover:scale-105"
             quality={85}
             loading="lazy"
           />
 
           {/* Hover gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
 
           {/* Discount Badge */}
          {/* Discount Badge */}
@@ -272,7 +272,7 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
          <button
   onClick={handleWishlistClick}
   disabled={isAddingToWishlist}
-  className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 disabled:opacity-50 bg-white/80 backdrop-blur-md hover:bg-white shadow-sm hover:shadow-md"
+  className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 disabled:opacity-50 bg-white/80 backdrop-blur-md md:hover:bg-white shadow-sm md:hover:shadow-md"
   aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
 >
   <Heart
@@ -298,7 +298,7 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
         {/* Info */}
         <div className="flex flex-col flex-1 p-5 gap-4">
           <div className="flex-1 space-y-2">
-            <h3 className="font-semibold text-zinc-900 text-base leading-snug line-clamp-2 group-hover:text-red-600 transition-colors duration-200">
+            <h3 className="font-semibold text-zinc-900 text-base leading-snug line-clamp-2 md:group-hover:text-red-600 transition-colors duration-200">
               {product.name}
             </h3>
 

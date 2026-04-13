@@ -26,7 +26,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
             >
               {/* Icon — fixed px size per breakpoint via inline style */}
               <div
-                className="relative rounded-xl lg:rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 group-hover:border-red-500 group-hover:shadow-md group-hover:shadow-red-500/20 group-hover:-translate-y-0.5 transition-all duration-200 mx-auto shrink-0"
+                className="relative rounded-xl lg:rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 md:group-hover:border-red-500 md:group-hover:shadow-md md:group-hover:shadow-red-500/20 md:group-hover:-translate-y-0.5 transition-all duration-200 mx-auto shrink-0"
                 style={{
                   width: "clamp(48px, 5vw, 80px)",
                   height: "clamp(48px, 5vw, 80px)",
@@ -50,20 +50,20 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                 ) : (
                   <div
                     style={{ width: "100%", height: "100%" }}
-                    className="flex items-center justify-center bg-zinc-800 group-hover:bg-zinc-700 transition-colors"
+                    className="flex items-center justify-center bg-zinc-800 md:group-hover:bg-zinc-700 transition-colors"
                   >
-                    <span className="text-lg font-black text-zinc-500 group-hover:text-red-500 transition-colors">
+                    <span className="text-lg font-black text-zinc-500 md:group-hover:text-red-500 transition-colors">
                       {category.name.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )}
 
                 {/* Hover overlay */}
-                <div className="absolute inset-0 bg-red-600/0 group-hover:bg-red-600/10 transition-colors duration-200" />
+                <div className="absolute inset-0 bg-red-600/0 md:group-hover:bg-red-600/10 transition-colors duration-200" />
               </div>
 
               {/* Name */}
-              <p className="text-[10px] md:text-[11px] lg:text-xs font-semibold text-white group-hover:text-red-400 transition-colors duration-200 text-center leading-tight w-full line-clamp-1 px-1">
+              <p className="text-[10px] md:text-[11px] lg:text-xs font-semibold text-white md:group-hover:text-red-400 transition-colors duration-200 text-center leading-tight w-full line-clamp-1 px-1">
                 {category.name}
               </p>
             </Link>

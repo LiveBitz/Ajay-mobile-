@@ -183,13 +183,13 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
                   )}
                 >
                   {/* Overlay gradient on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-brand/0 via-transparent to-brand/0 group-hover:from-brand/5 group-hover:to-brand/5 transition-all duration-300 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand/0 via-transparent to-brand/0 md:group-hover:from-brand/5 md:group-hover:to-brand/5 transition-all duration-300 pointer-events-none" />
                   
                   {category.image ? (
                     <img
                       src={category.image}
                       alt={category.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      className="w-full h-full object-cover transition-transform duration-500 md:group-hover:scale-110"
                       loading="lazy"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = "none";
@@ -199,7 +199,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
                   
                   {!category.image && (
                     <div className="text-center px-4 py-2">
-                      <span className="text-xs sm:text-sm font-black text-zinc-700 group-hover:text-brand transition-colors duration-300 line-clamp-2">
+                      <span className="text-xs sm:text-sm font-black text-zinc-700 md:group-hover:text-brand transition-colors duration-300 line-clamp-2">
                         {category.name}
                       </span>
                     </div>
@@ -208,10 +208,10 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
 
                 {/* Brand Name — Enhanced typography */}
                 <div className="text-center max-w-[120px] transition-all duration-300">
-                  <p className="text-xs sm:text-sm font-bold text-zinc-900 group-hover:text-brand transition-colors duration-300 line-clamp-2 tracking-tight">
+                  <p className="text-xs sm:text-sm font-bold text-zinc-900 md:group-hover:text-brand transition-colors duration-300 line-clamp-2 tracking-tight">
                     {category.name}
                   </p>
-                  <div className="h-0.5 w-0 group-hover:w-full bg-gradient-to-r from-transparent via-brand to-transparent rounded-full mx-auto transition-all duration-300 mt-2" />
+                  <div className="h-0.5 w-0 md:group-hover:w-full bg-gradient-to-r from-transparent via-brand to-transparent rounded-full mx-auto transition-all duration-300 mt-2" />
                 </div>
 
                 {/* Focus indicator for accessibility */}

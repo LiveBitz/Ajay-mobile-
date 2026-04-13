@@ -31,7 +31,7 @@ export function FeaturesStrip() {
         {features.map((feature, idx) => (
           <div
             key={idx}
-            className="group flex flex-row sm:flex-col items-center sm:items-center text-left sm:text-center gap-4 sm:gap-3 p-4 rounded-xl hover:bg-zinc-50 transition-all duration-200"
+            className="group flex flex-row sm:flex-col items-center sm:items-center text-left sm:text-center gap-4 sm:gap-3 p-4 rounded-xl md:hover:bg-zinc-50 transition-all duration-200"
           >
             <div className="p-2.5 rounded-xl bg-zinc-100 shrink-0">
               {feature.icon}

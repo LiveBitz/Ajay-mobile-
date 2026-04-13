@@ -46,7 +46,7 @@ export function NewsletterBanner({ banner }: NewsletterBannerProps) {
                 required
               />
             </div>
-            <Button className="bg-brand text-white hover:bg-red-700 px-8 h-12 rounded-lg font-semibold text-sm transition-all duration-200 shrink-0">
+            <Button className="bg-brand text-white md:hover:bg-red-700 px-8 h-12 rounded-lg font-semibold text-sm transition-all duration-200 shrink-0">
               {displayButtonText}
             </Button>
           </form>

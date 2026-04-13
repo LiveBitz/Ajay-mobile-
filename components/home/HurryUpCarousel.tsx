@@ -137,7 +137,7 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
               className={cn(
                 "h-10 w-10 rounded-full border flex items-center justify-center transition-all duration-200",
                 canScrollLeft
-                  ? "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500 hover:bg-zinc-800"
+                  ? "border-zinc-700 bg-zinc-900 text-zinc-300 md:hover:border-zinc-500 md:hover:bg-zinc-800"
                   : "border-zinc-800 bg-zinc-900/50 text-zinc-700 opacity-40 cursor-not-allowed"
               )}
             >

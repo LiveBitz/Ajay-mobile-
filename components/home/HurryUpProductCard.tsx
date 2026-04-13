@@ -86,7 +86,7 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
   return (
     <Link href={`/product/${product.slug}`} className="group block h-full">
       <div
-        className="relative flex flex-col h-full rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+        className="relative flex flex-col h-full rounded-2xl overflow-hidden transition-all duration-300 md:hover:-translate-y-1"
         style={{
           backgroundColor: "#18181b",
           border: "1px solid #3f3f46",
@@ -107,7 +107,7 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 md:group-hover:scale-105"
             onError={(e) => {
               (e.target as HTMLImageElement).src =
                 "https://placehold.co/300/18181b/52525b?text=Phone";
@@ -126,7 +126,7 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
             onClick={handleWishlistClick}
             disabled={isAddingToWishlist}
             aria-label="Toggle wishlist"
-            className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-all duration-300 disabled:opacity-50 hover:bg-black/40 active:scale-90"
+            className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-all duration-300 disabled:opacity-50 md:hover:bg-black/40 active:scale-90"
             style={{ backgroundColor: "rgba(24,24,27,0.85)", border: "1px solid #52525b" }}
           >
             <Heart
