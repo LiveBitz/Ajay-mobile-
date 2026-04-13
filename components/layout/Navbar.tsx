@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Search, Heart, ShoppingBag, User, Menu, X,
-  ChevronRight, ChevronDown, LogIn, HelpCircle, PhoneCall,
+  ChevronRight, ChevronDown, LogIn, HelpCircle,
   LogOut, Loader2, MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -218,20 +218,20 @@ export function Navbar() {
             </button>
           )}
           <Link
-            href="/track-order"
+            href="/profile?tab=orders"
             onClick={() => setIsOpen(false)}
             className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-50 transition-colors"
           >
             <HelpCircle className="w-5 h-5 text-zinc-400" />
-            <span className="font-semibold text-zinc-800 text-sm">Track Order</span>
+            <span className="font-semibold text-zinc-800 text-sm">My Orders</span>
           </Link>
           <Link
-            href="/contact"
+            href="/"
             onClick={() => setIsOpen(false)}
             className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-zinc-50 transition-colors"
           >
-            <PhoneCall className="w-5 h-5 text-zinc-400" />
-            <span className="font-semibold text-zinc-800 text-sm">Contact Us</span>
+            <ShoppingBag className="w-5 h-5 text-zinc-400" />
+            <span className="font-semibold text-zinc-800 text-sm">Shop All</span>
           </Link>
         </div>
       </div>
