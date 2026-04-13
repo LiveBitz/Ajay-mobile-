@@ -386,8 +386,9 @@ export function Navbar() {
         {/* ── Row 3: Search bar ──
             Positioned at the bottom center of the navbar border.
         ── */}
-        <div className="absolute left-1/2 -translate-x-1/2 w-full flex justify-center px-4 z-50 pointer-events-none" style={{ bottom: "-25px" }}>
-          <div className="w-full max-w-sm relative group pointer-events-auto" style={{ pointerEvents: searchOpen ? "auto" : "auto" }}>
+        {mounted && (
+          <div className="absolute left-1/2 -translate-x-1/2 w-full flex justify-center px-4 z-50 pointer-events-none" style={{ bottom: "-25px" }}>
+            <div className={`w-full max-w-sm relative group ${searchOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
             {/* Search trigger button */}
             {!searchOpen ? (
               <button
@@ -499,6 +500,7 @@ export function Navbar() {
             )}
           </div>
         </div>
+        )}
       </div>
 
       {/* ╔══════════════════════════════════════════╗
