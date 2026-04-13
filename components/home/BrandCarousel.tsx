@@ -118,7 +118,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .carousel-touch-pan { touch-action: pan-y; }
+        .carousel-touch-pan { touch-action: manipulation; }
       `}</style>
     </section>
   );
