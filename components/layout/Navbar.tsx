@@ -394,7 +394,7 @@ export function Navbar() {
               <button
                 onClick={() => setSearchOpen(true)}
                 className="w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl
-                           bg-white border-2 border-rose-500
+                           bg-white border-2 border-rose-500 pointer-events-auto
                            shadow-[0_2px_16px_rgba(0,0,0,0.08),0_1px_4px_rgba(0,0,0,0.04)]
                            hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)]
                            active:scale-[0.99] transition-all duration-200"
