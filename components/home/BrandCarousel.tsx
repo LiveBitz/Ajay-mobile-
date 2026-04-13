@@ -2,8 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { Category } from "@prisma/client";
 import { cn } from "@/lib/utils";
 
@@ -24,11 +23,10 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
       setScrollPosition(scrollLeft);
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-      
-      // Calculate scroll progress for indicator
-      const progress = scrollWidth > clientWidth 
-        ? (scrollLeft / (scrollWidth - clientWidth)) * 100 
-        : 0;
+      const progress =
+        scrollWidth > clientWidth
+          ? (scrollLeft / (scrollWidth - clientWidth)) * 100
+          : 0;
       setScrollProgress(progress);
     }
   }, []);
@@ -46,92 +44,85 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
 
   const scroll = (direction: "left" | "right") => {
     if (carouselRef.current) {
-      const scrollAmount = 300;
-      const newPosition =
-        direction === "left"
-          ? scrollPosition - scrollAmount
-          : scrollPosition + scrollAmount;
-
+      const scrollAmount = 320;
       carouselRef.current.scrollTo({
-        left: newPosition,
+        left:
+          direction === "left"
+            ? scrollPosition - scrollAmount
+            : scrollPosition + scrollAmount,
         behavior: "smooth",
       });
     }
   };
 
   return (
-    <section className="py-16 md:py-20 lg:py-24 bg-gradient-to-br from-white via-zinc-50/50 to-zinc-50">
+    <section className="py-14 md:py-20 lg:py-24 bg-white">
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-12 md:mb-14 lg:mb-16">
-          <div className="flex items-end justify-between gap-6 mb-8">
-            <div className="flex-1">
-              <div className="inline-flex items-center gap-2 mb-4">
-                <div className="h-1 w-8 bg-brand rounded-full" />
-                <span className="text-xs font-black uppercase tracking-[0.2em] text-brand">Premium Brands</span>
-              </div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-zinc-950 mb-3 tracking-tight leading-tight">
-                Shop by Brand
-              </h2>
-              <p className="text-base md:text-lg text-zinc-600 font-medium max-w-xl">
-                Explore our curated collection of premium brands and latest releases
-              </p>
+
+        {/* ── Header ── */}
+        <div className="flex items-end justify-between gap-6 mb-8 md:mb-10">
+          <div>
+            {/* Eyebrow */}
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-5 h-0.5 rounded-full" style={{ backgroundColor: "#dc2626" }} />
+              <span
+                className="text-xs font-bold uppercase tracking-[0.18em]"
+                style={{ color: "#dc2626" }}
+              >
+                Official Stores
+              </span>
             </div>
 
-            {/* Desktop nav arrows — enhanced design */}
-            <div className="hidden md:flex gap-3 items-center flex-shrink-0">
-              <button
-                onClick={() => scroll("left")}
-                disabled={!canScrollLeft}
-                aria-label="Scroll left"
-                className={cn(
-                  "h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300",
-                  "border-2 backdrop-blur-sm",
-                  canScrollLeft
-                    ? "border-zinc-200 bg-white/80 hover:bg-white hover:border-brand hover:shadow-lg hover:shadow-brand/20 text-zinc-700 hover:text-brand hover:-translate-y-0.5 active:scale-90"
-                    : "border-zinc-100 bg-zinc-50/50 text-zinc-300 cursor-not-allowed opacity-40"
-                )}
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => scroll("right")}
-                disabled={!canScrollRight}
-                aria-label="Scroll right"
-                className={cn(
-                  "h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300",
-                  "border-2 backdrop-blur-sm",
-                  canScrollRight
-                    ? "border-zinc-200 bg-white/80 hover:bg-white hover:border-brand hover:shadow-lg hover:shadow-brand/20 text-zinc-700 hover:text-brand hover:-translate-y-0.5 active:scale-90"
-                    : "border-zinc-100 bg-zinc-50/50 text-zinc-300 cursor-not-allowed opacity-40"
-                )}
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-zinc-900 tracking-tight leading-tight">
+              Shop by Brand
+            </h2>
+            <p className="text-sm text-zinc-500 font-medium mt-1.5">
+              Genuine products · Best prices · Warranty included
+            </p>
           </div>
 
-          {/* Scroll progress indicator — subtle bar */}
-          <div className="h-0.5 w-full bg-zinc-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-brand to-brand/70 transition-all duration-300"
-              style={{ width: `${scrollProgress}%` }}
-            />
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => scroll("left")}
+              disabled={!canScrollLeft}
+              aria-label="Scroll left"
+              className={cn(
+                "h-10 w-10 rounded-full border flex items-center justify-center transition-all duration-200",
+                canScrollLeft
+                  ? "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white shadow-sm"
+                  : "border-zinc-100 bg-zinc-50 text-zinc-300 cursor-not-allowed"
+              )}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => scroll("right")}
+              disabled={!canScrollRight}
+              aria-label="Scroll right"
+              className={cn(
+                "h-10 w-10 rounded-full border flex items-center justify-center transition-all duration-200",
+                canScrollRight
+                  ? "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white shadow-sm"
+                  : "border-zinc-100 bg-zinc-50 text-zinc-300 cursor-not-allowed"
+              )}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
-        {/* Mobile nav — refined design */}
-        <div className="md:hidden flex items-center justify-end gap-3 mb-6">
+        {/* ── Mobile nav ── */}
+        <div className="md:hidden flex items-center justify-end gap-2 mb-5">
           <button
             onClick={() => scroll("left")}
             disabled={!canScrollLeft}
             aria-label="Scroll left"
             className={cn(
-              "h-10 w-10 rounded-full flex items-center justify-center transition-all duration-300",
-              "border-2 backdrop-blur-sm",
+              "h-9 w-9 rounded-full border flex items-center justify-center transition-all duration-200",
               canScrollLeft
-                ? "border-zinc-200 bg-white/80 hover:bg-white hover:border-brand hover:shadow-lg text-zinc-700 hover:text-brand active:scale-90"
-                : "border-zinc-100 bg-zinc-50/50 text-zinc-300 opacity-40 cursor-not-allowed"
+                ? "border-zinc-200 bg-white text-zinc-700"
+                : "border-zinc-100 bg-zinc-50 text-zinc-300 opacity-50 cursor-not-allowed"
             )}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -141,83 +132,36 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
             disabled={!canScrollRight}
             aria-label="Scroll right"
             className={cn(
-              "h-10 w-10 rounded-full flex items-center justify-center transition-all duration-300",
-              "border-2 backdrop-blur-sm",
+              "h-9 w-9 rounded-full border flex items-center justify-center transition-all duration-200",
               canScrollRight
-                ? "border-zinc-200 bg-white/80 hover:bg-white hover:border-brand hover:shadow-lg text-zinc-700 hover:text-brand active:scale-90"
-                : "border-zinc-100 bg-zinc-50/50 text-zinc-300 opacity-40 cursor-not-allowed"
+                ? "border-zinc-200 bg-white text-zinc-700"
+                : "border-zinc-100 bg-zinc-50 text-zinc-300 opacity-50 cursor-not-allowed"
             )}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Carousel container */}
+        {/* ── Brand Cards Carousel ── */}
         <div
           ref={carouselRef}
-          className="flex gap-5 sm:gap-6 md:gap-7 lg:gap-8 overflow-x-auto scroll-smooth scrollbar-hide"
-          style={{
-            scrollBehavior: "smooth",
-            touchAction: "pan-x",
-          }}
+          className="flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-hide pb-2"
+          style={{ touchAction: "pan-x", scrollBehavior: "smooth" }}
         >
           {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/category/${category.slug}`}
-              className="flex-shrink-0 group cursor-pointer"
-            >
-              <div className="flex flex-col items-center gap-4 transition-all duration-300">
-                {/* Brand Card — Glassmorphism + Neumorphic */}
-                <div 
-                  className={cn(
-                    "relative h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 lg:h-32 lg:w-32",
-                    "rounded-2xl sm:rounded-3xl overflow-hidden",
-                    "bg-white/60 backdrop-blur-xl",
-                    "border border-white/50 sm:border-white/60",
-                    "shadow-sm hover:shadow-2xl transition-all duration-300",
-                    "flex items-center justify-center flex-shrink-0",
-                    "group-hover:scale-105 group-hover:border-white",
-                    "group-hover:shadow-brand/30 group-hover:shadow-2xl group-hover:bg-white/80"
-                  )}
-                >
-                  {/* Overlay gradient on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-brand/0 via-transparent to-brand/0 md:group-hover:from-brand/5 md:group-hover:to-brand/5 transition-all duration-300 pointer-events-none" />
-                  
-                  {category.image ? (
-                    <img
-                      src={category.image}
-                      alt={category.name}
-                      className="w-full h-full object-cover transition-transform duration-500 md:group-hover:scale-110"
-                      loading="lazy"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  ) : null}
-                  
-                  {!category.image && (
-                    <div className="text-center px-4 py-2">
-                      <span className="text-xs sm:text-sm font-black text-zinc-700 md:group-hover:text-brand transition-colors duration-300 line-clamp-2">
-                        {category.name}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Brand Name — Enhanced typography */}
-                <div className="text-center max-w-[120px] transition-all duration-300">
-                  <p className="text-xs sm:text-sm font-bold text-zinc-900 md:group-hover:text-brand transition-colors duration-300 line-clamp-2 tracking-tight">
-                    {category.name}
-                  </p>
-                  <div className="h-0.5 w-0 md:group-hover:w-full bg-gradient-to-r from-transparent via-brand to-transparent rounded-full mx-auto transition-all duration-300 mt-2" />
-                </div>
-
-                {/* Focus indicator for accessibility */}
-                <div className="absolute inset-0 rounded-3xl ring-2 ring-transparent group-focus-within:ring-brand transition-all opacity-0 group-focus-within:opacity-100 pointer-events-none" />
-              </div>
-            </Link>
+            <BrandCard key={category.id} category={category} />
           ))}
+        </div>
+
+        {/* ── Scroll Progress Bar ── */}
+        <div className="mt-6 h-px w-full bg-zinc-100 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-300"
+            style={{
+              width: `${scrollProgress}%`,
+              background: "linear-gradient(90deg, #dc2626, #ef4444)",
+            }}
+          />
         </div>
 
       </div>
@@ -227,5 +171,104 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </section>
+  );
+}
+
+/* ── Individual Brand Card ── */
+function BrandCard({ category }: { category: Category }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <Link
+      href={`/category/${category.slug}`}
+      className="flex-shrink-0 group"
+      style={{ width: "clamp(140px, 20vw, 200px)" }}
+    >
+      <div
+        className="rounded-2xl overflow-hidden transition-all duration-300"
+        style={{
+          border: hovered ? "1px solid #fecaca" : "1px solid #f4f4f5",
+          boxShadow: hovered
+            ? "0 16px 40px rgba(220,38,38,0.08), 0 4px 12px rgba(0,0,0,0.06)"
+            : "0 1px 4px rgba(0,0,0,0.04)",
+          transform: hovered ? "translateY(-4px)" : "translateY(0)",
+          backgroundColor: "#fff",
+        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+
+        {/* ── Logo / Image Area ── */}
+        <div
+          className="flex items-center justify-center overflow-hidden"
+          style={{
+            aspectRatio: "1 / 1",
+            backgroundColor: hovered ? "#fff7f7" : "#fafafa",
+            transition: "background-color 0.3s ease",
+            padding: "20px",
+          }}
+        >
+          {category.image ? (
+            <img
+              src={category.image}
+              alt={category.name}
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                transform: hovered ? "scale(1.08)" : "scale(1)",
+                transition: "transform 0.4s ease",
+              }}
+            />
+          ) : (
+            /* Fallback: first letter of brand name */
+            <div className="flex items-center justify-center w-full h-full">
+              <span
+                className="font-black text-4xl tracking-tighter"
+                style={{
+                  color: hovered ? "#dc2626" : "#d4d4d8",
+                  transition: "color 0.3s ease",
+                }}
+              >
+                {category.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* ── Name Footer ── */}
+        <div
+          className="flex items-center justify-between px-4 py-3"
+          style={{
+            borderTop: hovered ? "1px solid #fee2e2" : "1px solid #f4f4f5",
+            transition: "border-color 0.3s ease",
+          }}
+        >
+          <span
+            className="font-bold text-sm leading-tight line-clamp-1"
+            style={{
+              color: hovered ? "#dc2626" : "#18181b",
+              transition: "color 0.3s ease",
+            }}
+          >
+            {category.name}
+          </span>
+          <ArrowRight
+            className="shrink-0 ml-2"
+            style={{
+              width: "14px",
+              height: "14px",
+              color: hovered ? "#dc2626" : "#d4d4d8",
+              transform: hovered ? "translateX(2px)" : "translateX(0)",
+              transition: "all 0.3s ease",
+            }}
+          />
+        </div>
+      </div>
+    </Link>
   );
 }
