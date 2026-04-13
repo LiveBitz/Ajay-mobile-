@@ -91,8 +91,8 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
         {/* ── Brand Cards Carousel ── */}
         <div
           ref={carouselRef}
-          className="flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-hide pb-2"
-          style={{ touchAction: "pan-y", scrollBehavior: "smooth" }}
+          className="carousel-touch-pan flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-hide pb-2"
+          style={{ scrollBehavior: "smooth" }}
         >
           {categories.map((category) => (
             <BrandCard key={category.id} category={category} />
@@ -118,6 +118,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .carousel-touch-pan { touch-action: pan-y; }
       `}</style>
     </section>
   );

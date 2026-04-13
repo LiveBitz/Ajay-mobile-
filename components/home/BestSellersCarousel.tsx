@@ -164,8 +164,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
         <div
           ref={carouselRef}
           onScroll={checkScroll}
-          className="flex gap-4 md:gap-5 lg:gap-6 overflow-x-auto pb-3 scrollbar-hide"
-          style={{ touchAction: "pan-y" }}
+          className="carousel-touch-pan flex gap-4 md:gap-5 lg:gap-6 overflow-x-auto pb-3 scrollbar-hide"
         >
           {products.map((product, index) => (
             <BestSellerCard key={product.id} product={product} index={index} />
@@ -176,6 +175,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .carousel-touch-pan { touch-action: pan-y; }
       `}</style>
     </section>
   );

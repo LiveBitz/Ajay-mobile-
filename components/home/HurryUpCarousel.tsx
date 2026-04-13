@@ -137,8 +137,8 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
       <div
         ref={carouselRef}
         onScroll={checkScroll}
-        className="flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"
-        style={{ scrollBehavior: "smooth", touchAction: "pan-y" }}
+        className="carousel-touch-pan flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"
+        style={{ scrollBehavior: "smooth" }}
       >
         {products.map((product: any) => (
           <div
@@ -157,6 +157,7 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .carousel-touch-pan { touch-action: pan-y; }
       `}</style>
     </div>
   );
