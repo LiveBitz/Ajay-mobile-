@@ -37,6 +37,8 @@ export function Navbar() {
   const { totalItems, setIsOpen: setOpenCart } = useCart();
   const { items: wishlistItems }               = useWishlist();
   const supabase = createClient();
+  // Ref to the search pill container — used to detect outside touches on iOS
+  const searchPillRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -125,6 +127,30 @@ export function Navbar() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null));
     return () => { subscription.unsubscribe(); };
   }, []);
+
+  /* ── Close search on outside touch (iOS-safe) ──
+     iOS Safari does NOT fire click events on transparent fixed divs, even with
+     cursor:pointer.  A document-level touchstart listener is the only reliable
+     way to detect "tap outside" on iOS.  The listener checks whether the touch
+     originated inside the pill — if not, it closes the search. */
+  useEffect(() => {
+    if (!searchOpen) return;
+    const handleOutside = (e: TouchEvent | MouseEvent) => {
+      if (
+        searchPillRef.current &&
+        !searchPillRef.current.contains(e.target as Node)
+      ) {
+        setSearchOpen(false);
+        setSearchQuery("");
+      }
+    };
+    document.addEventListener("touchstart", handleOutside, { passive: true });
+    document.addEventListener("mousedown",  handleOutside);
+    return () => {
+      document.removeEventListener("touchstart", handleOutside);
+      document.removeEventListener("mousedown",  handleOutside);
+    };
+  }, [searchOpen]);
 
   /* ── Search ── */
   useEffect(() => {
@@ -388,7 +414,7 @@ export function Navbar() {
         ── */}
         {mounted && (
           <div className="absolute left-1/2 -translate-x-1/2 w-full flex justify-center px-4 z-50 pointer-events-none" style={{ bottom: "-25px" }}>
-            <div className={`w-full max-w-sm relative group ${searchOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
+            <div ref={searchPillRef} className={`w-full max-w-sm relative group ${searchOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
             {/* Search trigger button */}
             {!searchOpen ? (
               <button
@@ -491,19 +517,11 @@ export function Navbar() {
               </div>
             )}
 
-            {/* Backdrop - close search when tapping outside the pill.
-                IMPORTANT for iOS Safari:
-                - cursor: pointer  → makes transparent div hit-testable on iOS
-                - onClick (not onPointerDown) → waits for full tap; pointerDown fires
-                  mid-gesture which unmounts this div and exposes the search button below,
-                  causing the same tap's click to re-open the search in an endless loop.
-                - NO touchAction: none → that locks native touch for the whole gesture,
-                  making subsequent events after close get swallowed by iOS. */}
+            {/* Visual backdrop — pointer-events-none so taps pass straight through
+                to page links.  Closing is handled by the document touchstart/mousedown
+                listener above, which is the only approach that reliably works on iOS. */}
             {searchOpen && (
-              <div
-                className="fixed inset-0 z-[49] cursor-pointer"
-                onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
-              />
+              <div className="fixed inset-0 z-[49] pointer-events-none" />
             )}
           </div>
         </div>
