@@ -152,21 +152,20 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
           </button>
         </div>
 
-        {/* Carousel container with snap behavior */}
+        {/* Carousel container */}
         <div
           ref={carouselRef}
           className="flex gap-5 sm:gap-6 md:gap-7 lg:gap-8 overflow-x-auto scroll-smooth scrollbar-hide"
-          style={{ 
+          style={{
             scrollBehavior: "smooth",
-            scrollSnapType: "x mandatory"
+            touchAction: "pan-x",
           }}
         >
           {categories.map((category) => (
             <Link
               key={category.id}
               href={`/category/${category.slug}`}
-              className="flex-shrink-0 group cursor-pointer scroll-snap-align-start"
-              style={{ scrollSnapAlign: "start" }}
+              className="flex-shrink-0 group cursor-pointer"
             >
               <div className="flex flex-col items-center gap-4 transition-all duration-300">
                 {/* Brand Card — Glassmorphism + Neumorphic */}
@@ -221,30 +220,11 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
           ))}
         </div>
 
-        {/* Touch scroll hint for mobile */}
-        {categories.length > 3 && (
-          <div className="md:hidden mt-6 px-4 py-3 bg-zinc-100/50 rounded-xl border border-zinc-200/50 backdrop-blur-sm">
-            <p className="text-xs font-medium text-zinc-600 text-center">
-              💡 Swipe or tap arrows to explore more brands
-            </p>
-          </div>
-        )}
       </div>
 
       <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        
-        /* Smooth scroll snap per container */
-        .scroll-snap-align-start {
-          scroll-snap-align: start;
-          scroll-snap-stop: auto;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </section>
   );
