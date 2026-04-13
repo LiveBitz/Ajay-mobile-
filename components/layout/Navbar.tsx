@@ -24,7 +24,6 @@ export function Navbar() {
   const router = useRouter();
   const navRef = React.useRef<HTMLElement>(null);
   const [mounted,         setMounted]         = useState(false);
-  const [isScrolled,      setIsScrolled]      = useState(false);
   const [isOpen,          setIsOpen]          = useState(false);
   const [user,            setUser]            = useState<any>(null);
   const [loading,         setLoading]         = useState(true);
@@ -124,9 +123,7 @@ export function Navbar() {
       setLoading(false);
     })();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null));
-    const onScroll = () => setIsScrolled(window.scrollY > 0);
-    window.addEventListener("scroll", onScroll);
-    return () => { window.removeEventListener("scroll", onScroll); subscription.unsubscribe(); };
+    return () => { subscription.unsubscribe(); };
   }, []);
 
   /* ── Search ── */
@@ -246,11 +243,7 @@ export function Navbar() {
       ref={navRef}
       suppressHydrationWarning
       style={{ borderBottomLeftRadius: "24px", borderBottomRightRadius: "24px" }}
-      className={`relative w-full z-50 transition-all duration-300 bg-white md:overflow-hidden border border-black mb-8 md:mb-10 ${
-        isScrolled
-          ? "shadow-md shadow-black/5"
-          : "shadow-sm"
-      }`}
+      className="relative w-full z-50 bg-white md:overflow-hidden border border-black shadow-sm"
     >
 
       {/* ══════════════════════════════════════════

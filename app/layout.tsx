@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Space_Grotesk, DM_Sans } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { StickyMobileSearch } from "@/components/search/StickyMobileSearch";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -38,7 +37,6 @@ export default function RootLayout({
         <CartProvider>
           <WishlistProvider>
             <Navbar />
-            <StickyMobileSearch />
             <main>
 
               {children}
