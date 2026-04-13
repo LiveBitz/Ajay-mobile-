@@ -491,11 +491,15 @@ export function Navbar() {
               </div>
             )}
 
-            {/* Backdrop - close search on click outside */}
+            {/* Backdrop - close search on tap/click outside
+                NOTE: using onPointerDown (not onClick) because iOS Safari will NOT fire
+                click events on transparent elements — causing the backdrop to stay open
+                and block all page links. onPointerDown fires on every touch/click. */}
             {searchOpen && (
               <div
-                className="fixed inset-0 z-30 pointer-events-auto"
-                onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
+                className="fixed inset-0 z-[49] cursor-pointer"
+                style={{ touchAction: "none", WebkitTapHighlightColor: "transparent" }}
+                onPointerDown={() => { setSearchOpen(false); setSearchQuery(""); }}
               />
             )}
           </div>

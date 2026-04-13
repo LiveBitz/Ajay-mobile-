@@ -9,17 +9,13 @@ interface CategoryGridProps {
 }
 
 export function CategoryGrid({ categories }: CategoryGridProps) {
-  if (!categories || categories.length === 0) return null;
-
+  // ⚠️ ALL hooks must be called before any early return (Rules of Hooks)
   const scrollRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number | null>(null);
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPausedRef = useRef(false);
   const isUserScrollingRef = useRef(false);
   const lastScrollLeft = useRef(0);
-
-  // Duplicate 3× for seamless infinite scroll
-  const items = [...categories, ...categories, ...categories];
 
   const stopAuto = useCallback(() => {
     isPausedRef.current = true;
@@ -95,6 +91,12 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
     isUserScrollingRef.current = false;
   }, []);
 
+  // Early return AFTER all hooks (safe per Rules of Hooks)
+  if (!categories || categories.length === 0) return null;
+
+  // Duplicate 3× for seamless infinite scroll loop
+  const items = [...categories, ...categories, ...categories];
+
   return (
     <section
       className="relative overflow-hidden border-b border-zinc-800"
@@ -137,6 +139,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           WebkitOverflowScrolling: "touch",
+          touchAction: "pan-x",
         }}
       >
         {items.map((category, idx) => (
