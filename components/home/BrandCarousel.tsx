@@ -12,8 +12,6 @@ interface BrandCarouselProps {
 }
 
 export function BrandCarousel({ categories }: BrandCarouselProps) {
-  if (categories.length === 0) return null;
-
   const [scrollPosition, setScrollPosition] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -43,6 +41,8 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
       return () => carousel.removeEventListener("scroll", checkScroll);
     }
   }, [checkScroll]);
+
+  if (categories.length === 0) return null;
 
   const scroll = (direction: "left" | "right") => {
     if (carouselRef.current) {

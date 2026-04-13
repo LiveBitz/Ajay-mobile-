@@ -48,13 +48,13 @@ function TimerBlock({ value, label }: { value: number; label: string }) {
 }
 
 export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
-  if (!products || products.length === 0) return null;
-
   const [scrollPosition, setScrollPosition] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(products.length > 4);
+  const [canScrollRight, setCanScrollRight] = useState((products?.length ?? 0) > 4);
   const countdown = useCountdown(23, 59, 45);
+
+  if (!products || products.length === 0) return null;
 
   const checkScroll = () => {
     if (carouselRef.current) {

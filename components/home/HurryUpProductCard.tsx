@@ -84,7 +84,7 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
   };
 
   return (
-    <Link href={`/product/${product.slug}`} className="group block h-full">
+    <div className="group block h-full">
       <div
         className="relative flex flex-col h-full rounded-2xl overflow-hidden transition-all duration-300 md:hover:-translate-y-1"
         style={{
@@ -102,31 +102,33 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
         }}
       >
 
-        {/* ── Image ── */}
+        {/* ── Image — Link covers the image only ── */}
         <div className="relative aspect-square overflow-hidden shrink-0" style={{ backgroundColor: "#27272a" }}>
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 md:group-hover:scale-105"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src =
-                "https://placehold.co/300/18181b/52525b?text=Phone";
-            }}
-          />
+          <Link href={`/product/${product.slug}`} className="absolute inset-0 block">
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-full h-full object-cover transition-transform duration-500 md:group-hover:scale-105"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  "https://placehold.co/300/18181b/52525b?text=Phone";
+              }}
+            />
+          </Link>
 
-          {/* Discount badge — top-left, prominent */}
+          {/* Discount badge — pointer-events-none so it doesn't block the link */}
           {discount > 0 && (
-            <div className="absolute top-2 sm:top-2.5 left-2 sm:left-2.5 bg-brand text-white text-[9px] sm:text-[11px] font-black px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg tracking-wide shadow-lg">
+            <div className="absolute top-2 sm:top-2.5 left-2 sm:left-2.5 bg-brand text-white text-[9px] sm:text-[11px] font-black px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg tracking-wide shadow-lg pointer-events-none z-10">
               -{discount}%
             </div>
           )}
 
-          {/* Wishlist button — top-right */}
+          {/* Wishlist button — outside Link, z-20 */}
           <button
             onClick={handleWishlistClick}
             disabled={isAddingToWishlist}
             aria-label="Toggle wishlist"
-            className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-all duration-300 disabled:opacity-50 md:hover:bg-black/40 active:scale-90"
+            className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-all duration-300 disabled:opacity-50 md:hover:bg-black/40 active:scale-90"
             style={{ backgroundColor: "rgba(24,24,27,0.85)", border: "1px solid #52525b" }}
           >
             <Heart
@@ -145,7 +147,7 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
 
           {/* Out of stock overlay */}
           {isOutOfStock && (
-            <div className="absolute inset-0 bg-zinc-950/70 flex items-center justify-center">
+            <div className="absolute inset-0 bg-zinc-950/70 flex items-center justify-center z-10 pointer-events-none">
               <span className="text-zinc-300 text-xs font-bold uppercase tracking-widest">
                 Out of Stock
               </span>
@@ -155,24 +157,24 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
 
         {/* ── Info ── */}
         <div className="flex flex-col flex-1 p-2 sm:p-2.5 md:p-3 gap-2 sm:gap-2.5">
-          {/* Name */}
-          <p className="text-zinc-100 text-xs sm:text-sm font-semibold line-clamp-2 leading-snug">
-            {product.name}
-          </p>
-
-          {/* Pricing */}
-          <div className="flex items-baseline gap-1.5 sm:gap-2 tabular-nums">
-            <span className="text-white text-sm sm:text-base font-black">
-              ₹{product.price.toLocaleString("en-IN")}
-            </span>
-            {product.originalPrice > product.price && (
-              <span className="text-zinc-500 text-[10px] sm:text-xs line-through">
-                ₹{product.originalPrice.toLocaleString("en-IN")}
+          {/* Name + Price — wrapped in Link */}
+          <Link href={`/product/${product.slug}`} className="flex-1 space-y-1.5">
+            <p className="text-zinc-100 text-xs sm:text-sm font-semibold line-clamp-2 leading-snug">
+              {product.name}
+            </p>
+            <div className="flex items-baseline gap-1.5 sm:gap-2 tabular-nums">
+              <span className="text-white text-sm sm:text-base font-black">
+                ₹{product.price.toLocaleString("en-IN")}
               </span>
-            )}
-          </div>
+              {product.originalPrice > product.price && (
+                <span className="text-zinc-500 text-[10px] sm:text-xs line-through">
+                  ₹{product.originalPrice.toLocaleString("en-IN")}
+                </span>
+              )}
+            </div>
+          </Link>
 
-          {/* Add to Cart — brand red, feels urgent */}
+          {/* Add to Cart — outside Link */}
           <button
             onClick={handleAddToCart}
             disabled={isOutOfStock || isAddingToCart}
@@ -193,6 +195,6 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
           </button>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

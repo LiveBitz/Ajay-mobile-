@@ -218,76 +218,71 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
   };
 
   return (
-    <Link
-      href={`/product/${product.slug}`}
-      className="flex-shrink-0 group w-[280px] md:w-[300px] lg:w-[320px]"
-    >
+    <div className="flex-shrink-0 group w-[280px] md:w-[300px] lg:w-[320px]">
       <div className="flex flex-col h-full rounded-2xl overflow-hidden bg-white border border-zinc-100 shadow-sm md:hover:shadow-xl md:hover:shadow-zinc-200/80 md:hover:-translate-y-1.5 transition-all duration-300">
 
-        {/* Image */}
-        <div
-          className="relative overflow-hidden bg-zinc-50"
-          style={{ paddingBottom: "95%" }}
-        >
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-500 md:group-hover:scale-105"
-            quality={85}
-            loading="lazy"
-          />
-
-          {/* Hover gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Image — Link wraps only the image, buttons are siblings */}
+        <div className="relative overflow-hidden bg-zinc-50" style={{ paddingBottom: "95%" }}>
+          <Link
+            href={`/product/${product.slug}`}
+            className="absolute inset-0 block"
+          >
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              className="object-cover transition-transform duration-500 md:group-hover:scale-105"
+              quality={85}
+              loading="lazy"
+            />
+            {/* Hover gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
+          </Link>
 
           {/* Discount Badge */}
-         {/* Discount Badge */}
-{product.discount > 0 && (
-  <div className="absolute top-3 left-3 z-10">
-    <div
-      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white font-black text-xs tracking-wide shadow-lg"
-      style={{
-        background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
-        boxShadow: "0 2px 8px rgba(220, 38, 38, 0.45)",
-      }}
-    >
-      <Zap
-        size={10}
-        style={{ fill: "#fbbf24", stroke: "none" }}
-      />
-      <span>{product.discount}% OFF</span>
-    </div>
-  </div>
-)}
+          {product.discount > 0 && (
+            <div className="absolute top-3 left-3 z-10 pointer-events-none">
+              <div
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white font-black text-xs tracking-wide shadow-lg"
+                style={{
+                  background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+                  boxShadow: "0 2px 8px rgba(220, 38, 38, 0.45)",
+                }}
+              >
+                <Zap size={10} style={{ fill: "#fbbf24", stroke: "none" }} />
+                <span>{product.discount}% OFF</span>
+              </div>
+            </div>
+          )}
 
           {/* Bestseller tag */}
           {product.isBestSeller && !product.isNew && !product.discount && (
-            <div className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full uppercase tracking-wider">
+            <div className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full uppercase tracking-wider pointer-events-none">
               🔥 Hot
             </div>
           )}
 
-          {/* Wishlist */}
-         <button
-  onClick={handleWishlistClick}
-  disabled={isAddingToWishlist}
-  className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 disabled:opacity-50 bg-white/80 backdrop-blur-md md:hover:bg-white shadow-sm md:hover:shadow-md"
-  aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
->
-  <Heart
-    size={14}
-    strokeWidth={2}
-    style={{
-      fill: wishlisted ? "#ef4444" : "none",       // ✅ inline style — always works
-      stroke: wishlisted ? "#ef4444" : "#9f9f9f",  // ✅ bypasses Tailwind purge issues
-      transition: "all 0.3s ease",
-    }}
-  />
-</button>
+          {/* Wishlist — outside Link, z-20 so it intercepts its own taps */}
+          <button
+            onClick={handleWishlistClick}
+            disabled={isAddingToWishlist}
+            className="absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-300 active:scale-90 disabled:opacity-50 bg-white/80 backdrop-blur-md md:hover:bg-white shadow-sm md:hover:shadow-md"
+            aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          >
+            <Heart
+              size={14}
+              strokeWidth={2}
+              style={{
+                fill: wishlisted ? "#ef4444" : "none",
+                stroke: wishlisted ? "#ef4444" : "#9f9f9f",
+                transition: "all 0.3s ease",
+              }}
+            />
+          </button>
+
           {/* Out of stock overlay */}
           {isOutOfStock && (
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center z-20">
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center z-20 pointer-events-none">
               <span className="text-zinc-700 text-xs font-bold uppercase tracking-widest border border-zinc-300 px-4 py-2 rounded-full bg-white shadow-sm">
                 Out of Stock
               </span>
@@ -297,7 +292,7 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
 
         {/* Info */}
         <div className="flex flex-col flex-1 p-5 gap-4">
-          <div className="flex-1 space-y-2">
+          <Link href={`/product/${product.slug}`} className="flex-1 space-y-2">
             <h3 className="font-semibold text-zinc-900 text-base leading-snug line-clamp-2 md:group-hover:text-red-600 transition-colors duration-200">
               {product.name}
             </h3>
@@ -317,9 +312,9 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
                 You save ₹{savings.toLocaleString("en-IN")}
               </div>
             )}
-          </div>
+          </Link>
 
-          {/* Add to Cart */}
+          {/* Add to Cart — outside Link */}
           <button
             onClick={handleAddToCart}
             disabled={isOutOfStock || isAddingToCart}
@@ -345,6 +340,6 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
           </button>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
