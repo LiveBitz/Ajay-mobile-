@@ -26,11 +26,7 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
   const pluginRef = useRef<ReturnType<typeof Autoplay> | null>(null);
 
-  // Only render carousel if banners exist
-  if (!Array.isArray(banners) || banners.length === 0) {
-    return null;
-  }
-
+  // All hooks must be called unconditionally — no early returns before this point
   if (!pluginRef.current) {
     pluginRef.current = Autoplay({ delay: 5000, stopOnInteraction: false });
   }
@@ -55,6 +51,11 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
     api.on("select", onSelect);
     onSelect();
   }, [api, onSelect]);
+
+  // Conditional render after all hooks
+  if (!Array.isArray(banners) || banners.length === 0) {
+    return null;
+  }
 
   return (
     <section className="w-full bg-black">

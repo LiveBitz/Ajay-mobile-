@@ -101,31 +101,32 @@ export function ProductCard({ product }: ProductCardProps) {
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-sm hover:shadow-xl hover:shadow-zinc-200/60 hover:-translate-y-1.5 transition-all duration-300 h-full">
 
       {/* ── Image Area ── */}
-      <Link
-        href={`/product/${product.slug}`}
-        className="block relative overflow-hidden bg-zinc-50 shrink-0"
-        style={{ paddingBottom: "100%" }}
-      >
-        <Image
-          src={
-            imgError
-              ? "https://placehold.co/600/f4f4f5/a1a1aa?text=Phone"
-              : product.image
-          }
-          alt={product.name}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          onError={() => setImgError(true)}
-          quality={85}
-          loading="lazy"
-        />
+      <div className="relative overflow-hidden bg-zinc-50 shrink-0" style={{ paddingBottom: "100%" }}>
+        <Link
+          href={`/product/${product.slug}`}
+          className="absolute inset-0 block"
+        >
+          <Image
+            src={
+              imgError
+                ? "https://placehold.co/600/f4f4f5/a1a1aa?text=Phone"
+                : product.image
+            }
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={() => setImgError(true)}
+            quality={85}
+            loading="lazy"
+          />
 
-        {/* Hover gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Hover gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        </Link>
 
         {/* ── Discount Badge ── */}
         {product.discount > 0 && (
-          <div className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-lg text-white font-black text-[10px] tracking-wide shadow-lg"
+          <div className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-lg text-white font-black text-[10px] tracking-wide shadow-lg pointer-events-none"
             style={{
               background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
               boxShadow: "0 2px 8px rgba(220,38,38,0.4)",
@@ -138,21 +139,21 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* ── New / Bestseller Badge ── */}
         {product.isNew && !product.discount && (
-          <div className="absolute top-3 left-3 z-10 bg-zinc-900 text-white text-[9px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">
+          <div className="absolute top-3 left-3 z-10 bg-zinc-900 text-white text-[9px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider pointer-events-none">
             New
           </div>
         )}
         {product.isBestSeller && !product.isNew && !product.discount && (
-          <div className="absolute top-3 left-3 z-10 bg-amber-500 text-white text-[9px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">
+          <div className="absolute top-3 left-3 z-10 bg-amber-500 text-white text-[9px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider pointer-events-none">
             🔥 Hot
           </div>
         )}
 
-        {/* ── Wishlist Button ── */}
+        {/* ── Wishlist Button — outside <Link> to avoid invalid button-in-a nesting ── */}
         <button
           onClick={handleWishlistClick}
           disabled={isAddingToWishlist}
-          className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm hover:bg-white hover:shadow-md transition-all duration-300 active:scale-90 disabled:opacity-50"
+          className="absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm hover:bg-white hover:shadow-md transition-all duration-300 active:scale-90 disabled:opacity-50"
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
           <Heart
@@ -168,13 +169,13 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* ── Out of Stock Overlay ── */}
         {isOutOfStock && (
-          <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center z-20">
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center z-20 pointer-events-none">
             <span className="text-zinc-600 text-[10px] font-bold uppercase tracking-widest border border-zinc-300 px-3 py-1.5 rounded-full bg-white shadow-sm">
               Out of Stock
             </span>
           </div>
         )}
-      </Link>
+      </div>
 
       {/* ── Info Area ── */}
       <div className="flex flex-col flex-1 p-4 gap-3">
