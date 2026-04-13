@@ -26,7 +26,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div className="flex min-h-screen bg-zinc-50/20 antialiased">
+    <div className="flex min-h-screen bg-zinc-50/20 antialiased pt-8 md:pt-0">
       {/* Desktop Sidebar (Permanent) */}
       <aside className="hidden lg:flex w-72 border-r border-zinc-100 bg-white flex-col sticky top-0 h-screen shrink-0 shadow-sm z-20">
         <AdminSidebarContent />
