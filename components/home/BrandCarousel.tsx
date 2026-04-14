@@ -2,58 +2,91 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Category } from "@prisma/client";
-import { cn } from "@/lib/utils";
 
 interface BrandCarouselProps {
   categories: Category[];
 }
 
 export function BrandCarousel({ categories }: BrandCarouselProps) {
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(categories.length > 5);
+  const animFrameRef = useRef<number | null>(null);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isPausedRef = useRef(false);
+  const isUserScrollingRef = useRef(false);
 
-  const checkScroll = useCallback(() => {
-    if (carouselRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-      setScrollPosition(scrollLeft);
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-      const progress =
-        scrollWidth > clientWidth
-          ? (scrollLeft / (scrollWidth - clientWidth)) * 100
-          : 0;
-      setScrollProgress(progress);
-    }
+  const stopAuto = useCallback(() => {
+    isPausedRef.current = true;
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      isPausedRef.current = false;
+      startAuto();
+    }, 1800);
+  }, []);
+
+  const startAuto = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+
+    const tick = () => {
+      if (!isPausedRef.current) {
+        el.scrollLeft += 0.8;
+        const oneThird = el.scrollWidth / 3;
+        if (el.scrollLeft >= oneThird * 2) {
+          el.scrollLeft -= oneThird;
+        }
+      }
+      animFrameRef.current = requestAnimationFrame(tick);
+    };
+
+    animFrameRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+
+    const oneThird = el.scrollWidth / 3;
+    if (el.scrollLeft >= oneThird * 2) el.scrollLeft -= oneThird;
+    if (el.scrollLeft <= 0) el.scrollLeft += oneThird;
+
+    if (isUserScrollingRef.current) stopAuto();
+  }, [stopAuto]);
+
+  const handlePointerDown = useCallback(() => {
+    isUserScrollingRef.current = true;
+    stopAuto();
+  }, [stopAuto]);
+
+  const handlePointerUp = useCallback(() => {
+    isUserScrollingRef.current = false;
+  }, []);
+
+  const handleTouchStart = useCallback(() => {
+    isUserScrollingRef.current = true;
+    stopAuto();
+  }, [stopAuto]);
+
+  const handleTouchEnd = useCallback(() => {
+    isUserScrollingRef.current = false;
   }, []);
 
   useEffect(() => {
-    checkScroll();
-    const carousel = carouselRef.current;
-    if (carousel) {
-      carousel.addEventListener("scroll", checkScroll);
-      return () => carousel.removeEventListener("scroll", checkScroll);
+    const el = carouselRef.current;
+    if (el) {
+      el.scrollLeft = el.scrollWidth / 3;
     }
-  }, [checkScroll]);
+    startAuto();
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    };
+  }, [startAuto]);
 
   if (categories.length === 0) return null;
-
-  const scroll = (direction: "left" | "right") => {
-    if (carouselRef.current) {
-      const scrollAmount = 320;
-      carouselRef.current.scrollTo({
-        left:
-          direction === "left"
-            ? scrollPosition - scrollAmount
-            : scrollPosition + scrollAmount,
-        behavior: "smooth",
-      });
-    }
-  };
+  const items = [...categories, ...categories, ...categories];
 
   return (
     <section
@@ -91,26 +124,18 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
         {/* ── Brand Cards Carousel ── */}
         <div
           ref={carouselRef}
-          className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scrollbar-hide pb-2"
+          onScroll={handleScroll}
+          onMouseDown={handlePointerDown}
+          onMouseUp={handlePointerUp}
+          onMouseLeave={handlePointerUp}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scrollbar-hide pb-2 cursor-grab active:cursor-grabbing"
           style={{ scrollBehavior: "smooth" }}
         >
-          {categories.map((category) => (
-            <BrandCard key={category.id} category={category} />
+          {items.map((category, idx) => (
+            <BrandCard key={`${category.id}-${idx}`} category={category} />
           ))}
-        </div>
-
-        {/* ── Scroll Progress Bar ── */}
-        <div
-          className="mt-6 h-px w-full rounded-full overflow-hidden"
-          style={{ backgroundColor: "#f4f4f5" }}
-        >
-          <div
-            className="h-full rounded-full transition-all duration-300"
-            style={{
-              width: `${scrollProgress}%`,
-              background: "linear-gradient(90deg, #dc2626, #ef4444)",
-            }}
-          />
         </div>
 
       </div>
