@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Zap, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from "react";
+import { Zap, Clock } from "lucide-react";
 import { HurryUpProductCard } from "./HurryUpProductCard";
-import { cn } from "@/lib/utils";
 
 interface HurryUpCarouselProps {
   products: any[];
@@ -48,34 +46,9 @@ function TimerBlock({ value, label }: { value: number; label: string }) {
 }
 
 export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState((products?.length ?? 0) > 4);
   const countdown = useCountdown(23, 59, 45);
 
   if (!products || products.length === 0) return null;
-
-  const checkScroll = () => {
-    if (carouselRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-      setScrollPosition(scrollLeft);
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
-
-  const scroll = (direction: "left" | "right") => {
-    if (carouselRef.current) {
-      const scrollAmount = 300;
-      const newPosition =
-        direction === "left"
-          ? scrollPosition - scrollAmount
-          : scrollPosition + scrollAmount;
-      carouselRef.current.scrollTo({ left: newPosition, behavior: "smooth" });
-      setTimeout(checkScroll, 300);
-    }
-  };
 
   return (
     <div>
@@ -135,8 +108,6 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
 
       {/* ─── Carousel ─── */}
       <div
-        ref={carouselRef}
-        onScroll={checkScroll}
         className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scroll-smooth pb-3 scrollbar-hide"
         style={{ scrollBehavior: "smooth" }}
       >

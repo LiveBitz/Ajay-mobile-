@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Heart, ShoppingBag, Zap } from "lucide-react";
+import { Heart, ShoppingBag, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
@@ -27,31 +27,6 @@ interface BestSellersCarouselProps {
 }
 
 export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState((products?.length ?? 0) > 3);
-
-  const checkScroll = () => {
-    if (carouselRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-      setScrollPosition(scrollLeft);
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
-
-  const scroll = (direction: "left" | "right") => {
-    if (carouselRef.current) {
-      const scrollAmount = 400;
-      carouselRef.current.scrollTo({
-        left: direction === "left" ? scrollPosition - scrollAmount : scrollPosition + scrollAmount,
-        behavior: "smooth",
-      });
-      setTimeout(checkScroll, 300);
-    }
-  };
-
   if (!products || products.length === 0) return null;
 
   return (
@@ -73,7 +48,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
       <div className="mx-auto w-full max-w-[1720px] px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 relative z-10">
 
         {/* ── Header ── */}
-        <div className="flex items-end justify-between mb-6 md:mb-8">
+        <div className="mb-6 md:mb-8">
           <div>
             {/* Eyebrow */}
             <div className="flex items-center gap-2.5 mb-3">
@@ -93,81 +68,14 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
             </p>
           </div>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => scroll("left")}
-              disabled={!canScrollLeft}
-              aria-label="Scroll left"
-              style={{
-                height: 40, width: 40, borderRadius: "50%",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                border: `1px solid ${canScrollLeft ? "#3f3f46" : "#27272a"}`,
-                backgroundColor: canScrollLeft ? "#18181b" : "#111111",
-                color: canScrollLeft ? "#a1a1aa" : "#3f3f46",
-                cursor: canScrollLeft ? "pointer" : "not-allowed",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={e => { if (canScrollLeft) { Object.assign((e.currentTarget as HTMLButtonElement).style, { backgroundColor: "#dc2626", borderColor: "#dc2626", color: "#fff" }); } }}
-              onMouseLeave={e => { if (canScrollLeft) { Object.assign((e.currentTarget as HTMLButtonElement).style, { backgroundColor: "#18181b", borderColor: "#3f3f46", color: "#a1a1aa" }); } }}
-            >
-              <ChevronLeft style={{ width: 16, height: 16 }} />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              disabled={!canScrollRight}
-              aria-label="Scroll right"
-              style={{
-                height: 40, width: 40, borderRadius: "50%",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                border: `1px solid ${canScrollRight ? "#3f3f46" : "#27272a"}`,
-                backgroundColor: canScrollRight ? "#18181b" : "#111111",
-                color: canScrollRight ? "#a1a1aa" : "#3f3f46",
-                cursor: canScrollRight ? "pointer" : "not-allowed",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={e => { if (canScrollRight) { Object.assign((e.currentTarget as HTMLButtonElement).style, { backgroundColor: "#dc2626", borderColor: "#dc2626", color: "#fff" }); } }}
-              onMouseLeave={e => { if (canScrollRight) { Object.assign((e.currentTarget as HTMLButtonElement).style, { backgroundColor: "#18181b", borderColor: "#3f3f46", color: "#a1a1aa" }); } }}
-            >
-              <ChevronRight style={{ width: 16, height: 16 }} />
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Nav */}
-        <div className="md:hidden flex justify-end gap-2 mb-4">
-          {(["left", "right"] as const).map((dir) => {
-            const can = dir === "left" ? canScrollLeft : canScrollRight;
-            return (
-              <button
-                key={dir}
-                onClick={() => scroll(dir)}
-                disabled={!can}
-                style={{
-                  height: 36, width: 36, borderRadius: "50%",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  border: `1px solid ${can ? "#3f3f46" : "#27272a"}`,
-                  backgroundColor: can ? "#18181b" : "#111111",
-                  color: can ? "#a1a1aa" : "#3f3f46",
-                  cursor: can ? "pointer" : "not-allowed",
-                }}
-              >
-                {dir === "left"
-                  ? <ChevronLeft style={{ width: 14, height: 14 }} />
-                  : <ChevronRight style={{ width: 14, height: 14 }} />}
-              </button>
-            );
-          })}
         </div>
 
         {/* ── Carousel ── */}
         <div
-          ref={carouselRef}
-          onScroll={checkScroll}
           className="carousel-touch-pan flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto pb-2 scrollbar-hide"
         >
-          {products.map((product, index) => (
-            <BestSellerCard key={product.id} product={product} index={index} />
+          {products.map((product) => (
+            <BestSellerCard key={product.id} product={product} />
           ))}
         </div>
       </div>
@@ -182,7 +90,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
 }
 
 /* ── Individual Card ── */
-function BestSellerCard({ product, index }: { product: Product; index: number }) {
+function BestSellerCard({ product }: { product: Product }) {
   const [hovered, setHovered] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
