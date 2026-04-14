@@ -134,10 +134,8 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
         onMouseLeave={handlePointerUp}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="relative z-[5] flex items-center gap-4 md:gap-6 lg:gap-8 overflow-x-auto py-3 md:py-4 lg:py-5 cursor-grab active:cursor-grabbing"
+        className="relative z-[5] flex items-center gap-4 md:gap-6 lg:gap-8 overflow-x-auto py-3 md:py-4 lg:py-5 cursor-grab active:cursor-grabbing slider-scroll"
         style={{
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
           WebkitOverflowScrolling: "touch",
           touchAction: "manipulation",
         }}
@@ -201,7 +199,15 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
       </div>
 
       <style jsx>{`
-        div::-webkit-scrollbar { display: none; }
+        .slider-scroll::-webkit-scrollbar { display: none; }
+        .slider-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        @media (min-width: 1024px) {
+          .slider-scroll { -ms-overflow-style: auto; scrollbar-width: thin; }
+          .slider-scroll::-webkit-scrollbar { display: block; height: 8px; }
+          .slider-scroll::-webkit-scrollbar-track { background: rgba(63,63,70,0.45); border-radius: 9999px; }
+          .slider-scroll::-webkit-scrollbar-thumb { background: rgba(220,38,38,0.8); border-radius: 9999px; }
+          .slider-scroll::-webkit-scrollbar-thumb:hover { background: rgba(220,38,38,1); }
+        }
       `}</style>
     </section>
   );

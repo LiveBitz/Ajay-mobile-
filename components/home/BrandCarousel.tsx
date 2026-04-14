@@ -166,6 +166,13 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         .carousel-touch-pan { touch-action: manipulation; }
+        @media (min-width: 1024px) {
+          .scrollbar-hide { -ms-overflow-style: auto; scrollbar-width: thin; }
+          .scrollbar-hide::-webkit-scrollbar { display: block; height: 8px; }
+          .scrollbar-hide::-webkit-scrollbar-track { background: #e4e4e7; border-radius: 9999px; }
+          .scrollbar-hide::-webkit-scrollbar-thumb { background: #a1a1aa; border-radius: 9999px; }
+          .scrollbar-hide::-webkit-scrollbar-thumb:hover { background: #71717a; }
+        }
       `}</style>
     </section>
   );
