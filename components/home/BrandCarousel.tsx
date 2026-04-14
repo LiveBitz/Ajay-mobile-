@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Category } from "@prisma/client";
 
 interface BrandCarouselProps {
@@ -17,6 +17,13 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
   const isDraggingRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  const updateOverflow = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    setHasOverflow(el.scrollWidth - el.clientWidth > 6);
+  }, []);
 
   const startAuto = useCallback(() => {
     const el = carouselRef.current;
@@ -45,6 +52,14 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
       startAuto();
     }, 2000);
   }, [startAuto]);
+
+  const scrollByAmount = useCallback((direction: "left" | "right") => {
+    const el = carouselRef.current;
+    if (!el) return;
+    pauseAutoForInteraction();
+    const amount = Math.max(el.clientWidth * 0.6, 220);
+    el.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" });
+  }, [pauseAutoForInteraction]);
 
   const handleScroll = useCallback(() => {
     const el = carouselRef.current;
@@ -99,12 +114,24 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
     if (el) {
       el.scrollLeft = el.scrollWidth / 3;
     }
+    updateOverflow();
     startAuto();
+
+    const onResize = () => updateOverflow();
+    if (el) {
+      el.addEventListener("scroll", updateOverflow, { passive: true });
+    }
+    window.addEventListener("resize", onResize);
+
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+      if (el) {
+        el.removeEventListener("scroll", updateOverflow);
+      }
+      window.removeEventListener("resize", onResize);
     };
-  }, [startAuto]);
+  }, [categories.length, startAuto, updateOverflow]);
 
   if (categories.length === 0) return null;
   const items = [...categories, ...categories, ...categories];
@@ -139,6 +166,42 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
             <p className="text-xs md:text-sm font-medium mt-1.5" style={{ color: "#71717a" }}>
               Genuine products · Best prices · Warranty included
             </p>
+          </div>
+
+          <div className="hidden lg:flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => scrollByAmount("left")}
+              disabled={!hasOverflow}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+              style={{
+                background: hasOverflow ? "rgba(255,255,255,0.9)" : "rgba(244,244,245,0.65)",
+                border: hasOverflow ? "1px solid rgba(39,39,42,0.14)" : "1px solid rgba(39,39,42,0.08)",
+                color: hasOverflow ? "#18181b" : "#a1a1aa",
+                boxShadow: hasOverflow ? "0 8px 20px rgba(24,24,27,0.12)" : "none",
+                backdropFilter: "blur(8px)",
+                cursor: hasOverflow ? "pointer" : "not-allowed",
+              }}
+              aria-label="Scroll brands left"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollByAmount("right")}
+              disabled={!hasOverflow}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+              style={{
+                background: hasOverflow ? "rgba(220,38,38,0.93)" : "rgba(220,38,38,0.35)",
+                border: hasOverflow ? "1px solid rgba(248,113,113,0.85)" : "1px solid rgba(248,113,113,0.3)",
+                color: "#ffffff",
+                boxShadow: hasOverflow ? "0 10px 22px rgba(220,38,38,0.28)" : "none",
+                cursor: hasOverflow ? "pointer" : "not-allowed",
+              }}
+              aria-label="Scroll brands right"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
 

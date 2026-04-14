@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Zap, Clock } from "lucide-react";
+import { Zap, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { HurryUpProductCard } from "./HurryUpProductCard";
 
 interface HurryUpCarouselProps {
@@ -51,6 +51,23 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
   const isDraggingRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollButtons = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const maxScrollLeft = el.scrollWidth - el.clientWidth;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(maxScrollLeft - el.scrollLeft > 4);
+  }, []);
+
+  const scrollByAmount = useCallback((direction: "left" | "right") => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const amount = Math.max(el.clientWidth * 0.75, 220);
+    el.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" });
+  }, []);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -79,6 +96,21 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
   const handleMouseLeave = useCallback(() => {
     isDraggingRef.current = false;
   }, []);
+
+  useEffect(() => {
+    updateScrollButtons();
+    const el = carouselRef.current;
+    if (!el) return;
+
+    const onResize = () => updateScrollButtons();
+    el.addEventListener("scroll", updateScrollButtons, { passive: true });
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      el.removeEventListener("scroll", updateScrollButtons);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [products.length, updateScrollButtons]);
 
   if (!products || products.length === 0) return null;
 
@@ -134,7 +166,40 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
             </div>
           </div>
 
-
+          <div className="hidden lg:flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => scrollByAmount("left")}
+              disabled={!canScrollLeft}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+              style={{
+                background: canScrollLeft ? "rgba(39,39,42,0.85)" : "rgba(39,39,42,0.35)",
+                border: canScrollLeft ? "1px solid rgba(255,255,255,0.16)" : "1px solid rgba(255,255,255,0.08)",
+                color: canScrollLeft ? "#fafafa" : "#71717a",
+                backdropFilter: "blur(10px)",
+                cursor: canScrollLeft ? "pointer" : "not-allowed",
+              }}
+              aria-label="Scroll flash sale left"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollByAmount("right")}
+              disabled={!canScrollRight}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+              style={{
+                background: canScrollRight ? "rgba(220,38,38,0.94)" : "rgba(220,38,38,0.35)",
+                border: canScrollRight ? "1px solid rgba(248,113,113,0.9)" : "1px solid rgba(248,113,113,0.35)",
+                color: "#ffffff",
+                boxShadow: canScrollRight ? "0 10px 24px rgba(220,38,38,0.42)" : "none",
+                cursor: canScrollRight ? "pointer" : "not-allowed",
+              }}
+              aria-label="Scroll flash sale right"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       </div>
 

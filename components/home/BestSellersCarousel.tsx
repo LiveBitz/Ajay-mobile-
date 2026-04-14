@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingBag, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, ShoppingBag, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +31,26 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
   const isDraggingRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollButtons = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const maxScrollLeft = el.scrollWidth - el.clientWidth;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(maxScrollLeft - el.scrollLeft > 4);
+  }, []);
+
+  const scrollByAmount = useCallback((direction: "left" | "right") => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const amount = Math.max(el.clientWidth * 0.75, 240);
+    el.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  }, []);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -60,6 +80,21 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
     isDraggingRef.current = false;
   }, []);
 
+  useEffect(() => {
+    updateScrollButtons();
+    const el = carouselRef.current;
+    if (!el) return;
+
+    const onResize = () => updateScrollButtons();
+    el.addEventListener("scroll", updateScrollButtons, { passive: true });
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      el.removeEventListener("scroll", updateScrollButtons);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [products.length, updateScrollButtons]);
+
   if (!products || products.length === 0) return null;
 
   return (
@@ -81,7 +116,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
       <div className="mx-auto w-full max-w-[1720px] px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 relative z-10">
 
         {/* ── Header ── */}
-        <div className="mb-6 md:mb-8">
+        <div className="mb-6 md:mb-8 flex items-end justify-between gap-4">
           <div>
             {/* Eyebrow */}
             <div className="flex items-center gap-2.5 mb-3">
@@ -101,6 +136,41 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
             </p>
           </div>
 
+          <div className="hidden lg:flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => scrollByAmount("left")}
+              disabled={!canScrollLeft}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+              style={{
+                background: canScrollLeft ? "rgba(39,39,42,0.7)" : "rgba(39,39,42,0.35)",
+                border: canScrollLeft ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(255,255,255,0.08)",
+                color: canScrollLeft ? "#fafafa" : "#71717a",
+                backdropFilter: "blur(10px)",
+                boxShadow: canScrollLeft ? "0 8px 22px rgba(0,0,0,0.35)" : "none",
+                cursor: canScrollLeft ? "pointer" : "not-allowed",
+              }}
+              aria-label="Scroll best sellers left"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollByAmount("right")}
+              disabled={!canScrollRight}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+              style={{
+                background: canScrollRight ? "rgba(220,38,38,0.92)" : "rgba(220,38,38,0.35)",
+                border: canScrollRight ? "1px solid rgba(248,113,113,0.9)" : "1px solid rgba(248,113,113,0.35)",
+                color: "#ffffff",
+                boxShadow: canScrollRight ? "0 10px 24px rgba(220,38,38,0.45)" : "none",
+                cursor: canScrollRight ? "pointer" : "not-allowed",
+              }}
+              aria-label="Scroll best sellers right"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
 
         {/* ── Carousel ── */}
