@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, ShoppingBag, Zap } from "lucide-react";
@@ -27,6 +27,26 @@ interface BestSellersCarouselProps {
 }
 
 export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [sliderValue, setSliderValue] = useState(0);
+
+  const updateSlider = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    const progress = max > 0 ? (el.scrollLeft / max) * 100 : 0;
+    setSliderValue(progress);
+  }, []);
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const next = Number(e.target.value);
+    setSliderValue(next);
+    const max = el.scrollWidth - el.clientWidth;
+    el.scrollLeft = (next / 100) * Math.max(max, 0);
+  };
+
   if (!products || products.length === 0) return null;
 
   return (
@@ -72,11 +92,27 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
 
         {/* ── Carousel ── */}
         <div
+          ref={carouselRef}
+          onScroll={updateSlider}
           className="carousel-touch-pan flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto pb-2 scrollbar-hide"
         >
           {products.map((product) => (
             <BestSellerCard key={product.id} product={product} />
           ))}
+        </div>
+
+        {/* Always-visible manual slider (monitor-friendly) */}
+        <div className="mt-3">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={0.1}
+            value={sliderValue}
+            onChange={handleSliderChange}
+            className="section-slider w-full"
+            aria-label="Scroll Best Selling Phones"
+          />
         </div>
       </div>
 
@@ -87,6 +123,30 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
         .scrollbar-hide::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 9999px; }
         .scrollbar-hide::-webkit-scrollbar-thumb:hover { background: #b91c1c; }
         .carousel-touch-pan { touch-action: manipulation; }
+        .section-slider {
+          appearance: none;
+          height: 8px;
+          border-radius: 9999px;
+          background: rgba(63,63,70,0.45);
+          outline: none;
+        }
+        .section-slider::-webkit-slider-thumb {
+          appearance: none;
+          width: 18px;
+          height: 18px;
+          border-radius: 9999px;
+          background: #dc2626;
+          border: 2px solid #7f1d1d;
+          cursor: pointer;
+        }
+        .section-slider::-moz-range-thumb {
+          width: 18px;
+          height: 18px;
+          border-radius: 9999px;
+          background: #dc2626;
+          border: 2px solid #7f1d1d;
+          cursor: pointer;
+        }
       `}</style>
     </section>
   );
