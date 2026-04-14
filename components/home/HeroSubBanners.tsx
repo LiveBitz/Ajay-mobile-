@@ -24,13 +24,14 @@ export function HeroSubBanners({
 }: HeroSubBannersProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+  const draggedRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    if (e.pointerType !== "mouse") return;
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
     isDraggingRef.current = true;
+    draggedRef.current = false;
     dragStartXRef.current = e.clientX;
     dragStartScrollLeftRef.current = e.currentTarget.scrollLeft;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -41,12 +42,13 @@ export function HeroSubBanners({
     const el = rowRef.current;
     if (!el) return;
     const deltaX = e.clientX - dragStartXRef.current;
+    if (Math.abs(deltaX) > 4) draggedRef.current = true;
     el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
   }, []);
 
   const handlePointerUp = useCallback((e?: React.PointerEvent<HTMLDivElement>) => {
     isDraggingRef.current = false;
-    if (e && e.currentTarget.hasPointerCapture(e.pointerId)) {
+    if (e?.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
   }, []);
@@ -55,79 +57,143 @@ export function HeroSubBanners({
     isDraggingRef.current = false;
   }, []);
 
+  const handleLinkClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (draggedRef.current) e.preventDefault();
+  }, []);
+
   if (!banners || banners.length === 0) return null;
 
   const displayBanners = banners.slice(startIndex, startIndex + maxItems);
   if (displayBanners.length === 0) return null;
-  const cardWidth =
-    displayBanners.length >= 3
-      ? emphasizeMobileCards
-        ? "clamp(260px, 86vw, 700px)"
-        : "clamp(240px, 84vw, 640px)"
-      : displayBanners.length === 2
-      ? "clamp(260px, 84vw, 760px)"
-      : "100%";
 
-  const imageAspectRatio = emphasizeMobileCards ? "16 / 6" : "16 / 5.2";
+  const count = displayBanners.length;
+
+  const paddingTop = emphasizeMobileCards ? "37.5%" : "32.5%";
+
+  const desktopCols =
+    count >= 3 ? "grid-cols-3" : count === 2 ? "grid-cols-2" : "grid-cols-1";
+
+  const desktopSizes =
+    count >= 3 ? "(max-width: 1023px) 33vw, 30vw" : count === 2 ? "50vw" : "100vw";
 
   return (
-    <section className="w-full bg-black py-4 md:py-6 lg:py-7">
-      <div className="mx-auto w-full max-w-[1720px] px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12">
-        <div className="flex items-center gap-2 mb-3 md:mb-4">
-          <div className="w-4 h-0.5 rounded-full bg-red-600" />
-          <p className="text-[11px] md:text-xs uppercase tracking-[0.16em] font-bold text-zinc-400">
-            {heading}
-          </p>
-        </div>
+    <>
+      <section className="w-full bg-black py-4 md:py-6 lg:py-7">
+        <div className="mx-auto w-full max-w-[1720px] px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12">
 
-        <div className="relative">
-          <div
-            ref={rowRef}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
-            onMouseLeave={handleMouseLeave}
-            className="flex overflow-x-auto gap-3 md:gap-4 lg:gap-5 pb-2 snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none [touch-action:pan-x] [scroll-behavior:smooth] [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-          >
-          {displayBanners.map((banner, index) => (
-            <Link
-              key={banner.id}
-              href={(banner.link as string) || "/"}
-              className="group relative block shrink-0 snap-start rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-colors duration-300"
-              style={{ width: cardWidth }}
-            >
-              <div className="relative w-full" style={{ aspectRatio: imageAspectRatio }}>
-                <Image
-                  src={banner.image}
-                  alt={banner.title || `Hero banner ${index + 1}`}
-                  fill
-                  className="object-cover md:group-hover:scale-[1.02] transition-transform duration-500"
-                  priority={index === 0}
-                  quality={88}
-                  sizes={
-                    displayBanners.length >= 3
-                      ? "(max-width: 767px) 88vw, (max-width: 1023px) 50vw, 33vw"
-                      : displayBanners.length === 2
-                      ? "(max-width: 767px) 88vw, 50vw"
-                      : "100vw"
-                  }
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-transparent pointer-events-none" />
-              </div>
-            </Link>
-          ))}
+          {/* Heading */}
+          <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <div className="w-4 h-0.5 rounded-full bg-red-600" />
+            <p className="text-[11px] md:text-xs uppercase tracking-[0.16em] font-bold text-zinc-400">
+              {heading}
+            </p>
           </div>
 
-          {showMobileEdgeFades && displayBanners.length > 1 && (
-            <>
-              <div className="md:hidden pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black to-transparent" />
-              <div className="md:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-black to-transparent" />
-            </>
-          )}
-        </div>
-      </div>
+          {/* ─── MOBILE: horizontal scroll (hidden on md+) ─── */}
+          <div className="relative md:hidden">
+            <div
+              ref={rowRef}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+              onMouseLeave={handleMouseLeave}
+              style={{ touchAction: "pan-x" }}
+              className="hero-sub-scroll"
+            >
+              {displayBanners.map((banner, index) => (
+                <Link
+                  key={banner.id}
+                  href={banner.link ?? "/"}
+                  onClick={handleLinkClick}
+                  className="hero-sub-mobile-card group relative block rounded-2xl overflow-hidden border border-zinc-800"
+                >
+                  <div className="relative w-full" style={{ paddingTop }}>
+                    <Image
+                      src={banner.image}
+                      alt={banner.title || `Hero banner ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      priority={index === 0}
+                      quality={88}
+                      sizes="84vw"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-transparent pointer-events-none" />
+                  </div>
+                </Link>
+              ))}
+            </div>
 
-    </section>
+            {showMobileEdgeFades && count > 1 && (
+              <>
+                <div className="pointer-events-none absolute left-0 top-0 bottom-2 w-6 bg-gradient-to-r from-black to-transparent z-10" />
+                <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-6 bg-gradient-to-l from-black to-transparent z-10" />
+              </>
+            )}
+          </div>
+
+          {/* ─── DESKTOP: CSS grid (hidden below md) ─── */}
+          <div className={`hidden md:grid ${desktopCols} gap-4 lg:gap-5 w-full`}>
+            {displayBanners.map((banner, index) => (
+              <Link
+                key={banner.id}
+                href={banner.link ?? "/"}
+                className="group relative block w-full rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-colors duration-300"
+              >
+                <div className="relative w-full" style={{ paddingTop }}>
+                  <Image
+                    src={banner.image}
+                    alt={banner.title || `Hero banner ${index + 1}`}
+                    fill
+                    className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                    priority={index === 0}
+                    quality={88}
+                    sizes={desktopSizes}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-transparent pointer-events-none" />
+                </div>
+              </Link>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* All mobile scroll logic in plain CSS — no jsx, no Tailwind conflicts */}
+      <style>{`
+        .hero-sub-scroll {
+          display: flex;
+          flex-direction: row;
+          overflow-x: auto;
+          overflow-y: hidden;
+          gap: 12px;
+          padding-bottom: 8px;
+          scroll-snap-type: x mandatory;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          cursor: grab;
+          user-select: none;
+          white-space: nowrap;
+        }
+
+        .hero-sub-scroll:active {
+          cursor: grabbing;
+        }
+
+        .hero-sub-scroll::-webkit-scrollbar {
+          display: none;
+        }
+
+        .hero-sub-mobile-card {
+          display: inline-block;
+          flex-shrink: 0;
+          width: 84vw;
+          max-width: 480px;
+          scroll-snap-align: start;
+          white-space: normal;
+        }
+      `}</style>
+    </>
   );
 }
