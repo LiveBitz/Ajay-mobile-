@@ -92,18 +92,6 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
     isDraggingRef.current = false;
   }, []);
 
-  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    const el = carouselRef.current;
-    if (!el) return;
-    // Map wheel gestures to horizontal scrolling for mouse users on desktop.
-    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    if (delta === 0) return;
-    e.preventDefault();
-    isUserScrollingRef.current = true;
-    stopAuto();
-    el.scrollLeft += delta;
-  }, [stopAuto]);
-
   useEffect(() => {
     const el = carouselRef.current;
     if (el) {
@@ -161,7 +149,6 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
           onMouseLeave={handleMouseLeave}
-          onWheel={handleWheel}
           className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scrollbar-hide pb-2 cursor-grab active:cursor-grabbing"
           style={{ scrollBehavior: "smooth", userSelect: "none" }}
         >

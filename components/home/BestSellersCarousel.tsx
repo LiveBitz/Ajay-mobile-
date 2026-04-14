@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, ShoppingBag, Zap } from "lucide-react";
@@ -27,13 +27,6 @@ interface BestSellersCarouselProps {
 }
 
 export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
-  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    if (delta === 0) return;
-    e.preventDefault();
-    e.currentTarget.scrollLeft += delta;
-  }, []);
-
   if (!products || products.length === 0) return null;
 
   return (
@@ -79,7 +72,6 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
 
         {/* ── Carousel ── */}
         <div
-          onWheel={handleWheel}
           className="carousel-touch-pan flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto pb-2 scrollbar-hide"
         >
           {products.map((product) => (
