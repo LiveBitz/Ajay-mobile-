@@ -1,3 +1,6 @@
+"use client";
+
+import { useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Banner } from "@prisma/client";
@@ -19,18 +22,51 @@ export function HeroSubBanners({
   showMobileEdgeFades = false,
   emphasizeMobileCards = false,
 }: HeroSubBannersProps) {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartScrollLeftRef = useRef(0);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (e.pointerType !== "mouse") return;
+    isDraggingRef.current = true;
+    dragStartXRef.current = e.clientX;
+    dragStartScrollLeftRef.current = e.currentTarget.scrollLeft;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }, []);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || e.pointerType !== "mouse") return;
+    const el = rowRef.current;
+    if (!el) return;
+    const deltaX = e.clientX - dragStartXRef.current;
+    el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
+  }, []);
+
+  const handlePointerUp = useCallback((e?: React.PointerEvent<HTMLDivElement>) => {
+    isDraggingRef.current = false;
+    if (e && e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    isDraggingRef.current = false;
+  }, []);
+
   if (!banners || banners.length === 0) return null;
 
   const displayBanners = banners.slice(startIndex, startIndex + maxItems);
   if (displayBanners.length === 0) return null;
-  const cardWidthClass =
+  const cardWidth =
     displayBanners.length >= 3
       ? emphasizeMobileCards
-        ? "min-w-[92%] sm:min-w-[78%] md:min-w-[52%] lg:min-w-[36%]"
-        : "min-w-[88%] sm:min-w-[72%] md:min-w-[48%] lg:min-w-[32%]"
+        ? "clamp(260px, 86vw, 700px)"
+        : "clamp(240px, 84vw, 640px)"
       : displayBanners.length === 2
-      ? "min-w-[88%] sm:min-w-[72%] md:min-w-[48%] lg:min-w-[48%]"
-      : "min-w-full sm:min-w-full md:min-w-full";
+      ? "clamp(260px, 84vw, 760px)"
+      : "100%";
 
   const imageAspectRatio = emphasizeMobileCards ? "16 / 6" : "16 / 5.2";
 
@@ -45,12 +81,21 @@ export function HeroSubBanners({
         </div>
 
         <div className="relative">
-          <div className="flex overflow-x-auto gap-3 md:gap-4 lg:gap-5 pb-2 snap-x snap-mandatory [touch-action:pan-x] [scroll-behavior:smooth] [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div
+            ref={rowRef}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            onMouseLeave={handleMouseLeave}
+            className="flex overflow-x-auto gap-3 md:gap-4 lg:gap-5 pb-2 snap-x snap-mandatory cursor-grab active:cursor-grabbing select-none [touch-action:pan-x] [scroll-behavior:smooth] [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          >
           {displayBanners.map((banner, index) => (
             <Link
               key={banner.id}
               href={(banner.link as string) || "/"}
-              className={`group relative block w-full ${cardWidthClass} snap-start rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-colors duration-300`}
+              className="group relative block shrink-0 snap-start rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-colors duration-300"
+              style={{ width: cardWidth }}
             >
               <div className="relative w-full" style={{ aspectRatio: imageAspectRatio }}>
                 <Image

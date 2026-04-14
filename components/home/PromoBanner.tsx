@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Banner } from "@prisma/client";
 import Autoplay from "embla-carousel-autoplay";
+import { Sparkles } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -52,22 +53,44 @@ export function PromoBanner({ banners = [] }: PromoBannerProps) {
   if (!banners || banners.length === 0) return null;
 
   return (
-    <section className="w-full py-12 md:py-16 lg:py-20 bg-zinc-50">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8">
+    <section className="relative w-full py-10 md:py-16 lg:py-20" style={{ backgroundColor: "#0a0a0a" }}>
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full blur-[110px]"
+          style={{ backgroundColor: "rgba(220,38,38,0.10)" }}
+        />
+        <div
+          className="absolute -bottom-20 -right-20 w-[360px] h-[360px] rounded-full blur-[95px]"
+          style={{ backgroundColor: "rgba(153,27,27,0.08)" }}
+        />
+      </div>
+
+      <div className="mx-auto w-full max-w-[1720px] px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 relative z-10">
         {/* Section Header */}
-        <div className="mb-10 md:mb-12">
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-zinc-900 mb-2 tracking-tight">
-            Promotional Offers
+        <div className="mb-8 md:mb-12">
+          <div className="inline-flex max-w-full items-center gap-2 sm:gap-2.5 bg-brand/15 border border-brand/30 rounded-full px-2.5 sm:px-3.5 py-1 sm:py-1.5 mb-3 md:mb-4">
+            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand shrink-0" />
+            <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.12em] sm:tracking-[0.18em] text-brand whitespace-nowrap">
+              Promotional Offers
+            </span>
+          </div>
+
+          <h2 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-5xl font-black text-white mb-2 tracking-tight leading-[1.02] sm:leading-[0.98]">
+            Grab the <span className="text-brand">Best Deals</span>
+            <br />
+            <span className="text-zinc-400">Limited-Time Promotions</span>
           </h2>
-          <p className="text-sm md:text-base text-zinc-600 font-medium">
+          <p className="text-sm md:text-base text-zinc-400 font-medium max-w-[56ch]">
             Check out our latest deals and exclusive promotions
           </p>
+          <div className="mt-5 md:mt-6 h-[2px] w-20 sm:w-28 rounded-full bg-gradient-to-r from-brand via-red-400/70 to-transparent" />
         </div>
 
         {/* Carousel Container */}
         <div
           onMouseEnter={() => pluginRef.current?.stop()}
           onMouseLeave={() => pluginRef.current?.play()}
+          className="rounded-3xl border border-zinc-800/90 bg-zinc-950/60 p-2 md:p-3 backdrop-blur-sm"
         >
           <Carousel
             setApi={setApi}
@@ -75,14 +98,13 @@ export function PromoBanner({ banners = [] }: PromoBannerProps) {
             className="w-full"
             opts={{ loop: banners.length > 1 }}
           >
-            <CarouselContent>
+            <CarouselContent className="m-0 w-full">
               {banners.map((banner, index) => (
-                <CarouselItem key={`promo-${banner.id}`}>
+                <CarouselItem key={`promo-${banner.id}`} className="pl-0 basis-full w-full">
                   <Link href={banner.link || "/"} className="block w-full">
-                    {/* ✅ Use aspect-ratio container instead of fill */}
+                    {/* Keep a reliable fixed media height across devices */}
                     <div
-                      className="relative w-full rounded-3xl overflow-hidden"
-                      style={{ paddingBottom: "35%" }} // ✅ controls height via aspect ratio
+                      className="promo-media relative w-full rounded-3xl overflow-hidden border border-zinc-800"
                     >
                       <Image
                         src={banner.image}
@@ -108,14 +130,14 @@ export function PromoBanner({ banners = [] }: PromoBannerProps) {
               <button
                 key={`dot-${index}`}
                 onClick={() => onDotClick(index)}
-                className="transition-all duration-300 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand"
+                className="transition-all duration-300 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand focus-visible:ring-offset-black"
                 style={{
                   width: selectedIndex === index ? "28px" : "10px",
                   height: "10px",
                   backgroundColor:
                     selectedIndex === index
                       ? "rgb(220, 38, 38)"
-                      : "rgb(229, 231, 235)",
+                      : "rgb(63, 63, 70)",
                   boxShadow:
                     selectedIndex === index
                       ? "0 0 12px rgba(220, 38, 38, 0.4)"
@@ -127,6 +149,24 @@ export function PromoBanner({ banners = [] }: PromoBannerProps) {
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        .promo-media {
+          padding-bottom: 56%;
+        }
+
+        @media (min-width: 640px) {
+          .promo-media {
+            padding-bottom: 48%;
+          }
+        }
+
+        @media (min-width: 768px) {
+          .promo-media {
+            padding-bottom: 35%;
+          }
+        }
+      `}</style>
     </section>
   );
 }
