@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Zap, Clock } from "lucide-react";
 import { HurryUpProductCard } from "./HurryUpProductCard";
 
@@ -47,6 +47,13 @@ function TimerBlock({ value, label }: { value: number; label: string }) {
 
 export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
   const countdown = useCountdown(23, 59, 45);
+
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (delta === 0) return;
+    e.preventDefault();
+    e.currentTarget.scrollLeft += delta;
+  }, []);
 
   if (!products || products.length === 0) return null;
 
@@ -108,6 +115,7 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
 
       {/* ─── Carousel ─── */}
       <div
+        onWheel={handleWheel}
         className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scroll-smooth pb-3 scrollbar-hide"
         style={{ scrollBehavior: "smooth" }}
       >

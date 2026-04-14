@@ -59,12 +59,14 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
   }, [stopAuto]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
     isUserScrollingRef.current = true;
     stopAuto();
     if (e.pointerType === "mouse") {
       isDraggingRef.current = true;
       dragStartXRef.current = e.clientX;
       dragStartScrollLeftRef.current = e.currentTarget.scrollLeft;
+      e.currentTarget.setPointerCapture(e.pointerId);
     }
   }, [stopAuto]);
 
@@ -72,11 +74,20 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
     if (!isDraggingRef.current || e.pointerType !== "mouse") return;
     const el = carouselRef.current;
     if (!el) return;
+    e.preventDefault();
     const deltaX = e.clientX - dragStartXRef.current;
     el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
   }, []);
 
-  const handlePointerUp = useCallback(() => {
+  const handlePointerUp = useCallback((e?: React.PointerEvent<HTMLDivElement>) => {
+    isUserScrollingRef.current = false;
+    isDraggingRef.current = false;
+    if (e && e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
     isUserScrollingRef.current = false;
     isDraggingRef.current = false;
   }, []);
@@ -84,13 +95,13 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
     const el = carouselRef.current;
     if (!el) return;
-    // Allow natural vertical wheel gestures to horizontally scroll the strip.
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      e.preventDefault();
-      isUserScrollingRef.current = true;
-      stopAuto();
-      el.scrollLeft += e.deltaY;
-    }
+    // Map wheel gestures to horizontal scrolling for mouse users on desktop.
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (delta === 0) return;
+    e.preventDefault();
+    isUserScrollingRef.current = true;
+    stopAuto();
+    el.scrollLeft += delta;
   }, [stopAuto]);
 
   useEffect(() => {
@@ -149,7 +160,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          onMouseLeave={handlePointerUp}
+          onMouseLeave={handleMouseLeave}
           onWheel={handleWheel}
           className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scrollbar-hide pb-2 cursor-grab active:cursor-grabbing"
           style={{ scrollBehavior: "smooth", userSelect: "none" }}
