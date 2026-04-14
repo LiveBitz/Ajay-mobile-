@@ -63,7 +63,7 @@ export default async function Home() {
     <main className="flex flex-col w-full overflow-x-hidden" style={{ backgroundColor: "#0a0a0a" }}>
 
       {/* ── 1. Featured Categories ── dark */}
-      <Section className="mt-8 md:mt-10">
+      <Section className="mt-5 md:mt-7">
         <FeaturedCategoriesSection />
       </Section>
 
@@ -91,8 +91,6 @@ export default async function Home() {
       <Section delay={0}>
         <HurryUpSection />
       </Section>
-
-      <Divider dark />
 
       <Divider dark />
 

@@ -57,13 +57,13 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
 
   return (
     <section
-      className="relative py-14 md:py-20 lg:py-24 overflow-hidden"
+      className="relative py-10 md:py-14 lg:py-16 overflow-hidden"
       style={{ backgroundColor: "#ffffff" }}
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
 
         {/* ── Header ── */}
-        <div className="flex items-end justify-between gap-6 mb-8 md:mb-10">
+        <div className="flex items-end justify-between gap-6 mb-6 md:mb-8">
           <div>
             {/* Eyebrow */}
             <div className="flex items-center gap-2.5 mb-3">
@@ -82,7 +82,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
             >
               Shop by Brand
             </h2>
-            <p className="text-sm font-medium mt-1.5" style={{ color: "#71717a" }}>
+            <p className="text-xs md:text-sm font-medium mt-1.5" style={{ color: "#71717a" }}>
               Genuine products · Best prices · Warranty included
             </p>
           </div>
@@ -91,7 +91,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
         {/* ── Brand Cards Carousel ── */}
         <div
           ref={carouselRef}
-          className="carousel-touch-pan flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-hide pb-2"
+          className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scrollbar-hide pb-2"
           style={{ scrollBehavior: "smooth" }}
         >
           {categories.map((category) => (
@@ -132,7 +132,7 @@ function BrandCard({ category }: { category: Category }) {
     <Link
       href={`/category/${category.slug}`}
       className="flex-shrink-0 group"
-      style={{ width: "clamp(140px, 20vw, 200px)" }}
+      style={{ width: "clamp(116px, 18vw, 168px)" }}
     >
       <div
         className="rounded-2xl overflow-hidden"
@@ -156,7 +156,7 @@ function BrandCard({ category }: { category: Category }) {
             aspectRatio: "1 / 1",
             backgroundColor: hovered ? "#f4f4f5" : "#fafafa",
             transition: "background-color 0.3s ease",
-            padding: "20px",
+            padding: "14px",
           }}
         >
           {category.image ? (
@@ -193,7 +193,7 @@ function BrandCard({ category }: { category: Category }) {
 
         {/* ── Name Footer ── */}
         <div
-          className="flex items-center justify-between px-4 py-3"
+          className="flex items-center justify-between px-3 py-2.5"
           style={{
             borderTop: hovered ? "1px solid #e4e4e7" : "1px solid #f4f4f5",
             transition: "border-color 0.3s ease",

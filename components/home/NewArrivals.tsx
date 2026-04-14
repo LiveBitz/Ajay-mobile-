@@ -24,10 +24,10 @@ export async function NewArrivals() {
   if (featuredProducts.length === 0) return null;
 
   return (
-    <section id="new-arrivals" className="py-12 md:py-16 lg:py-20 bg-white">
+    <section id="new-arrivals" className="py-8 md:py-12 lg:py-16 bg-white">
 
       <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        <div className="mb-8 md:mb-10 lg:mb-12">
+        <div className="mb-6 md:mb-8 lg:mb-10">
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-zinc-900 mb-1.5 tracking-tight">
             Latest Launches
           </h2>
@@ -36,7 +36,7 @@ export async function NewArrivals() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-5">
           {featuredProducts.map((product) => (
             <ProductCard key={product.id} product={product as any} />
           ))}

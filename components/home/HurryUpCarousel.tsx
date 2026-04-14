@@ -80,19 +80,19 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
   return (
     <div>
       {/* ─── Section Header ─── */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10 md:mb-12">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-7 md:mb-9">
 
         {/* Left: Badge + Title + Subtitle */}
         <div className="flex-1 min-w-0">
           {/* "FLASH SALE" pill badge */}
-          <div className="inline-flex items-center gap-1.5 bg-brand/15 border border-brand/30 rounded-full px-3 py-1 mb-5">
+          <div className="inline-flex items-center gap-1.5 bg-brand/15 border border-brand/30 rounded-full px-3 py-1 mb-4">
             <Zap className="w-3.5 h-3.5 text-brand fill-brand" />
             <span className="text-[11px] font-black uppercase tracking-[0.18em] text-brand">
               Flash Sale
             </span>
           </div>
 
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[0.9] tracking-tight mb-5">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[0.95] tracking-tight mb-4">
             Up to{" "}
             <span className="relative inline-block">
               <span className="text-brand">40% OFF</span>
@@ -100,12 +100,12 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
               <span className="absolute -bottom-1 left-0 right-0 h-[3px] bg-brand/40 rounded-full" />
             </span>
             <br />
-            <span className="text-zinc-400 text-3xl md:text-4xl lg:text-5xl font-bold">
+            <span className="text-zinc-400 text-2xl md:text-3xl lg:text-4xl font-bold">
               on Premium Phones
             </span>
           </h2>
 
-          <p className="text-zinc-500 text-sm md:text-base font-medium">
+          <p className="text-zinc-500 text-xs md:text-sm font-medium">
             While stock lasts · Limited time only
           </p>
         </div>
@@ -137,7 +137,7 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
       <div
         ref={carouselRef}
         onScroll={checkScroll}
-        className="carousel-touch-pan flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto scroll-smooth pb-4 scrollbar-hide"
+        className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scroll-smooth pb-3 scrollbar-hide"
         style={{ scrollBehavior: "smooth" }}
       >
         {products.map((product: any) => (
@@ -145,8 +145,8 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
             key={product.id}
             className="flex-shrink-0"
             style={{
-              width: "clamp(150px, calc(100vw - 40px) / 2.2, 220px)",
-              minWidth: "150px"
+              width: "clamp(132px, calc((100vw - 32px) / 2.35), 200px)",
+              minWidth: "132px"
             }}
           >
             <HurryUpProductCard product={product} />

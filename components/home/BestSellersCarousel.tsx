@@ -56,7 +56,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
 
   return (
     <section
-      className="relative py-14 md:py-20 lg:py-24 overflow-hidden"
+      className="relative py-10 md:py-14 lg:py-18 overflow-hidden"
       style={{ backgroundColor: "#0a0a0a" }}
     >
       {/* Subtle red glow — top centre */}
@@ -73,7 +73,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
       <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
 
         {/* ── Header ── */}
-        <div className="flex items-end justify-between mb-8 md:mb-12">
+        <div className="flex items-end justify-between mb-6 md:mb-8">
           <div>
             {/* Eyebrow */}
             <div className="flex items-center gap-2.5 mb-3">
@@ -88,7 +88,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
             >
               Best Selling Phones
             </h2>
-            <p className="text-sm font-medium mt-1.5" style={{ color: "#71717a" }}>
+            <p className="text-xs md:text-sm font-medium mt-1.5" style={{ color: "#71717a" }}>
               The most loved devices this season
             </p>
           </div>
@@ -135,7 +135,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
         </div>
 
         {/* Mobile Nav */}
-        <div className="md:hidden flex justify-end gap-2 mb-5">
+        <div className="md:hidden flex justify-end gap-2 mb-4">
           {(["left", "right"] as const).map((dir) => {
             const can = dir === "left" ? canScrollLeft : canScrollRight;
             return (
@@ -164,7 +164,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
         <div
           ref={carouselRef}
           onScroll={checkScroll}
-          className="carousel-touch-pan flex gap-4 md:gap-5 lg:gap-6 overflow-x-auto pb-3 scrollbar-hide"
+          className="carousel-touch-pan flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto pb-2 scrollbar-hide"
         >
           {products.map((product, index) => (
             <BestSellerCard key={product.id} product={product} index={index} />
@@ -234,7 +234,7 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
   return (
     <div
       className="flex-shrink-0"
-      style={{ width: "clamp(220px, 28vw, 300px)" }}
+      style={{ width: "clamp(170px, 43vw, 240px)" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -251,7 +251,7 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
         }}
       >
         {/* ── Image ── */}
-        <div className="relative overflow-hidden" style={{ paddingBottom: "90%", backgroundColor: "#212121" }}>
+        <div className="relative overflow-hidden" style={{ paddingBottom: "86%", backgroundColor: "#212121" }}>
           <Link href={`/product/${product.slug}`} className="absolute inset-0 block">
             <Image
               src={product.image}
@@ -331,7 +331,7 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
         </div>
 
         {/* ── Info ── */}
-        <div className="flex flex-col flex-1 p-4 gap-3">
+        <div className="flex flex-col flex-1 p-3 sm:p-3.5 gap-2.5">
           <Link href={`/product/${product.slug}`} className="flex-1 space-y-1.5">
             <h3
               className="font-semibold text-sm leading-snug line-clamp-2"
@@ -341,7 +341,7 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
             </h3>
 
             <div className="flex items-baseline gap-2 tabular-nums">
-              <span className="font-black text-lg" style={{ color: "#ffffff" }}>
+              <span className="font-black text-base sm:text-lg" style={{ color: "#ffffff" }}>
                 ₹{product.price.toLocaleString("en-IN")}
               </span>
               {product.originalPrice > product.price && (
@@ -365,7 +365,7 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
           <button
             onClick={handleAddToCart}
             disabled={isOutOfStock || isAddingToCart}
-            className="w-full h-10 rounded-xl flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider transition-all duration-200"
+            className="w-full h-9 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider transition-all duration-200"
             style={
               isOutOfStock
                 ? { backgroundColor: "#111111", border: "1px solid #27272a", color: "#52525b", cursor: "not-allowed" }
