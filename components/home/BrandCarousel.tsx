@@ -15,6 +15,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPausedRef = useRef(false);
   const isUserScrollingRef = useRef(false);
+  const isAutoScrollRef = useRef(false);
   const isDraggingRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
@@ -26,7 +27,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
     resumeTimerRef.current = setTimeout(() => {
       isPausedRef.current = false;
       startAuto();
-    }, 1800);
+    }, 2000);
   }, []);
 
   const startAuto = useCallback(() => {
@@ -35,9 +36,11 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
 
     const tick = () => {
       if (!isPausedRef.current) {
+        isAutoScrollRef.current = true;
         el.scrollLeft += 0.8;
         const oneThird = el.scrollWidth / 3;
         if (el.scrollLeft >= oneThird * 2) {
+          isAutoScrollRef.current = true;
           el.scrollLeft -= oneThird;
         }
       }
@@ -51,11 +54,23 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
     const el = carouselRef.current;
     if (!el) return;
 
-    const oneThird = el.scrollWidth / 3;
-    if (el.scrollLeft >= oneThird * 2) el.scrollLeft -= oneThird;
-    if (el.scrollLeft <= 0) el.scrollLeft += oneThird;
+    const isAutoEvent = isAutoScrollRef.current;
+    isAutoScrollRef.current = false;
 
-    if (isUserScrollingRef.current) stopAuto();
+    const oneThird = el.scrollWidth / 3;
+    if (el.scrollLeft >= oneThird * 2) {
+      isAutoScrollRef.current = true;
+      el.scrollLeft -= oneThird;
+    }
+    if (el.scrollLeft <= 0) {
+      isAutoScrollRef.current = true;
+      el.scrollLeft += oneThird;
+    }
+
+    if (!isAutoEvent) {
+      isUserScrollingRef.current = true;
+      stopAuto();
+    }
   }, [stopAuto]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
