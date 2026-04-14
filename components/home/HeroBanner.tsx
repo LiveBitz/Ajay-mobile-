@@ -75,7 +75,7 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
             {banners.map((slide) => (
               <CarouselItem key={slide.id} className="pl-0 basis-full w-full">
                 <Link href={(slide as any).link || "/"} className="block w-full">
-                  <div className="relative w-full bg-zinc-900" style={{ aspectRatio: "16 / 6" }}>
+                  <div className="hero-banner-media relative w-full bg-zinc-900">
                     <Image
                       src={slide.image}
                       alt={slide.title}
@@ -95,7 +95,7 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
 
       {/* Pagination Dots */}
       {scrollSnaps.length > 1 && (
-        <div className="flex items-center justify-center gap-2 py-3 px-4 bg-white">
+        <div className="flex items-center justify-center gap-2 py-3 px-4 bg-black">
           {scrollSnaps.map((_, index) => (
             <button
               key={index}
@@ -119,6 +119,18 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
           ))}
         </div>
       )}
+
+      <style jsx>{`
+        .hero-banner-media {
+          aspect-ratio: 16 / 6;
+        }
+
+        @media (min-width: 1024px) {
+          .hero-banner-media {
+            aspect-ratio: 16 / 4.7;
+          }
+        }
+      `}</style>
     </section>
   );
 }

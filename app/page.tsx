@@ -1,4 +1,5 @@
 import { HeroBanner } from "@/components/home/HeroBanner";
+import { HeroSubBanners } from "@/components/home/HeroSubBanners";
 import { NewArrivals } from "@/components/home/NewArrivals";
 import { PromoBanner } from "@/components/home/PromoBanner";
 import { HurryUpSection } from "@/components/home/HurryUpSection";
@@ -92,6 +93,12 @@ export default async function Home() {
         <HurryUpSection />
       </Section>
 
+      {heroBanners.length > 0 && (
+        <Section delay={50}>
+          <HeroSubBanners banners={heroBanners} startIndex={0} maxItems={2} heading="Fresh Drops to Explore" />
+        </Section>
+      )}
+
       <Divider dark />
 
       {/* ── 4. Brand Carousel ── light: white */}
@@ -105,6 +112,19 @@ export default async function Home() {
       <Section delay={150}>
         <BestSellersSection />
       </Section>
+
+      {heroBanners.length > 2 && (
+        <Section delay={170}>
+          <HeroSubBanners
+            banners={heroBanners}
+            startIndex={2}
+            maxItems={3}
+            heading="Swipe and Steal the Deals"
+            showMobileEdgeFades
+            emphasizeMobileCards
+          />
+        </Section>
+      )}
 
       <Divider dark />
 
