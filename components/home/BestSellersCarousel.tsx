@@ -70,7 +70,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
         style={{ background: "linear-gradient(90deg, transparent, rgba(220,38,38,0.5), transparent)" }}
       />
 
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
+      <div className="mx-auto w-full max-w-[1720px] px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 relative z-10">
 
         {/* ── Header ── */}
         <div className="flex items-end justify-between mb-6 md:mb-8">
@@ -234,7 +234,7 @@ function BestSellerCard({ product, index }: { product: Product; index: number })
   return (
     <div
       className="flex-shrink-0"
-      style={{ width: "clamp(170px, 43vw, 240px)" }}
+      style={{ width: "clamp(170px, 19vw, 280px)" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >

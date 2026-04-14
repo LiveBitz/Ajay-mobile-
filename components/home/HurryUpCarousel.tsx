@@ -145,7 +145,7 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
             key={product.id}
             className="flex-shrink-0"
             style={{
-              width: "clamp(132px, calc((100vw - 32px) / 2.35), 200px)",
+              width: "clamp(132px, calc((100vw - 32px) / 2.35), 240px)",
               minWidth: "132px"
             }}
           >

@@ -41,7 +41,7 @@ export async function HurryUpSection() {
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-50" />
       </div>
 
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 py-10 md:py-14 lg:py-16 relative z-10">
+      <div className="mx-auto w-full max-w-[1720px] px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 py-10 md:py-14 lg:py-16 relative z-10">
         <HurryUpCarousel products={products} />
       </div>
     </section>

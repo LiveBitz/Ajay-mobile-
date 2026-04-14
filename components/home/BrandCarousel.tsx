@@ -60,7 +60,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
       className="relative py-10 md:py-14 lg:py-16 overflow-hidden"
       style={{ backgroundColor: "#ffffff" }}
     >
-      <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
+      <div className="mx-auto w-full max-w-[1720px] px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 relative z-10">
 
         {/* ── Header ── */}
         <div className="flex items-end justify-between gap-6 mb-6 md:mb-8">
@@ -132,7 +132,7 @@ function BrandCard({ category }: { category: Category }) {
     <Link
       href={`/category/${category.slug}`}
       className="flex-shrink-0 group"
-      style={{ width: "clamp(116px, 18vw, 168px)" }}
+      style={{ width: "clamp(116px, 14vw, 220px)" }}
     >
       <div
         className="rounded-2xl overflow-hidden"
