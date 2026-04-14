@@ -15,6 +15,9 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPausedRef = useRef(false);
   const isUserScrollingRef = useRef(false);
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartScrollLeftRef = useRef(0);
 
   const stopAuto = useCallback(() => {
     isPausedRef.current = true;
@@ -55,23 +58,40 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
     if (isUserScrollingRef.current) stopAuto();
   }, [stopAuto]);
 
-  const handlePointerDown = useCallback(() => {
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     isUserScrollingRef.current = true;
     stopAuto();
+    if (e.pointerType === "mouse") {
+      isDraggingRef.current = true;
+      dragStartXRef.current = e.clientX;
+      dragStartScrollLeftRef.current = e.currentTarget.scrollLeft;
+    }
   }, [stopAuto]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || e.pointerType !== "mouse") return;
+    const el = carouselRef.current;
+    if (!el) return;
+    const deltaX = e.clientX - dragStartXRef.current;
+    el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
+  }, []);
 
   const handlePointerUp = useCallback(() => {
     isUserScrollingRef.current = false;
+    isDraggingRef.current = false;
   }, []);
 
-  const handleTouchStart = useCallback(() => {
-    isUserScrollingRef.current = true;
-    stopAuto();
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    const el = carouselRef.current;
+    if (!el) return;
+    // Allow natural vertical wheel gestures to horizontally scroll the strip.
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      isUserScrollingRef.current = true;
+      stopAuto();
+      el.scrollLeft += e.deltaY;
+    }
   }, [stopAuto]);
-
-  const handleTouchEnd = useCallback(() => {
-    isUserScrollingRef.current = false;
-  }, []);
 
   useEffect(() => {
     const el = carouselRef.current;
@@ -125,13 +145,14 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
         <div
           ref={carouselRef}
           onScroll={handleScroll}
-          onMouseDown={handlePointerDown}
-          onMouseUp={handlePointerUp}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
           onMouseLeave={handlePointerUp}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
+          onWheel={handleWheel}
           className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scrollbar-hide pb-2 cursor-grab active:cursor-grabbing"
-          style={{ scrollBehavior: "smooth" }}
+          style={{ scrollBehavior: "smooth", userSelect: "none" }}
         >
           {items.map((category, idx) => (
             <BrandCard key={`${category.id}-${idx}`} category={category} />
