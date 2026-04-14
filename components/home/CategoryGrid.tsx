@@ -199,11 +199,8 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
       </div>
 
       <style jsx>{`
-        .slider-scroll { -ms-overflow-style: auto; scrollbar-width: thin; scrollbar-color: #dc2626 rgba(63,63,70,0.45); }
-        .slider-scroll::-webkit-scrollbar { display: block; height: 8px; }
-        .slider-scroll::-webkit-scrollbar-track { background: rgba(63,63,70,0.45); border-radius: 9999px; }
-        .slider-scroll::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 9999px; }
-        .slider-scroll::-webkit-scrollbar-thumb:hover { background: #b91c1c; }
+        .slider-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .slider-scroll::-webkit-scrollbar { display: none; }
       `}</style>
     </section>
   );

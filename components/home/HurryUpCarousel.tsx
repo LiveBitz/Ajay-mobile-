@@ -48,24 +48,37 @@ function TimerBlock({ value, label }: { value: number; label: string }) {
 export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
   const countdown = useCountdown(23, 59, 45);
   const carouselRef = useRef<HTMLDivElement>(null);
-  const [sliderValue, setSliderValue] = useState(0);
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartScrollLeftRef = useRef(0);
 
-  const updateSlider = useCallback(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const max = el.scrollWidth - el.clientWidth;
-    const progress = max > 0 ? (el.scrollLeft / max) * 100 : 0;
-    setSliderValue(progress);
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (e.pointerType !== "mouse") return;
+    isDraggingRef.current = true;
+    dragStartXRef.current = e.clientX;
+    dragStartScrollLeftRef.current = e.currentTarget.scrollLeft;
+    e.currentTarget.setPointerCapture(e.pointerId);
   }, []);
 
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || e.pointerType !== "mouse") return;
     const el = carouselRef.current;
     if (!el) return;
-    const next = Number(e.target.value);
-    setSliderValue(next);
-    const max = el.scrollWidth - el.clientWidth;
-    el.scrollLeft = (next / 100) * Math.max(max, 0);
-  };
+    const deltaX = e.clientX - dragStartXRef.current;
+    el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
+  }, []);
+
+  const handlePointerUp = useCallback((e?: React.PointerEvent<HTMLDivElement>) => {
+    isDraggingRef.current = false;
+    if (e && e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    isDraggingRef.current = false;
+  }, []);
 
   if (!products || products.length === 0) return null;
 
@@ -128,7 +141,11 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
       {/* ─── Carousel ─── */}
       <div
         ref={carouselRef}
-        onScroll={updateSlider}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onMouseLeave={handleMouseLeave}
         className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scroll-smooth pb-3 scrollbar-hide"
         style={{ scrollBehavior: "smooth" }}
       >
@@ -146,51 +163,10 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
         ))}
       </div>
 
-      {/* Always-visible manual slider (monitor-friendly) */}
-      <div className="mt-2">
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={0.1}
-          value={sliderValue}
-          onChange={handleSliderChange}
-          className="section-slider w-full"
-          aria-label="Scroll Flash Sale products"
-        />
-      </div>
-
       <style jsx>{`
-        .scrollbar-hide { -ms-overflow-style: auto; scrollbar-width: thin; scrollbar-color: #dc2626 rgba(63,63,70,0.45); }
-        .scrollbar-hide::-webkit-scrollbar { display: block; height: 8px; }
-        .scrollbar-hide::-webkit-scrollbar-track { background: rgba(63,63,70,0.45); border-radius: 9999px; }
-        .scrollbar-hide::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 9999px; }
-        .scrollbar-hide::-webkit-scrollbar-thumb:hover { background: #b91c1c; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
         .carousel-touch-pan { touch-action: manipulation; }
-        .section-slider {
-          appearance: none;
-          height: 8px;
-          border-radius: 9999px;
-          background: rgba(63,63,70,0.45);
-          outline: none;
-        }
-        .section-slider::-webkit-slider-thumb {
-          appearance: none;
-          width: 18px;
-          height: 18px;
-          border-radius: 9999px;
-          background: #dc2626;
-          border: 2px solid #7f1d1d;
-          cursor: pointer;
-        }
-        .section-slider::-moz-range-thumb {
-          width: 18px;
-          height: 18px;
-          border-radius: 9999px;
-          background: #dc2626;
-          border: 2px solid #7f1d1d;
-          cursor: pointer;
-        }
       `}</style>
     </div>
   );
