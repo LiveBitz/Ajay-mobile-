@@ -81,16 +81,12 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
       </div>
 
       <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .scrollbar-hide { -ms-overflow-style: auto; scrollbar-width: thin; scrollbar-color: #dc2626 rgba(63,63,70,0.45); }
+        .scrollbar-hide::-webkit-scrollbar { display: block; height: 8px; }
+        .scrollbar-hide::-webkit-scrollbar-track { background: rgba(63,63,70,0.45); border-radius: 9999px; }
+        .scrollbar-hide::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 9999px; }
+        .scrollbar-hide::-webkit-scrollbar-thumb:hover { background: #b91c1c; }
         .carousel-touch-pan { touch-action: manipulation; }
-        @media (min-width: 1024px) {
-          .scrollbar-hide { -ms-overflow-style: auto; scrollbar-width: thin; }
-          .scrollbar-hide::-webkit-scrollbar { display: block; height: 8px; }
-          .scrollbar-hide::-webkit-scrollbar-track { background: rgba(63,63,70,0.45); border-radius: 9999px; }
-          .scrollbar-hide::-webkit-scrollbar-thumb { background: rgba(220,38,38,0.8); border-radius: 9999px; }
-          .scrollbar-hide::-webkit-scrollbar-thumb:hover { background: rgba(220,38,38,1); }
-        }
       `}</style>
     </section>
   );
