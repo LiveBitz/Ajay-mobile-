@@ -14,21 +14,9 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
   const animFrameRef = useRef<number | null>(null);
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPausedRef = useRef(false);
-  const isUserScrollingRef = useRef(false);
-  const isAutoScrollRef = useRef(false);
   const isDraggingRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
-
-  const stopAuto = useCallback(() => {
-    isPausedRef.current = true;
-    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
-    resumeTimerRef.current = setTimeout(() => {
-      isPausedRef.current = false;
-      startAuto();
-    }, 2000);
-  }, []);
 
   const startAuto = useCallback(() => {
     const el = carouselRef.current;
@@ -36,11 +24,9 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
 
     const tick = () => {
       if (!isPausedRef.current) {
-        isAutoScrollRef.current = true;
-        el.scrollLeft += 0.8;
+        el.scrollLeft += 0.6;
         const oneThird = el.scrollWidth / 3;
         if (el.scrollLeft >= oneThird * 2) {
-          isAutoScrollRef.current = true;
           el.scrollLeft -= oneThird;
         }
       }
@@ -50,40 +36,39 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
     animFrameRef.current = requestAnimationFrame(tick);
   }, []);
 
+  const pauseAutoForInteraction = useCallback(() => {
+    isPausedRef.current = true;
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => {
+      isPausedRef.current = false;
+      startAuto();
+    }, 2000);
+  }, [startAuto]);
+
   const handleScroll = useCallback(() => {
     const el = carouselRef.current;
     if (!el) return;
 
-    const isAutoEvent = isAutoScrollRef.current;
-    isAutoScrollRef.current = false;
-
     const oneThird = el.scrollWidth / 3;
     if (el.scrollLeft >= oneThird * 2) {
-      isAutoScrollRef.current = true;
       el.scrollLeft -= oneThird;
     }
     if (el.scrollLeft <= 0) {
-      isAutoScrollRef.current = true;
       el.scrollLeft += oneThird;
     }
-
-    if (!isAutoEvent) {
-      isUserScrollingRef.current = true;
-      stopAuto();
-    }
-  }, [stopAuto]);
+  }, []);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    isUserScrollingRef.current = true;
-    stopAuto();
+    pauseAutoForInteraction();
     if (e.pointerType === "mouse") {
       isDraggingRef.current = true;
       dragStartXRef.current = e.clientX;
       dragStartScrollLeftRef.current = e.currentTarget.scrollLeft;
       e.currentTarget.setPointerCapture(e.pointerId);
     }
-  }, [stopAuto]);
+  }, [pauseAutoForInteraction]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current || e.pointerType !== "mouse") return;
@@ -95,7 +80,6 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
   }, []);
 
   const handlePointerUp = useCallback((e?: React.PointerEvent<HTMLDivElement>) => {
-    isUserScrollingRef.current = false;
     isDraggingRef.current = false;
     if (e && e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
@@ -103,9 +87,12 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
   }, []);
 
   const handleMouseLeave = useCallback(() => {
-    isUserScrollingRef.current = false;
     isDraggingRef.current = false;
   }, []);
+
+  const handleWheel = useCallback(() => {
+    pauseAutoForInteraction();
+  }, [pauseAutoForInteraction]);
 
   useEffect(() => {
     const el = carouselRef.current;
@@ -164,8 +151,9 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
           onMouseLeave={handleMouseLeave}
+          onWheel={handleWheel}
           className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scrollbar-hide pb-2 cursor-grab active:cursor-grabbing"
-          style={{ scrollBehavior: "smooth", userSelect: "none" }}
+          style={{ userSelect: "none" }}
         >
           {items.map((category, idx) => (
             <BrandCard key={`${category.id}-${idx}`} category={category} />
