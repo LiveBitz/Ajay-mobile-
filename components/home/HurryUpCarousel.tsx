@@ -116,8 +116,8 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
             key={product.id}
             className="flex-shrink-0"
             style={{
-              width: "clamp(132px, calc((100vw - 32px) / 2.35), 240px)",
-              minWidth: "132px"
+              width: "clamp(128px, 12.5vw, 200px)",
+              minWidth: "128px"
             }}
           >
             <HurryUpProductCard product={product} />

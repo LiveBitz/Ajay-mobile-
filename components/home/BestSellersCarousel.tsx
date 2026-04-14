@@ -142,7 +142,7 @@ function BestSellerCard({ product }: { product: Product }) {
   return (
     <div
       className="flex-shrink-0"
-      style={{ width: "clamp(170px, 19vw, 280px)" }}
+      style={{ width: "clamp(160px, 14.5vw, 220px)" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >

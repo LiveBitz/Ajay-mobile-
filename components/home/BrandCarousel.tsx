@@ -132,7 +132,7 @@ function BrandCard({ category }: { category: Category }) {
     <Link
       href={`/category/${category.slug}`}
       className="flex-shrink-0 group"
-      style={{ width: "clamp(116px, 14vw, 220px)" }}
+      style={{ width: "clamp(108px, 11vw, 176px)" }}
     >
       <div
         className="rounded-2xl overflow-hidden"
