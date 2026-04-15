@@ -272,7 +272,7 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
           gap: 10px;
           padding-bottom: 10px;
           scroll-behavior: smooth;
-          touch-action: pan-x;
+          touch-action: manipulation;
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
           -ms-overflow-style: none;

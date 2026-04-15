@@ -37,36 +37,55 @@ export async function NewArrivals() {
           </p>
         </div>
 
-        {/* MOBILE: 3D carousel — bleeds edge to edge */}
-        <div className="md:hidden -mx-4">
+        {/* MOBILE: 3D carousel — no Tailwind show/hide, CSS handles it */}
+        <div className="na-mobile-wrapper -mx-4">
           <NewArrivalsCarousel products={featuredProducts} />
         </div>
 
-        {/* DESKTOP: auto-fill grid */}
-        <div className="hidden md:grid new-arrivals-grid">
+        {/* DESKTOP: grid — no Tailwind show/hide, CSS handles it */}
+        <div className="new-arrivals-grid">
           {featuredProducts.map((product) => (
             <ProductCard key={product.id} product={product as any} />
           ))}
         </div>
+
       </div>
 
       <style>{`
-        .new-arrivals-grid {
-          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-          gap: 14px;
+        /* MOBILE: show carousel, hide grid */
+        .na-mobile-wrapper {
+          display: block;
         }
+        .new-arrivals-grid {
+          display: none;
+        }
+
+        /* DESKTOP (768px+): hide carousel, show grid */
+        @media (min-width: 768px) {
+          .na-mobile-wrapper {
+            display: none;
+          }
+          .new-arrivals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 14px;
+          }
+        }
+
         @media (min-width: 1024px) {
           .new-arrivals-grid {
             grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
             gap: 16px;
           }
         }
+
         @media (min-width: 1280px) {
           .new-arrivals-grid {
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 18px;
           }
         }
+
         @media (min-width: 1536px) {
           .new-arrivals-grid {
             grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));

@@ -98,7 +98,6 @@ export function HeroSubBanners({
               onPointerUp={handlePointerUp}
               onPointerCancel={handlePointerUp}
               onMouseLeave={handleMouseLeave}
-              style={{ touchAction: "pan-x" }}
               className="hero-sub-scroll"
             >
               {displayBanners.map((banner, index) => (

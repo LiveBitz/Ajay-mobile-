@@ -202,7 +202,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
           cursor: grab;
           user-select: none;
           -webkit-overflow-scrolling: touch;
-          touch-action: pan-x;
+          touch-action: manipulation;
           scrollbar-width: none;
           -ms-overflow-style: none;
         }

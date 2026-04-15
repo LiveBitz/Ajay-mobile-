@@ -151,7 +151,7 @@ export function NewArrivalsCarousel({ products }: Props) {
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
           -ms-overflow-style: none;
-          touch-action: pan-x;
+          touch-action: manipulation;
           box-sizing: border-box;
         }
 
