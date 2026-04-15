@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Category } from "@prisma/client";
 
 interface BrandCarouselProps {
@@ -28,18 +28,14 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
   const startAuto = useCallback(() => {
     const el = carouselRef.current;
     if (!el) return;
-
     const tick = () => {
       if (!isPausedRef.current) {
-        el.scrollLeft += 0.6;
+        el.scrollLeft += 0.5;
         const oneThird = el.scrollWidth / 3;
-        if (el.scrollLeft >= oneThird * 2) {
-          el.scrollLeft -= oneThird;
-        }
+        if (el.scrollLeft >= oneThird * 2) el.scrollLeft -= oneThird;
       }
       animFrameRef.current = requestAnimationFrame(tick);
     };
-
     animFrameRef.current = requestAnimationFrame(tick);
   }, []);
 
@@ -57,21 +53,16 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
     const el = carouselRef.current;
     if (!el) return;
     pauseAutoForInteraction();
-    const amount = Math.max(el.clientWidth * 0.6, 220);
+    const amount = Math.max(el.clientWidth * 0.6, 200);
     el.scrollBy({ left: direction === "left" ? -amount : amount, behavior: "smooth" });
   }, [pauseAutoForInteraction]);
 
   const handleScroll = useCallback(() => {
     const el = carouselRef.current;
     if (!el) return;
-
     const oneThird = el.scrollWidth / 3;
-    if (el.scrollLeft >= oneThird * 2) {
-      el.scrollLeft -= oneThird;
-    }
-    if (el.scrollLeft <= 0) {
-      el.scrollLeft += oneThird;
-    }
+    if (el.scrollLeft >= oneThird * 2) el.scrollLeft -= oneThird;
+    if (el.scrollLeft <= 0) el.scrollLeft += oneThird;
   }, []);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -90,45 +81,31 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
     const el = carouselRef.current;
     if (!el) return;
     e.preventDefault();
-    const deltaX = e.clientX - dragStartXRef.current;
-    el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
+    el.scrollLeft = dragStartScrollLeftRef.current - (e.clientX - dragStartXRef.current);
   }, []);
 
   const handlePointerUp = useCallback((e?: React.PointerEvent<HTMLDivElement>) => {
     isDraggingRef.current = false;
-    if (e && e.currentTarget.hasPointerCapture(e.pointerId)) {
+    if (e?.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
   }, []);
 
-  const handleMouseLeave = useCallback(() => {
-    isDraggingRef.current = false;
-  }, []);
-
-  const handleWheel = useCallback(() => {
-    pauseAutoForInteraction();
-  }, [pauseAutoForInteraction]);
+  const handleMouseLeave = useCallback(() => { isDraggingRef.current = false; }, []);
+  const handleWheel = useCallback(() => { pauseAutoForInteraction(); }, [pauseAutoForInteraction]);
 
   useEffect(() => {
     const el = carouselRef.current;
-    if (el) {
-      el.scrollLeft = el.scrollWidth / 3;
-    }
+    if (el) el.scrollLeft = el.scrollWidth / 3;
     updateOverflow();
     startAuto();
-
     const onResize = () => updateOverflow();
-    if (el) {
-      el.addEventListener("scroll", updateOverflow, { passive: true });
-    }
+    el?.addEventListener("scroll", updateOverflow, { passive: true });
     window.addEventListener("resize", onResize);
-
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
-      if (el) {
-        el.removeEventListener("scroll", updateOverflow);
-      }
+      el?.removeEventListener("scroll", updateOverflow);
       window.removeEventListener("resize", onResize);
     };
   }, [categories.length, startAuto, updateOverflow]);
@@ -137,75 +114,65 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
   const items = [...categories, ...categories, ...categories];
 
   return (
-    <section
-      className="relative py-10 md:py-14 lg:py-16 overflow-hidden"
-      style={{ backgroundColor: "#ffffff" }}
-    >
+    <section className="relative py-7 md:py-10 lg:py-12 overflow-hidden bg-white">
       <div className="mx-auto w-full max-w-[1720px] px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 relative z-10">
 
-        {/* ── Header ── */}
-        <div className="flex items-end justify-between gap-6 mb-6 md:mb-8">
+        {/* Header */}
+        <div className="flex items-end justify-between gap-4 mb-5 md:mb-7">
           <div>
-            {/* Eyebrow */}
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-5 h-0.5 rounded-full" style={{ backgroundColor: "#dc2626" }} />
-              <span
-                className="text-xs font-bold uppercase tracking-[0.18em]"
-                style={{ color: "#dc2626" }}
-              >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-4 h-0.5 rounded-full bg-red-600" />
+              <span className="text-[11px] md:text-xs font-bold uppercase tracking-[0.18em] text-red-600">
                 Official Stores
               </span>
             </div>
-
-            <h2
-              className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight leading-tight"
-              style={{ color: "#18181b" }}
-            >
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight text-zinc-900">
               Shop by Brand
             </h2>
-            <p className="text-xs md:text-sm font-medium mt-1.5" style={{ color: "#71717a" }}>
+            <p className="text-[11px] md:text-xs font-medium mt-1 text-zinc-400">
               Genuine products · Best prices · Warranty included
             </p>
           </div>
 
-          <div className="hidden lg:flex items-center gap-2">
+          {/* Desktop nav arrows */}
+          <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
             <button
               type="button"
               onClick={() => scrollByAmount("left")}
               disabled={!hasOverflow}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+              aria-label="Scroll brands left"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
               style={{
                 background: hasOverflow ? "rgba(255,255,255,0.9)" : "rgba(244,244,245,0.65)",
                 border: hasOverflow ? "1px solid rgba(39,39,42,0.14)" : "1px solid rgba(39,39,42,0.08)",
                 color: hasOverflow ? "#18181b" : "#a1a1aa",
-                boxShadow: hasOverflow ? "0 8px 20px rgba(24,24,27,0.12)" : "none",
+                boxShadow: hasOverflow ? "0 6px 16px rgba(24,24,27,0.10)" : "none",
                 backdropFilter: "blur(8px)",
                 cursor: hasOverflow ? "pointer" : "not-allowed",
               }}
-              aria-label="Scroll brands left"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} />
             </button>
             <button
               type="button"
               onClick={() => scrollByAmount("right")}
               disabled={!hasOverflow}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+              aria-label="Scroll brands right"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
               style={{
                 background: hasOverflow ? "rgba(220,38,38,0.93)" : "rgba(220,38,38,0.35)",
                 border: hasOverflow ? "1px solid rgba(248,113,113,0.85)" : "1px solid rgba(248,113,113,0.3)",
                 color: "#ffffff",
-                boxShadow: hasOverflow ? "0 10px 22px rgba(220,38,38,0.28)" : "none",
+                boxShadow: hasOverflow ? "0 8px 18px rgba(220,38,38,0.25)" : "none",
                 cursor: hasOverflow ? "pointer" : "not-allowed",
               }}
-              aria-label="Scroll brands right"
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>
 
-        {/* ── Brand Cards Carousel ── */}
+        {/* Carousel */}
         <div
           ref={carouselRef}
           onScroll={handleScroll}
@@ -215,8 +182,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
           onPointerCancel={handlePointerUp}
           onMouseLeave={handleMouseLeave}
           onWheel={handleWheel}
-          className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scrollbar-hide pb-2 cursor-grab active:cursor-grabbing"
-          style={{ userSelect: "none" }}
+          className="brand-carousel"
         >
           {items.map((category, idx) => (
             <BrandCard key={`${category.id}-${idx}`} category={category} />
@@ -225,48 +191,73 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
 
       </div>
 
-      <style jsx>{`
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .carousel-touch-pan { touch-action: manipulation; }
+      <style>{`
+        .brand-carousel {
+          display: flex;
+          flex-direction: row;
+          gap: 10px;
+          overflow-x: auto;
+          overflow-y: hidden;
+          padding-bottom: 6px;
+          cursor: grab;
+          user-select: none;
+          -webkit-overflow-scrolling: touch;
+          touch-action: pan-x;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .brand-carousel:active {
+          cursor: grabbing;
+        }
+        .brand-carousel::-webkit-scrollbar {
+          display: none;
+        }
+        @media (min-width: 640px) {
+          .brand-carousel { gap: 12px; }
+        }
+        @media (min-width: 768px) {
+          .brand-carousel { gap: 14px; }
+        }
+        @media (min-width: 1024px) {
+          .brand-carousel { gap: 16px; }
+        }
       `}</style>
     </section>
   );
 }
 
-/* ── Individual Brand Card ── */
+/* ── Brand Card ── */
 function BrandCard({ category }: { category: Category }) {
   const [hovered, setHovered] = useState(false);
 
   return (
     <Link
       href={`/category/${category.slug}`}
-      className="flex-shrink-0 group"
-      style={{ width: "clamp(108px, 11vw, 176px)" }}
+      className="flex-shrink-0 group block"
+      style={{ width: "clamp(72px, 8.5vw, 130px)" }}
     >
       <div
-        className="rounded-2xl overflow-hidden"
-        style={{
-          border: hovered ? "1px solid #e4e4e7" : "1px solid #f4f4f5",
-          boxShadow: hovered
-            ? "0 20px 48px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.05)"
-            : "0 1px 4px rgba(0,0,0,0.04)",
-          transform: hovered ? "translateY(-5px)" : "translateY(0)",
-          backgroundColor: hovered ? "#fafafa" : "#ffffff",
-          transition: "all 0.3s ease",
-        }}
+        className="flex flex-col items-center"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-
-        {/* ── Logo / Image Area ── */}
+        {/* Circle */}
         <div
-          className="flex items-center justify-center overflow-hidden"
           style={{
+            width: "100%",
             aspectRatio: "1 / 1",
-            backgroundColor: hovered ? "#f4f4f5" : "#fafafa",
-            transition: "background-color 0.3s ease",
-            padding: "14px",
+            borderRadius: "9999px",
+            overflow: "hidden",
+            border: "1.5px solid #e4e4e7",
+            backgroundColor: "#ffffff",
+            boxShadow: hovered
+              ? "0 8px 20px rgba(0,0,0,0.10)"
+              : "0 1px 3px rgba(0,0,0,0.05)",
+            transform: hovered ? "translateY(-3px)" : "translateY(0)",
+            transition: "all 0.28s ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           {category.image ? (
@@ -274,61 +265,50 @@ function BrandCard({ category }: { category: Category }) {
               src={category.image}
               alt={category.name}
               loading="lazy"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
               style={{
                 width: "100%",
                 height: "100%",
-                objectFit: "contain",
-                transform: hovered ? "scale(1.08)" : "scale(1)",
-                transition: "transform 0.4s ease",
-                filter: hovered ? "brightness(1.0)" : "brightness(0.95)",
+                objectFit: "cover",
+                borderRadius: "9999px",
+                transform: hovered ? "scale(1.04)" : "scale(1)",
+                transition: "transform 0.3s ease",
               }}
             />
           ) : (
-            <div className="flex items-center justify-center w-full h-full">
-              <span
-                className="font-black text-4xl tracking-tighter"
-                style={{
-                  color: hovered ? "#dc2626" : "#d4d4d8",
-                  transition: "color 0.3s ease",
-                }}
-              >
-                {category.name.charAt(0).toUpperCase()}
-              </span>
-            </div>
+            <span
+              style={{
+                fontWeight: 900,
+                fontSize: "clamp(18px, 3vw, 30px)",
+                color: hovered ? "#dc2626" : "#a1a1aa",
+                transition: "color 0.28s ease",
+                lineHeight: 1,
+              }}
+            >
+              {category.name.charAt(0).toUpperCase()}
+            </span>
           )}
         </div>
 
-        {/* ── Name Footer ── */}
-        <div
-          className="flex items-center justify-between px-3 py-2.5"
+        {/* Name */}
+        <span
           style={{
-            borderTop: hovered ? "1px solid #e4e4e7" : "1px solid #f4f4f5",
-            transition: "border-color 0.3s ease",
+            marginTop: "clamp(6px, 1vw, 10px)",
+            fontSize: "clamp(10px, 1.1vw, 13px)",
+            fontWeight: 600,
+            color: hovered ? "#18181b" : "#52525b",
+            textAlign: "center",
+            lineHeight: 1.3,
+            display: "-webkit-box",
+            WebkitLineClamp: 1,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            transition: "color 0.28s ease",
+            width: "100%",
           }}
         >
-          <span
-            className="font-bold text-sm leading-tight line-clamp-1"
-            style={{
-              color: hovered ? "#18181b" : "#71717a",
-              transition: "color 0.3s ease",
-            }}
-          >
-            {category.name}
-          </span>
-          <ArrowRight
-            className="shrink-0 ml-2"
-            style={{
-              width: "14px",
-              height: "14px",
-              color: hovered ? "#dc2626" : "#d4d4d8",
-              transform: hovered ? "translateX(2px)" : "translateX(0)",
-              transition: "all 0.3s ease",
-            }}
-          />
-        </div>
+          {category.name}
+        </span>
       </div>
     </Link>
   );

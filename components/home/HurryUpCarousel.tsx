@@ -8,10 +8,8 @@ interface HurryUpCarouselProps {
   products: any[];
 }
 
-// Countdown timer — ends 24 hours from page load
 function useCountdown(hours = 23, minutes = 59, seconds = 45) {
   const [time, setTime] = useState({ h: hours, m: minutes, s: seconds });
-
   useEffect(() => {
     const interval = setInterval(() => {
       setTime((prev) => {
@@ -23,7 +21,6 @@ function useCountdown(hours = 23, minutes = 59, seconds = 45) {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
-
   return time;
 }
 
@@ -31,14 +28,14 @@ function TimerBlock({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex flex-col items-center">
       <div
-        className="rounded-lg w-12 h-12 md:w-14 md:h-14 flex items-center justify-center"
+        className="timer-block-box flex items-center justify-center rounded-lg"
         style={{ backgroundColor: "#1c1c1c", border: "1px solid #3f3f46" }}
       >
-        <span className="text-xl md:text-2xl font-black text-white tabular-nums leading-none">
+        <span className="timer-block-num font-black text-white tabular-nums leading-none">
           {String(value).padStart(2, "0")}
         </span>
       </div>
-      <span className="text-[9px] uppercase tracking-widest text-zinc-500 mt-1.5 font-bold">
+      <span className="text-[9px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">
         {label}
       </span>
     </div>
@@ -49,6 +46,7 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
   const countdown = useCountdown(23, 59, 45);
   const carouselRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+  const draggedRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -70,9 +68,9 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
   }, []);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    if (e.pointerType !== "mouse") return;
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
     isDraggingRef.current = true;
+    draggedRef.current = false;
     dragStartXRef.current = e.clientX;
     dragStartScrollLeftRef.current = e.currentTarget.scrollLeft;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -83,32 +81,28 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
     const el = carouselRef.current;
     if (!el) return;
     const deltaX = e.clientX - dragStartXRef.current;
+    if (Math.abs(deltaX) > 4) draggedRef.current = true;
     el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
   }, []);
 
   const handlePointerUp = useCallback((e?: React.PointerEvent<HTMLDivElement>) => {
     isDraggingRef.current = false;
-    if (e && e.currentTarget.hasPointerCapture(e.pointerId)) {
+    if (e?.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
   }, []);
 
-  const handleMouseLeave = useCallback(() => {
-    isDraggingRef.current = false;
-  }, []);
+  const handleMouseLeave = useCallback(() => { isDraggingRef.current = false; }, []);
 
   useEffect(() => {
     updateScrollButtons();
     const el = carouselRef.current;
     if (!el) return;
-
-    const onResize = () => updateScrollButtons();
     el.addEventListener("scroll", updateScrollButtons, { passive: true });
-    window.addEventListener("resize", onResize);
-
+    window.addEventListener("resize", updateScrollButtons);
     return () => {
       el.removeEventListener("scroll", updateScrollButtons);
-      window.removeEventListener("resize", onResize);
+      window.removeEventListener("resize", updateScrollButtons);
     };
   }, [products.length, updateScrollButtons]);
 
@@ -117,61 +111,61 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
   return (
     <div>
       {/* ─── Section Header ─── */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-7 md:mb-9">
+      <div className="hurryup-header">
 
-        {/* Left: Badge + Title + Subtitle */}
+        {/* Left: Badge + Title */}
         <div className="flex-1 min-w-0">
-          {/* "FLASH SALE" pill badge */}
-          <div className="inline-flex items-center gap-1.5 bg-brand/15 border border-brand/30 rounded-full px-3 py-1 mb-4">
-            <Zap className="w-3.5 h-3.5 text-brand fill-brand" />
-            <span className="text-[11px] font-black uppercase tracking-[0.18em] text-brand">
+          <div className="inline-flex items-center gap-1.5 bg-red-600/15 border border-red-600/30 rounded-full px-3 py-1 mb-3">
+            <Zap className="w-3 h-3 text-red-500 fill-red-500" />
+            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-red-500">
               Flash Sale
             </span>
           </div>
 
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[0.95] tracking-tight mb-4">
+          <h2 className="hurryup-title font-black text-white leading-[0.95] tracking-tight mb-2">
             Up to{" "}
             <span className="relative inline-block">
-              <span className="text-brand">40% OFF</span>
-              {/* underline accent */}
-              <span className="absolute -bottom-1 left-0 right-0 h-[3px] bg-brand/40 rounded-full" />
+              <span className="text-red-500">40% OFF</span>
+              <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-red-500/40 rounded-full" />
             </span>
             <br />
-            <span className="text-zinc-400 text-2xl md:text-3xl lg:text-4xl font-bold">
+            <span className="hurryup-subtitle font-bold text-zinc-400">
               on Premium Phones
             </span>
           </h2>
 
-          <p className="text-zinc-500 text-xs md:text-sm font-medium">
+          <p className="text-zinc-500 text-[11px] md:text-xs font-medium">
             While stock lasts · Limited time only
           </p>
         </div>
 
-        {/* Right: Countdown + Nav arrows */}
-        <div className="flex flex-col items-start lg:items-end gap-6 shrink-0">
-          {/* Countdown timer */}
+        {/* Right: Countdown + Nav */}
+        <div className="hurryup-right">
+          {/* Timer */}
           <div>
-            <div className="flex items-center gap-1.5 mb-3">
-              <Clock className="w-3.5 h-3.5 text-zinc-500" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Clock className="w-3 h-3 text-zinc-500" />
+              <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
                 Ends in
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <TimerBlock value={countdown.h} label="Hrs" />
-              <span className="text-zinc-500 font-black text-xl mb-4">:</span>
+              <span className="text-zinc-500 font-black text-lg mb-4">:</span>
               <TimerBlock value={countdown.m} label="Min" />
-              <span className="text-zinc-500 font-black text-xl mb-4">:</span>
+              <span className="text-zinc-500 font-black text-lg mb-4">:</span>
               <TimerBlock value={countdown.s} label="Sec" />
             </div>
           </div>
 
+          {/* Desktop nav arrows */}
           <div className="hidden lg:flex items-center gap-2">
             <button
               type="button"
               onClick={() => scrollByAmount("left")}
               disabled={!canScrollLeft}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+              aria-label="Scroll flash sale left"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
               style={{
                 background: canScrollLeft ? "rgba(39,39,42,0.85)" : "rgba(39,39,42,0.35)",
                 border: canScrollLeft ? "1px solid rgba(255,255,255,0.16)" : "1px solid rgba(255,255,255,0.08)",
@@ -179,25 +173,24 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
                 backdropFilter: "blur(10px)",
                 cursor: canScrollLeft ? "pointer" : "not-allowed",
               }}
-              aria-label="Scroll flash sale left"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} />
             </button>
             <button
               type="button"
               onClick={() => scrollByAmount("right")}
               disabled={!canScrollRight}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+              aria-label="Scroll flash sale right"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
               style={{
                 background: canScrollRight ? "rgba(220,38,38,0.94)" : "rgba(220,38,38,0.35)",
                 border: canScrollRight ? "1px solid rgba(248,113,113,0.9)" : "1px solid rgba(248,113,113,0.35)",
                 color: "#ffffff",
-                boxShadow: canScrollRight ? "0 10px 24px rgba(220,38,38,0.42)" : "none",
+                boxShadow: canScrollRight ? "0 8px 20px rgba(220,38,38,0.38)" : "none",
                 cursor: canScrollRight ? "pointer" : "not-allowed",
               }}
-              aria-label="Scroll flash sale right"
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>
@@ -211,27 +204,102 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         onMouseLeave={handleMouseLeave}
-        className="carousel-touch-pan flex gap-2.5 sm:gap-3.5 md:gap-4 overflow-x-auto scroll-smooth pb-3 scrollbar-hide"
-        style={{ scrollBehavior: "smooth" }}
+        className="hurryup-carousel"
       >
         {products.map((product: any) => (
-          <div
-            key={product.id}
-            className="flex-shrink-0"
-            style={{
-              width: "clamp(128px, 12.5vw, 200px)",
-              minWidth: "128px"
-            }}
-          >
+          <div key={product.id} className="hurryup-card-wrap">
             <HurryUpProductCard product={product} />
           </div>
         ))}
       </div>
 
-      <style jsx>{`
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .carousel-touch-pan { touch-action: manipulation; }
+      <style>{`
+        /* ── Header layout ── */
+        .hurryup-header {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-bottom: 20px;
+        }
+        @media (min-width: 1024px) {
+          .hurryup-header {
+            flex-direction: row;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 28px;
+          }
+        }
+
+        /* Right column: timer + arrows stacked */
+        .hurryup-right {
+          display: flex;
+          flex-direction: row;
+          align-items: flex-end;
+          gap: 20px;
+        }
+        @media (min-width: 1024px) {
+          .hurryup-right {
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 16px;
+          }
+        }
+
+        /* ── Title scaling ── */
+        .hurryup-title {
+          font-size: clamp(22px, 4.5vw, 52px);
+        }
+        .hurryup-subtitle {
+          font-size: clamp(14px, 2.8vw, 34px);
+        }
+
+        /* ── Timer block ── */
+        .timer-block-box {
+          width: clamp(38px, 5vw, 52px);
+          height: clamp(38px, 5vw, 52px);
+        }
+        .timer-block-num {
+          font-size: clamp(15px, 2.2vw, 22px);
+        }
+
+        /* ── Carousel ── */
+        .hurryup-carousel {
+          display: flex;
+          flex-direction: row;
+          overflow-x: auto;
+          overflow-y: hidden;
+          gap: 10px;
+          padding-bottom: 10px;
+          scroll-behavior: smooth;
+          touch-action: pan-x;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          cursor: grab;
+          user-select: none;
+        }
+        .hurryup-carousel:active {
+          cursor: grabbing;
+        }
+        .hurryup-carousel::-webkit-scrollbar {
+          display: none;
+        }
+        @media (min-width: 640px) {
+          .hurryup-carousel { gap: 12px; }
+        }
+        @media (min-width: 768px) {
+          .hurryup-carousel { gap: 14px; }
+        }
+        @media (min-width: 1024px) {
+          .hurryup-carousel { gap: 16px; }
+        }
+
+        /* ── Card width — fluid across all breakpoints ── */
+        .hurryup-card-wrap {
+          flex-shrink: 0;
+          width: clamp(130px, 13vw, 210px);
+        }
       `}</style>
     </div>
   );
