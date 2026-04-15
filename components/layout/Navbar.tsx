@@ -40,6 +40,27 @@ export function Navbar() {
   // Ref to the search pill container — used to detect outside touches on iOS
   const searchPillRef = React.useRef<HTMLDivElement>(null);
 
+  const goToSearchResults = React.useCallback((rawQuery: string) => {
+    const query = rawQuery.trim();
+    if (!query) return;
+    router.push(`/search?q=${encodeURIComponent(query)}`);
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  }, [router]);
+
+  const onSearchSubmit = React.useCallback((e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    goToSearchResults(searchQuery);
+  }, [goToSearchResults, searchQuery]);
+
+  const onSearchKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      goToSearchResults(searchQuery);
+    }
+  }, [goToSearchResults, searchQuery]);
+
   useEffect(() => { setMounted(true); }, []);
 
   /* ── Navbar Height CSS Variable ── */
@@ -413,7 +434,7 @@ export function Navbar() {
             Positioned at the bottom center of the navbar border.
         ── */}
         {mounted && (
-          <div className="absolute left-1/2 -translate-x-1/2 w-full flex justify-center px-4 z-50 pointer-events-none overflow-hidden" style={{ bottom: "-25px" }}>
+          <div className="absolute left-1/2 -translate-x-1/2 w-full flex justify-center px-4 z-50 pointer-events-none" style={{ bottom: "-25px" }}>
             <div ref={searchPillRef} className={`w-full max-w-sm relative group ${searchOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
             {/* Search trigger button */}
             {!searchOpen ? (
@@ -432,11 +453,14 @@ export function Navbar() {
               </button>
             ) : (
               /* Search input - inline */
-              <div className="w-full flex items-center gap-2 px-5 py-3.5 rounded-2xl
-                             bg-white border-2 border-brand
-                             shadow-[0_2px_16px_rgba(0,0,0,0.08),0_1px_4px_rgba(0,0,0,0.04)]
-                             focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.12)]
-                             transition-all duration-200">
+              <form
+                onSubmit={onSearchSubmit}
+                className="w-full flex items-center gap-2 px-5 py-3.5 rounded-2xl
+                           bg-white border-2 border-brand
+                           shadow-[0_2px_16px_rgba(0,0,0,0.08),0_1px_4px_rgba(0,0,0,0.04)]
+                           focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.12)]
+                           transition-all duration-200"
+              >
                 <Search className="w-4 h-4 text-brand shrink-0" />
                 <input
                   autoFocus
@@ -444,6 +468,7 @@ export function Navbar() {
                   placeholder="Search products…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={onSearchKeyDown}
                   className="flex-1 bg-transparent outline-none text-sm font-medium
                              text-zinc-900 placeholder:text-zinc-400"
                 />
@@ -451,6 +476,7 @@ export function Navbar() {
                   <button
                     onClick={() => setSearchQuery("")}
                     className="p-1 hover:bg-zinc-100 rounded-full shrink-0"
+                    type="button"
                   >
                     <X className="w-4 h-4 text-zinc-400" />
                   </button>
@@ -458,10 +484,11 @@ export function Navbar() {
                 <button
                   onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
                   className="p-1 hover:bg-zinc-100 rounded-full shrink-0"
+                  type="button"
                 >
                   <ChevronRight className="w-4 h-4 text-zinc-400 rotate-180" />
                 </button>
-              </div>
+              </form>
             )}
 
             {/* Dropdown results - appears below searchbar when active */}
@@ -584,7 +611,7 @@ export function Navbar() {
         </div>
 
         {/* Search bar */}
-        <div className="flex flex-1 mx-4 lg:mx-6 max-w-2xl relative group">
+        <form onSubmit={onSearchSubmit} className="flex flex-1 mx-4 lg:mx-6 max-w-2xl relative group">
           <div className="w-full relative">
             <div
               className="flex items-center gap-3 px-4 py-2.5 rounded-lg
@@ -599,6 +626,7 @@ export function Navbar() {
                 placeholder="Search smartphones, laptops…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={onSearchKeyDown}
                 className="flex-1 bg-transparent outline-none text-sm font-medium
                            text-zinc-900 placeholder:text-zinc-400"
               />
@@ -606,6 +634,7 @@ export function Navbar() {
                 <button
                   onClick={() => setSearchQuery("")}
                   className="p-1 hover:bg-zinc-200/60 rounded-full transition-colors shrink-0"
+                  type="button"
                 >
                   <X className="w-4 h-4 text-zinc-400" />
                 </button>
@@ -664,7 +693,7 @@ export function Navbar() {
               </div>
             )}
           </div>
-        </div>
+        </form>
 
         {/* Right icons */}
         <div className="flex items-center gap-2 md:gap-3 lg:gap-4 shrink-0">
