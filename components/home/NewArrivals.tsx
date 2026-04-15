@@ -22,20 +22,22 @@ export async function NewArrivals() {
       <div className="mx-auto w-full max-w-[1720px] px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12">
 
         {/* Header */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-4 h-0.5 rounded-full bg-red-600" />
-          <p className="text-[11px] md:text-xs uppercase tracking-[0.16em] font-bold text-zinc-400">
-            Fresh In
-          </p>
-        </div>
-        <div className="mb-3 md:mb-7 lg:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-zinc-900 tracking-tight leading-tight">
-            Latest Launches
-          </h2>
-          <p className="text-[11px] md:text-xs text-zinc-400 font-medium mt-1">
-            Newest smartphone releases with cutting-edge technology
-          </p>
-        </div>
+        {/* Header */}
+<div className="flex flex-col items-center text-center mb-3 md:mb-7 lg:mb-8 pt-2">
+  <div className="flex items-center gap-2 mb-3">
+    <div className="w-5 h-0.5 rounded-full bg-red-600" />
+    <p className="text-[11px] md:text-xs uppercase tracking-[0.22em] font-bold text-zinc-400">
+      Fresh In
+    </p>
+    <div className="w-5 h-0.5 rounded-full bg-red-600" />
+  </div>
+  <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight leading-tight mb-1.5">
+    Latest Launches
+  </h2>
+  <p className="text-[12px] md:text-xs text-zinc-400 font-medium max-w-[260px] leading-relaxed">
+    Newest smartphone releases with cutting-edge technology
+  </p>
+</div>
 
         {/* MOBILE: 3D carousel — no Tailwind show/hide, CSS handles it */}
         <div className="na-mobile-wrapper -mx-4">
