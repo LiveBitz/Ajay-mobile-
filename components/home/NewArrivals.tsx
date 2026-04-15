@@ -1,7 +1,8 @@
 import React from "react";
 import prisma from "@/lib/prisma";
-import { ProductCard } from "@/components/shared/ProductCard";
 import { getTotalStock } from "@/lib/inventory";
+import { ProductCard } from "@/components/shared/ProductCard";
+import { NewArrivalsCarousel } from "./NewArrivalsCarousel";
 
 async function getNewArrivals() {
   const products = await prisma.product.findMany({
@@ -9,15 +10,11 @@ async function getNewArrivals() {
     orderBy: { createdAt: "desc" },
     take: 20,
   });
-
-  return products
-    .filter((p) => getTotalStock(p.sizes) > 0)
-    .slice(0, 10);
+  return products.filter((p) => getTotalStock(p.sizes) > 0).slice(0, 10);
 }
 
 export async function NewArrivals() {
   const featuredProducts = await getNewArrivals();
-
   if (featuredProducts.length === 0) return null;
 
   return (
@@ -31,7 +28,7 @@ export async function NewArrivals() {
             Fresh In
           </p>
         </div>
-        <div className="mb-5 md:mb-7 lg:mb-8">
+        <div className="mb-3 md:mb-7 lg:mb-8">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-zinc-900 tracking-tight leading-tight">
             Latest Launches
           </h2>
@@ -40,8 +37,13 @@ export async function NewArrivals() {
           </p>
         </div>
 
-        {/* Grid */}
-        <div className="new-arrivals-grid">
+        {/* MOBILE: 3D carousel — bleeds edge to edge */}
+        <div className="md:hidden -mx-4">
+          <NewArrivalsCarousel products={featuredProducts} />
+        </div>
+
+        {/* DESKTOP: auto-fill grid */}
+        <div className="hidden md:grid new-arrivals-grid">
           {featuredProducts.map((product) => (
             <ProductCard key={product.id} product={product as any} />
           ))}
@@ -50,47 +52,24 @@ export async function NewArrivals() {
 
       <style>{`
         .new-arrivals-grid {
-          display: grid;
-          gap: 10px;
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          gap: 14px;
         }
-
-        /* 3 cols — small tablets */
-        @media (min-width: 560px) {
-          .new-arrivals-grid {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-          }
-        }
-
-        /* 4 cols — md */
-        @media (min-width: 768px) {
-          .new-arrivals-grid {
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
-          }
-        }
-
-        /* 5 cols — lg */
         @media (min-width: 1024px) {
           .new-arrivals-grid {
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
             gap: 16px;
           }
         }
-
-        /* 6 cols — xl */
         @media (min-width: 1280px) {
           .new-arrivals-grid {
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 18px;
           }
         }
-
-        /* 7 cols — 2xl+ */
         @media (min-width: 1536px) {
           .new-arrivals-grid {
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
             gap: 20px;
           }
         }
