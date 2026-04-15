@@ -103,24 +103,29 @@ export async function toggleBannerStatus(id: string, isActive: boolean) {
 
 export async function getNavigationLinks() {
   try {
-    const [categories, products] = await Promise.all([
-      prisma.category.findMany({
-        select: { name: true, slug: true },
-        orderBy: { name: 'asc' }
-      }),
-      prisma.product.findMany({
-        select: { name: true, slug: true },
-        orderBy: { createdAt: 'desc' },
-        take: 20 // Limit to latest 20 for UX sanity
-      })
-    ]);
+    const categories = await prisma.category.findMany({
+      select: {
+        name: true,
+        slug: true,
+        _count: {
+          select: { products: true },
+        },
+      },
+      orderBy: { name: 'asc' }
+    });
+
+    const categoriesWithProducts = categories.filter((c) => c._count.products > 0);
 
     return {
       success: true,
-      categories: categories.map(c => ({ label: c.name, value: `/category/${c.slug}` })),
-      products: products.map(p => ({ label: p.name, value: `/product/${p.slug}` })),
+      categories: categoriesWithProducts.map(c => ({
+        label: `${c.name} (${c._count.products})`,
+        value: `/category/${c.slug}`
+      })),
+      products: [],
       fixed: [
         { label: "Home Page", value: "/" },
+        { label: "All Categories", value: "/category" },
         { label: "Shopping Cart", value: "/cart" },
       ]
     };

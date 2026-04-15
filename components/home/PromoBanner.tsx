@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Banner } from "@prisma/client";
 import Autoplay from "embla-carousel-autoplay";
 import { Sparkles } from "lucide-react";
+import { getBannerLinkTag, normalizeBannerLink } from "@/lib/banner-link";
 import {
   Carousel,
   CarouselContent,
@@ -99,13 +100,20 @@ export function PromoBanner({ banners = [] }: PromoBannerProps) {
             opts={{ loop: banners.length > 1 }}
           >
             <CarouselContent className="m-0 w-full">
-              {banners.map((banner, index) => (
+              {banners.map((banner, index) => {
+                const href = normalizeBannerLink(banner.link);
+                const linkTag = getBannerLinkTag(banner.link);
+
+                return (
                 <CarouselItem key={`promo-${banner.id}`} className="pl-0 basis-full w-full">
-                  <Link href={banner.link || "/"} className="block w-full">
+                  <Link href={href} className="block w-full">
                     {/* Keep a reliable fixed media height across devices */}
                     <div
                       className="promo-media relative w-full rounded-3xl overflow-hidden border border-zinc-800"
                     >
+                      <span className="absolute left-3 top-3 z-20 inline-flex h-7 items-center rounded-full border border-white/30 bg-black/55 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-sm pointer-events-none">
+                        {linkTag}
+                      </span>
                       <Image
                         src={banner.image}
                         alt={banner.title || "Promotional Banner"}
@@ -118,7 +126,8 @@ export function PromoBanner({ banners = [] }: PromoBannerProps) {
                     </div>
                   </Link>
                 </CarouselItem>
-              ))}
+              );
+              })}
             </CarouselContent>
           </Carousel>
         </div>

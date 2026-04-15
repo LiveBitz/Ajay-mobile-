@@ -4,6 +4,7 @@ import { useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Banner } from "@prisma/client";
+import { getBannerLinkTag, normalizeBannerLink } from "@/lib/banner-link";
 
 interface HeroSubBannersProps {
   banners: Banner[];
@@ -100,14 +101,21 @@ export function HeroSubBanners({
               onMouseLeave={handleMouseLeave}
               className="hero-sub-scroll"
             >
-              {displayBanners.map((banner, index) => (
+              {displayBanners.map((banner, index) => {
+                const href = normalizeBannerLink(banner.link);
+                const linkTag = getBannerLinkTag(banner.link);
+
+                return (
                 <Link
                   key={banner.id}
-                  href={banner.link ?? "/"}
+                  href={href}
                   onClick={handleLinkClick}
                   className="hero-sub-mobile-card group relative block rounded-2xl overflow-hidden border border-zinc-800"
                 >
                   <div className="relative w-full" style={{ paddingTop }}>
+                    <span className="absolute left-3 top-3 z-20 inline-flex h-7 items-center rounded-full border border-white/30 bg-black/55 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-sm pointer-events-none">
+                      {linkTag}
+                    </span>
                     <Image
                       src={banner.image}
                       alt={banner.title || `Hero banner ${index + 1}`}
@@ -120,7 +128,8 @@ export function HeroSubBanners({
                     <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-transparent pointer-events-none" />
                   </div>
                 </Link>
-              ))}
+              );
+              })}
             </div>
 
             {showMobileEdgeFades && count > 1 && (
@@ -133,13 +142,20 @@ export function HeroSubBanners({
 
           {/* ─── DESKTOP: CSS grid (hidden below md) ─── */}
           <div className={`hidden md:grid ${desktopCols} gap-4 lg:gap-5 w-full`}>
-            {displayBanners.map((banner, index) => (
+            {displayBanners.map((banner, index) => {
+              const href = normalizeBannerLink(banner.link);
+              const linkTag = getBannerLinkTag(banner.link);
+
+              return (
               <Link
                 key={banner.id}
-                href={banner.link ?? "/"}
+                href={href}
                 className="group relative block w-full rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-colors duration-300"
               >
                 <div className="relative w-full" style={{ paddingTop }}>
+                  <span className="absolute left-3 top-3 z-20 inline-flex h-7 items-center rounded-full border border-white/30 bg-black/55 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-sm pointer-events-none">
+                    {linkTag}
+                  </span>
                   <Image
                     src={banner.image}
                     alt={banner.title || `Hero banner ${index + 1}`}
@@ -152,7 +168,8 @@ export function HeroSubBanners({
                   <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-transparent pointer-events-none" />
                 </div>
               </Link>
-            ))}
+            );
+            })}
           </div>
 
         </div>

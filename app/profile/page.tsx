@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  LogOut,
   MapPin,
   ShoppingBag,
   Settings,
@@ -10,11 +9,10 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { signOut } from "@/lib/actions/auth-actions";
 import { AddressesManager } from "@/components/profile/AddressesManager";
 import { OrderHistory } from "@/components/profile/OrderHistory";
+import { LogoutButton } from "@/components/profile/LogoutButton";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -67,16 +65,7 @@ export default async function ProfilePage() {
             </div>
 
             {/* Logout */}
-            <form action={signOut}>
-              <Button
-                type="submit"
-                variant="outline"
-                className="w-full md:w-auto gap-2 rounded-xl border border-zinc-200 text-zinc-600 hover:border-red-200 hover:text-red-600 font-semibold text-sm h-10 bg-transparent"
-              >
-                <LogOut className="w-4 h-4" />
-                Logout
-              </Button>
-            </form>
+            <LogoutButton />
           </div>
         </div>
 

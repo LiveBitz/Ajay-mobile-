@@ -10,8 +10,12 @@ interface Props {
 export function NewArrivalsCarousel({ products }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const activeIndexRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const lastScrollRef = useRef<number>(-1);
+  const touchStartXRef = useRef(0);
+  const touchStartYRef = useRef(0);
+  const isProgrammaticRef = useRef(false);
 
   const getEdgePadding = useCallback(() => {
     const track = trackRef.current;
@@ -21,12 +25,10 @@ export function NewArrivalsCarousel({ products }: Props) {
     return Math.max(0, (track.clientWidth - card.offsetWidth) / 2);
   }, []);
 
-  const applyTransforms = useCallback(() => {
+  const applyTransforms = useCallback((force = false) => {
     const track = trackRef.current;
     if (!track) return;
-
-    // Skip if scroll position hasn't changed — prevents unnecessary repaints
-    if (track.scrollLeft === lastScrollRef.current) return;
+    if (!force && track.scrollLeft === lastScrollRef.current) return;
     lastScrollRef.current = track.scrollLeft;
 
     const children = Array.from(track.children) as HTMLElement[];
@@ -35,52 +37,73 @@ export function NewArrivalsCarousel({ products }: Props) {
     let closest = 0;
     let minDist = Infinity;
 
-    children.forEach((child, i) => {
+    // Pass 1: reads only
+    const metrics = children.map((child, i) => {
       const childCenter = child.offsetLeft + child.offsetWidth / 2;
       const dist = Math.abs(childCenter - trackCenter);
       if (dist < minDist) { minDist = dist; closest = i; }
-
       const ratio = Math.max(-1, Math.min(1,
         (childCenter - trackCenter) / (track.clientWidth * 0.46)
       ));
-      const absRatio = Math.abs(ratio);
-
-      const rotateY = ratio * 44;
-      const scale   = 1 - absRatio * 0.22;
-      const tx      = ratio * -26;
-      const opacity = 1 - absRatio * 0.55;
-      const blur    = absRatio > 0.08 ? absRatio * 2.5 : 0;
-
-      // Batch all style writes together — no interleaved reads
-      child.style.transform = `perspective(1200px) rotateY(${rotateY}deg) scale(${scale}) translateX(${tx}px)`;
-      child.style.opacity   = opacity.toFixed(3);
-      child.style.filter    = blur > 0 ? `blur(${blur.toFixed(2)}px)` : "none";
-      child.style.zIndex    = String(Math.round((1 - absRatio) * 10));
+      return { ratio, absRatio: Math.abs(ratio) };
     });
 
-    // Update active card shadow separately to avoid layout thrashing
-    children.forEach((child, i) => {
+    // Pass 2: writes only
+    metrics.forEach(({ ratio, absRatio }, i) => {
+      const child = children[i];
+      const isActive = i === closest;
+      const rotateY = ratio * 42;
+      const scale   = 1 - absRatio * 0.2;
+      const tx      = ratio * -24;
+      const opacity = Math.max(0.38, 1 - absRatio * 0.50);
+
+      child.style.transform = `perspective(1100px) rotateY(${rotateY.toFixed(2)}deg) scale(${scale.toFixed(4)}) translateX(${tx.toFixed(2)}px) translateZ(0)`;
+      child.style.opacity   = opacity.toFixed(3);
+      child.style.zIndex    = String(isActive ? 10 : Math.round((1 - absRatio) * 9));
+
       const inner = child.querySelector(".na-card-inner") as HTMLElement | null;
-      if (!inner) return;
-      if (i === closest) {
-        inner.style.boxShadow = "0 32px 64px rgba(0,0,0,0.14), 0 8px 24px rgba(220,38,38,0.10)";
-        inner.style.transform = "translateY(-4px)";
-      } else {
-        inner.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)";
-        inner.style.transform = "translateY(0px)";
+      if (inner) {
+        inner.style.boxShadow = isActive
+          ? "0 28px 56px rgba(0,0,0,0.13), 0 8px 20px rgba(220,38,38,0.09)"
+          : "0 2px 8px rgba(0,0,0,0.05)";
+        inner.style.transform = isActive
+          ? "translateY(-4px) translateZ(0)"
+          : "translateY(0) translateZ(0)";
       }
     });
 
-    setActiveIndex(closest);
+    if (closest !== activeIndexRef.current) {
+      activeIndexRef.current = closest;
+      setActiveIndex(closest);
+    }
   }, []);
 
-  // rAF-throttled scroll handler — only runs once per frame max
   const onScroll = useCallback(() => {
     if (rafRef.current !== null) return;
     rafRef.current = requestAnimationFrame(() => {
       applyTransforms();
       rafRef.current = null;
     });
+  }, [applyTransforms]);
+
+  // Single scroll function used by BOTH arrows and touch swipe
+  const scrollToIndex = useCallback((index: number) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const child = track.children[index] as HTMLElement;
+    if (!child) return;
+    isProgrammaticRef.current = true;
+    track.scrollTo({
+      left: child.offsetLeft - (track.clientWidth - child.offsetWidth) / 2,
+      behavior: "smooth",
+    });
+    // scrollTo fires scroll events continuously — applyTransforms runs on each one
+    // Mark as settled once scroll animation finishes (~400ms)
+    setTimeout(() => {
+      isProgrammaticRef.current = false;
+      lastScrollRef.current = -1;
+      applyTransforms(true);
+    }, 420);
   }, [applyTransforms]);
 
   const setEdgePadding = useCallback(() => {
@@ -93,20 +116,17 @@ export function NewArrivalsCarousel({ products }: Props) {
     track.style.scrollPaddingRight = `${pad}px`;
   }, [getEdgePadding]);
 
-  const scrollToIndex = useCallback((index: number) => {
-    const track = trackRef.current;
-    if (!track) return;
-    const child = track.children[index] as HTMLElement;
-    if (!child) return;
-    track.scrollTo({
-      left: child.offsetLeft - (track.clientWidth - child.offsetWidth) / 2,
-      behavior: "smooth",
-    });
-  }, []);
-
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
+
+    // Pre-promote all cards to GPU layers
+    Array.from(track.children).forEach((child) => {
+      const el = child as HTMLElement;
+      el.style.transform  = "perspective(1100px) rotateY(0deg) scale(1) translateX(0px) translateZ(0)";
+      el.style.opacity    = "1";
+      el.style.willChange = "transform, opacity";
+    });
 
     const init = () => {
       setEdgePadding();
@@ -114,28 +134,66 @@ export function NewArrivalsCarousel({ products }: Props) {
       if (first) {
         track.scrollLeft = first.offsetLeft - (track.clientWidth - first.offsetWidth) / 2;
       }
-      lastScrollRef.current = -1; // force first paint
-      applyTransforms();
+      lastScrollRef.current = -1;
+      applyTransforms(true);
+    };
+    requestAnimationFrame(() => { requestAnimationFrame(init); });
+
+    // Touch: record start position only
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartXRef.current = e.touches[0].clientX;
+      touchStartYRef.current = e.touches[0].clientY;
     };
 
-    const raf = requestAnimationFrame(init);
+    // Touch: on lift, decide direction and call scrollToIndex — same as arrow buttons
+    const onTouchEnd = (e: TouchEvent) => {
+      const dx = touchStartXRef.current - e.changedTouches[0].clientX;
+      const dy = touchStartYRef.current - e.changedTouches[0].clientY;
+
+      // Ignore if mostly vertical scroll
+      if (Math.abs(dy) > Math.abs(dx)) return;
+
+      // Only trigger if swipe is meaningful (>40px)
+      if (Math.abs(dx) < 40) return;
+
+      const current = activeIndexRef.current;
+      const target = dx > 0
+        ? Math.min(products.length - 1, current + 1)
+        : Math.max(0, current - 1);
+
+      if (target !== current) {
+        scrollToIndex(target);
+      }
+    };
+
+    // Prevent default touch scroll — we handle scrolling via scrollToIndex
+    const onTouchMove = (e: TouchEvent) => {
+      const dx = Math.abs(touchStartXRef.current - e.touches[0].clientX);
+      const dy = Math.abs(touchStartYRef.current - e.touches[0].clientY);
+      if (dx > dy) e.preventDefault();
+    };
 
     const onResize = () => {
       setEdgePadding();
       lastScrollRef.current = -1;
-      applyTransforms();
+      applyTransforms(true);
     };
 
-    track.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
+    track.addEventListener("scroll",     onScroll,     { passive: true });
+    track.addEventListener("touchstart", onTouchStart, { passive: true });
+    track.addEventListener("touchmove",  onTouchMove,  { passive: false }); // non-passive to allow preventDefault
+    track.addEventListener("touchend",   onTouchEnd,   { passive: true });
+    window.addEventListener("resize",    onResize);
 
     return () => {
-      cancelAnimationFrame(raf);
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-      track.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
+      track.removeEventListener("scroll",     onScroll);
+      track.removeEventListener("touchstart", onTouchStart);
+      track.removeEventListener("touchmove",  onTouchMove);
+      track.removeEventListener("touchend",   onTouchEnd);
+      window.removeEventListener("resize",    onResize);
     };
-  }, [applyTransforms, onScroll, setEdgePadding]);
+  }, [applyTransforms, onScroll, products.length, scrollToIndex, setEdgePadding]);
 
   return (
     <div className="na-root">
@@ -161,7 +219,6 @@ export function NewArrivalsCarousel({ products }: Props) {
           <span className="na-sep" />
           <span className="na-tot">{String(products.length).padStart(2, "0")}</span>
         </div>
-
         <div className="na-dots">
           {products.map((_, i) => (
             <button
@@ -173,7 +230,6 @@ export function NewArrivalsCarousel({ products }: Props) {
             />
           ))}
         </div>
-
         <div className="na-arrows">
           <button
             className="na-arrow"
@@ -211,7 +267,11 @@ export function NewArrivalsCarousel({ products }: Props) {
         .na-bg {
           position: absolute;
           left: 0; right: 0; top: 0; bottom: 60px;
-          background: radial-gradient(ellipse 90% 70% at 50% 40%, rgba(244,244,245,0.9) 0%, rgba(255,255,255,0) 100%);
+          background: radial-gradient(
+            ellipse 90% 70% at 50% 40%,
+            rgba(244,244,245,0.9) 0%,
+            rgba(255,255,255,0) 100%
+          );
           pointer-events: none;
           z-index: 0;
         }
@@ -219,55 +279,44 @@ export function NewArrivalsCarousel({ products }: Props) {
           position: relative;
           z-index: 1;
           display: flex;
-          flex-direction: row;
           align-items: center;
           overflow-x: auto;
           overflow-y: visible;
           gap: 14px;
           padding-top: 20px;
           padding-bottom: 28px;
-          scroll-snap-type: x mandatory;
+          /* No scroll-snap — scrollToIndex handles all snapping */
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
           -ms-overflow-style: none;
-          touch-action: pan-x;
+          /* touch-action managed by touchmove preventDefault */
           box-sizing: border-box;
-          /* Promote scroll container to its own layer */
           transform: translateZ(0);
           -webkit-transform: translateZ(0);
         }
         .na-track::-webkit-scrollbar { display: none; }
+
         .na-card {
           flex-shrink: 0;
           width: 50vw;
           max-width: 230px;
-          scroll-snap-align: center;
-          transform-origin: center center;
-          /* 
-            Remove will-change from here — it was creating a new stacking
-            context on every card and fighting the scroll container's layer.
-            GPU promotion happens naturally via the transform in JS.
-          */
           cursor: pointer;
           position: relative;
           z-index: 1;
-          /* CSS transition only on transform/opacity — no JS transition string needed */
-          transition:
-            transform 0.46s cubic-bezier(.25,.46,.45,.94),
-            opacity   0.46s ease,
-            filter    0.36s ease;
         }
+
         .na-card-inner {
           border-radius: 20px;
           overflow: hidden;
           background: #ffffff;
           border: 1px solid rgba(0,0,0,0.07);
           transition:
-            box-shadow 0.46s ease,
-            transform  0.46s cubic-bezier(.25,.46,.45,.94);
-          /* Own compositing layer for shadow animation */
+            box-shadow 0.4s ease,
+            transform  0.4s cubic-bezier(.25,.46,.45,.94);
           transform: translateZ(0);
+          -webkit-transform: translateZ(0);
         }
+
         .na-controls {
           position: relative;
           z-index: 1;
@@ -277,93 +326,45 @@ export function NewArrivalsCarousel({ products }: Props) {
           padding: 0 18px;
           gap: 10px;
         }
-        .na-counter {
-          display: flex;
-          align-items: center;
-          gap: 7px;
-          min-width: 56px;
-        }
+        .na-counter { display: flex; align-items: center; gap: 7px; min-width: 56px; }
         .na-cur {
-          font-size: 20px;
-          font-weight: 900;
-          color: #09090b;
-          letter-spacing: -0.05em;
-          line-height: 1;
+          font-size: 20px; font-weight: 900; color: #09090b;
+          letter-spacing: -0.05em; line-height: 1;
         }
-        .na-sep {
-          width: 1px;
-          height: 16px;
-          background: #e4e4e7;
-          flex-shrink: 0;
-        }
-        .na-tot {
-          font-size: 13px;
-          font-weight: 500;
-          color: #a1a1aa;
-          line-height: 1;
-        }
+        .na-sep { width: 1px; height: 16px; background: #e4e4e7; flex-shrink: 0; }
+        .na-tot { font-size: 13px; font-weight: 500; color: #a1a1aa; line-height: 1; }
         .na-dots {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 5px;
-          flex: 1;
+          display: flex; align-items: center;
+          justify-content: center; gap: 5px; flex: 1;
         }
         .na-dot {
-          height: 5px;
-          width: 5px;
-          border-radius: 9999px;
-          border: none;
-          padding: 0;
-          cursor: pointer;
-          background: #e4e4e7;
-          transition: width 0.34s cubic-bezier(.25,.46,.45,.94), background-color 0.34s ease;
+          height: 5px; width: 5px; border-radius: 9999px;
+          border: none; padding: 0; cursor: pointer; background: #e4e4e7;
+          transition:
+            width 0.3s cubic-bezier(.25,.46,.45,.94),
+            background-color 0.3s ease;
         }
-        .na-dot[data-active="true"] {
-          width: 24px;
-          background: #dc2626;
-        }
+        .na-dot[data-active="true"] { width: 24px; background: #dc2626; }
         .na-arrows {
-          display: flex;
-          align-items: center;
-          gap: 7px;
-          min-width: 56px;
-          justify-content: flex-end;
+          display: flex; align-items: center;
+          gap: 7px; min-width: 56px; justify-content: flex-end;
         }
         .na-arrow {
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          border: 1px solid #e4e4e7;
-          background: #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: #52525b;
-          transition: all 0.2s ease;
-          padding: 0;
+          width: 32px; height: 32px; border-radius: 50%;
+          border: 1px solid #e4e4e7; background: #ffffff;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; color: #52525b;
+          transition: all 0.18s ease; padding: 0;
           box-shadow: 0 1px 4px rgba(0,0,0,0.07);
         }
-        .na-arrow:disabled {
-          opacity: 0.25;
-          cursor: not-allowed;
-          box-shadow: none;
-        }
-        .na-arrow:not(:disabled):active {
-          transform: scale(0.92);
-          background: #f4f4f5;
-        }
+        .na-arrow:disabled { opacity: 0.25; cursor: not-allowed; box-shadow: none; }
+        .na-arrow:not(:disabled):active { transform: scale(0.92); background: #f4f4f5; }
         .na-arrow-next:not(:disabled) {
-          background: #dc2626;
-          border-color: #dc2626;
-          color: #ffffff;
-          box-shadow: 0 4px 12px rgba(220,38,38,0.30);
+          background: #dc2626; border-color: #dc2626; color: #ffffff;
+          box-shadow: 0 4px 12px rgba(220,38,38,0.28);
         }
         .na-arrow-next:not(:disabled):active {
-          transform: scale(0.92);
-          background: #b91c1c;
-          box-shadow: 0 2px 6px rgba(220,38,38,0.25);
+          transform: scale(0.92); background: #b91c1c;
         }
       `}</style>
     </div>

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { Banner } from "@prisma/client";
+import { getBannerLinkTag, normalizeBannerLink } from "@/lib/banner-link";
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react";
@@ -72,10 +73,17 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
           opts={{ loop: true }}
         >
           <CarouselContent className="m-0 w-full">
-            {banners.map((slide) => (
+            {banners.map((slide) => {
+              const href = normalizeBannerLink(slide.link);
+              const linkTag = getBannerLinkTag(slide.link);
+
+              return (
               <CarouselItem key={slide.id} className="pl-0 basis-full w-full">
-                <Link href={(slide as any).link || "/"} className="block w-full">
+                <Link href={href} className="block w-full">
                   <div className="hero-banner-media relative w-full bg-zinc-900">
+                    <span className="absolute left-3 top-3 z-20 inline-flex h-7 items-center rounded-full border border-white/30 bg-black/55 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white backdrop-blur-sm pointer-events-none">
+                      {linkTag}
+                    </span>
                     <Image
                       src={slide.image}
                       alt={slide.title}
@@ -88,7 +96,8 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
                   </div>
                 </Link>
               </CarouselItem>
-            ))}
+            );
+            })}
           </CarouselContent>
         </Carousel>
       </div>
