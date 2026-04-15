@@ -140,7 +140,7 @@ export default function CartPage() {
         </div>
 
         {/* Empty state content */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-24">
+        <div className="flex-1 flex flex-col items-center justify-start sm:justify-center px-6 pt-12 pb-14 sm:py-24">
           <div className="w-24 h-24 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-center mb-8">
             <ShoppingBag className="w-10 h-10 text-zinc-300" strokeWidth={1.5} />
           </div>

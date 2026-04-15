@@ -9,6 +9,7 @@ interface CategoryGridProps {
 }
 
 export function CategoryGrid({ categories }: CategoryGridProps) {
+  const AUTO_SCROLL_SPEED = 0.55;
   // ⚠️ ALL hooks must be called before any early return (Rules of Hooks)
   const scrollRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number | null>(null);
@@ -34,7 +35,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
 
     const tick = () => {
       if (!isPausedRef.current && el) {
-        el.scrollLeft += 1;
+        el.scrollLeft += AUTO_SCROLL_SPEED;
         // Seamless loop: when we've scrolled past the first third, jump back
         const oneThird = el.scrollWidth / 3;
         if (el.scrollLeft >= oneThird * 2) {
@@ -150,7 +151,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
           >
             {/* Icon */}
             <div
-              className="relative rounded-xl overflow-hidden border border-zinc-800 group-hover:border-red-500 group-hover:-translate-y-0.5 transition-all duration-200 mx-auto"
+              className="relative rounded-xl overflow-hidden border border-zinc-800 group-hover:border-red-500 group-hover:-translate-y-0.5 transition-all duration-300 mx-auto"
               style={{
                 width: "clamp(48px, 5vw, 72px)",
                 height: "clamp(48px, 5vw, 72px)",
@@ -179,19 +180,19 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                   className="w-full h-full flex items-center justify-center"
                   style={{ backgroundColor: "#27272a" }}
                 >
-                  <span className="text-base font-black text-zinc-500 group-hover:text-red-500 transition-colors">
+                  <span className="text-base font-black text-zinc-500 group-hover:text-red-500 transition-colors duration-300">
                     {category.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
               <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 style={{ backgroundColor: "rgba(220,38,38,0.08)" }}
               />
             </div>
 
             {/* Name */}
-            <p className="text-xs font-semibold text-zinc-400 group-hover:text-red-400 transition-colors duration-200 text-center leading-tight w-full line-clamp-1 px-1 select-none">
+            <p className="text-xs font-semibold text-zinc-400 group-hover:text-red-400 transition-colors duration-300 text-center leading-tight w-full line-clamp-1 px-1 select-none">
               {category.name}
             </p>
           </Link>

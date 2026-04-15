@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, DM_Sans } from "next/font/google";
-import { Navbar } from "@/components/layout/Navbar";
+import { ConditionalNavbar } from "@/components/layout/ConditionalNavbar";
 import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
@@ -36,7 +36,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-white text-zinc-900">
         <CartProvider>
           <WishlistProvider>
-            <Navbar />
+            <ConditionalNavbar />
             <main>
 
               {children}
