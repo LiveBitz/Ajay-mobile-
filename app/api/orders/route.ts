@@ -281,20 +281,22 @@ export async function POST(request: NextRequest) {
                 // Match if size matches AND color matches (if color exists in orderItem)
                 if (size === orderItem.size && (!orderItem.color || color === orderItem.color)) {
                   const currentQty = parseInt(quantity) || 0;
-                  const newQty = Math.max(0, currentQty - orderItem.quantity);
-                  return newQty > 0 ? `${key}:${newQty}` : null;
+                  if (currentQty < orderItem.quantity) throw new Error(`Insufficient stock for ${product.name} (${key})`);
+                  const newQty = currentQty - orderItem.quantity;
+                  return `${key}:${newQty}`;
                 }
               } else {
                 // For old "S:10" format - backwards compatibility
                 if (key === orderItem.size && !key.includes("-")) {
                   const currentQty = parseInt(quantity) || 0;
-                  const newQty = Math.max(0, currentQty - orderItem.quantity);
+                  if (currentQty < orderItem.quantity) throw new Error(`Insufficient stock for ${product.name} (${key})`);
+                  const newQty = currentQty - orderItem.quantity;
                   return `${key}:${newQty}`;
                 }
               }
             }
             return sizeStr;
-          }).filter(s => s !== null);
+          });
 
           // Update product in database
           await tx.product.update({
@@ -303,7 +305,11 @@ export async function POST(request: NextRequest) {
           });
         } else {
           // Legacy: deduct from total stock field
-          const newStock = Math.max(0, (product.stock || 0) - orderItem.quantity);
+          const currentStock = product.stock || 0;
+          if (currentStock < orderItem.quantity) {
+            throw new Error(`Insufficient stock for ${product.name}`);
+          }
+          const newStock = currentStock - orderItem.quantity;
           await tx.product.update({
             where: { id: product.id },
             data: { stock: newStock },

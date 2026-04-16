@@ -13,7 +13,6 @@ import {
   Tag,
   DollarSign,
   Eye,
-  EyeOff,
   CheckCircle2,
   Upload,
   AlertCircle,
@@ -36,6 +35,8 @@ import { createProduct, updateProduct } from "@/app/admin/actions/product";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 interface Category {
   id: string;
   name: string;
@@ -49,6 +50,198 @@ interface ProductFormProps {
   existingSubCategories?: Record<string, string[]>;
 }
 
+interface SpecRow {
+  key: string;
+  value: string;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const PRESET_COLORS: { name: string; hex: string }[] = [
+  { name: "Midnight Black", hex: "#121212" },
+  { name: "Starlight White", hex: "#F5F5F0" },
+  { name: "Titanium Grey", hex: "#8E8E93" },
+  { name: "Arctic Silver", hex: "#C0C0C0" },
+  { name: "Pacific Blue", hex: "#0070BB" },
+  { name: "Deep Purple", hex: "#4E3C58" },
+  { name: "Rose Gold", hex: "#B76E79" },
+  { name: "Graphite", hex: "#41424C" },
+  { name: "Emerald Green", hex: "#046307" },
+  { name: "Sunset Orange", hex: "#FD5E28" },
+  { name: "Natural Titanium", hex: "#BEBEBE" },
+  { name: "Copper", hex: "#B87333" },
+];
+
+// Variant presets per product type
+const VARIANT_PRESETS: Record<string, string[]> = {
+  smartphone: ["64GB", "128GB", "256GB", "512GB", "1TB"],
+  laptop: ["8GB/256GB", "8GB/512GB", "16GB/512GB", "16GB/1TB", "32GB/1TB"],
+  tablet: ["64GB", "128GB", "256GB", "512GB"],
+  smartwatch: ["38mm", "40mm", "41mm", "44mm", "45mm", "49mm"],
+  tv: ['32"', '43"', '50"', '55"', '65"', '75"', '85"'],
+  ac: ["0.8 Ton", "1 Ton", "1.5 Ton", "2 Ton", "3 Ton"],
+  refrigerator: ["180L", "236L", "260L", "320L", "400L", "500L"],
+  washing_machine: ["6 kg", "7 kg", "8 kg", "9 kg", "10 kg", "12 kg"],
+  speaker: ["Mini", "Compact", "Standard", "Large"],
+  earphones: ["Standard"],
+  headphones: ["Standard"],
+  camera: ["Body Only", "Kit (18-55mm)", "Kit (18-135mm)"],
+  power_bank: ["5000mAh", "10000mAh", "20000mAh", "30000mAh"],
+  default: ["Standard"],
+};
+
+// Spec templates per product type
+const SPEC_TEMPLATES: Record<string, string[]> = {
+  smartphone: [
+    "Brand", "Model", "Processor", "RAM", "Storage",
+    "Display", "Battery", "Rear Camera", "Front Camera",
+    "OS", "Connectivity", "SIM Type",
+  ],
+  laptop: [
+    "Brand", "Model", "Processor", "RAM", "Storage",
+    "Display", "Graphics Card", "Battery Life", "OS", "Ports", "Weight",
+  ],
+  tablet: [
+    "Brand", "Model", "Processor", "RAM", "Storage",
+    "Display", "Battery", "Camera", "OS", "Connectivity",
+  ],
+  smartwatch: [
+    "Brand", "Model", "Display Type", "Battery Life",
+    "Health Sensors", "Connectivity", "Water Resistance",
+    "Compatible OS", "Strap Material",
+  ],
+  tv: [
+    "Brand", "Model", "Screen Size", "Resolution", "Display Technology",
+    "Refresh Rate", "Smart TV OS", "HDMI Ports", "USB Ports", "Connectivity",
+  ],
+  ac: [
+    "Brand", "Model", "Type", "Capacity", "Star Rating",
+    "Cooling Technology", "Compressor Type", "Refrigerant", "Noise Level", "Warranty",
+  ],
+  refrigerator: [
+    "Brand", "Model", "Type", "Capacity", "Star Rating",
+    "Cooling Technology", "Inverter", "Defrost Type", "Warranty",
+  ],
+  washing_machine: [
+    "Brand", "Model", "Type", "Capacity", "Star Rating",
+    "Wash Programs", "Spin Speed", "Inverter Motor", "Warranty",
+  ],
+  headphones: [
+    "Brand", "Model", "Type", "Driver Size", "Frequency Response",
+    "Impedance", "Connectivity", "Battery Life", "Noise Cancellation", "Microphone",
+  ],
+  earphones: [
+    "Brand", "Model", "Type", "Driver Size", "Frequency Response",
+    "Connectivity", "Battery Life", "Water Resistance", "Microphone",
+  ],
+  speaker: [
+    "Brand", "Model", "Output Power", "Driver Configuration",
+    "Connectivity", "Battery Life", "Water Resistance", "Frequency Response",
+  ],
+  camera: [
+    "Brand", "Model", "Sensor Type", "Megapixels", "Lens Mount",
+    "Video Resolution", "ISO Range", "Autofocus", "Battery Life", "Weight",
+  ],
+  power_bank: [
+    "Brand", "Model", "Capacity", "Input", "Output",
+    "Fast Charging", "Number of Ports", "Weight",
+  ],
+  default: [
+    "Brand", "Model", "Key Feature 1", "Key Feature 2",
+    "Key Feature 3", "Connectivity", "Power", "Warranty",
+  ],
+};
+
+// ─── Detect product type from category + sub-category ─────────────────────────
+
+const detectProductType = (categoryName: string, subCategory: string): string => {
+  const text = `${categoryName} ${subCategory}`.toLowerCase();
+  if (text.includes("smartphone") || text.includes("mobile") || text.includes("phone")) return "smartphone";
+  if (text.includes("laptop") || text.includes("notebook")) return "laptop";
+  if (text.includes("tablet") || text.includes("ipad")) return "tablet";
+  if (text.includes("watch") || text.includes("wearable")) return "smartwatch";
+  if (text.includes(" tv") || text.includes("television") || text.includes("monitor")) return "tv";
+  if (text.includes(" ac") || text.includes("air condition")) return "ac";
+  if (text.includes("refrigerator") || text.includes("fridge")) return "refrigerator";
+  if (text.includes("washing") || text.includes("washer")) return "washing_machine";
+  if (text.includes("headphone") || text.includes("over-ear")) return "headphones";
+  if (text.includes("earphone") || text.includes("earbud") || text.includes("tws")) return "earphones";
+  if (text.includes("speaker") || text.includes("soundbar")) return "speaker";
+  if (text.includes("camera") || text.includes("dslr") || text.includes("mirrorless")) return "camera";
+  if (text.includes("power bank") || text.includes("powerbank")) return "power_bank";
+  return "default";
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const slugify = (str: string) =>
+  str.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
+
+const parseSizeColorStock = (sizes: string[] = []): Record<string, number> => {
+  const stock: Record<string, number> = {};
+  sizes.forEach((entry) => {
+    // format: "128GB-Midnight Black:25"
+    const lastColon = entry.lastIndexOf(":");
+    if (lastColon === -1) return;
+    const key = entry.slice(0, lastColon);
+    const qty = parseInt(entry.slice(lastColon + 1)) || 0;
+    if (key.includes("-")) stock[key] = qty;
+  });
+  return stock;
+};
+
+const extractBaseSizes = (sizes: string[] = []): string[] => {
+  const s = new Set<string>();
+  sizes.forEach((entry) => {
+    const lastColon = entry.lastIndexOf(":");
+    const key = lastColon !== -1 ? entry.slice(0, lastColon) : entry;
+    if (key.includes("-")) {
+      // "128GB-Midnight Black" → "128GB"
+      s.add(key.slice(0, key.indexOf("-")));
+    } else {
+      s.add(key);
+    }
+  });
+  return Array.from(s);
+};
+
+const extractColors = (sizes: string[] = []): string[] => {
+  const c = new Set<string>();
+  sizes.forEach((entry) => {
+    const lastColon = entry.lastIndexOf(":");
+    if (lastColon === -1) return;
+    const key = entry.slice(0, lastColon);
+    const dashIdx = key.indexOf("-");
+    if (dashIdx !== -1) c.add(key.slice(dashIdx + 1));
+  });
+  return Array.from(c);
+};
+
+// Parse "Brand: Samsung" style features into SpecRow[]
+const parseSpecsFromFeatures = (features: string[]): SpecRow[] =>
+  features
+    .filter((f) => f.includes(":"))
+    .map((f) => {
+      const colonIdx = f.indexOf(":");
+      return {
+        key: f.slice(0, colonIdx).trim(),
+        value: f.slice(colonIdx + 1).trim(),
+      };
+    });
+
+// Get visual hex for a color name
+const getColorHex = (name: string): string => {
+  const preset = PRESET_COLORS.find((p) => p.name === name);
+  return preset?.hex ?? name.toLowerCase();
+};
+
+const isLightColor = (name: string) =>
+  ["white", "silver", "starlight", "arctic", "cream", "beige"].some((w) =>
+    name.toLowerCase().includes(w)
+  );
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function ProductForm({
   categories,
   initialData,
@@ -57,106 +250,14 @@ export function ProductForm({
 }: ProductFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const isEdit = !!initialData;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState<Record<string, boolean>>({});
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [showPreview, setShowPreview] = useState(false);
 
-  const isEdit = !!initialData;
-
-  // Phone spec keys displayed in the admin form
-  const PHONE_SPEC_KEYS = [
-    "Processor",
-    "RAM",
-    "Display",
-    "Battery",
-    "Camera",
-    "OS",
-    "Connectivity",
-  ] as const;
-
-  type PhoneSpecKey = typeof PHONE_SPEC_KEYS[number];
-
-  const parseSpecsFromFeatures = (features: string[]): Record<string, string> => {
-    const specs: Record<string, string> = {};
-    features.forEach((f) => {
-      const colonIndex = f.indexOf(":");
-      if (colonIndex > -1) {
-        const key = f.slice(0, colonIndex).trim();
-        const val = f.slice(colonIndex + 1).trim();
-        if ((PHONE_SPEC_KEYS as readonly string[]).includes(key)) {
-          specs[key] = val;
-        }
-      }
-    });
-    return specs;
-  };
-
-  const [phoneSpecs, setPhoneSpecs] = useState<Record<string, string>>(
-    () => parseSpecsFromFeatures(
-      Array.isArray(initialData?.features) ? initialData.features : []
-    )
-  );
-
-  const handleSpecChange = (key: PhoneSpecKey, value: string) => {
-    const updatedSpecs = { ...phoneSpecs, [key]: value };
-    setPhoneSpecs(updatedSpecs);
-    const nonSpecFeatures = (formData.features as string[]).filter((f: string) => {
-      const colonIdx = f.indexOf(":");
-      if (colonIdx === -1) return true;
-      const fKey = f.slice(0, colonIdx).trim();
-      return !(PHONE_SPEC_KEYS as readonly string[]).includes(fKey);
-    });
-    const specFeatures = Object.entries(updatedSpecs)
-      .filter(([, v]) => v.trim() !== "")
-      .map(([k, v]) => `${k}: ${v}`);
-    setFormData((p: typeof formData) => ({ ...p, features: [...nonSpecFeatures, ...specFeatures] }));
-  };
-
-  // Helper functions to parse existing data
-  const extractBaseSizes = (sizes: string[] = []) => {
-    const baseSizes = new Set<string>();
-    sizes.forEach((entry: string) => {
-      if (entry.includes("-")) {
-        // New format: "S-Purple:5" → extract "S"
-        const baseSize = entry.split("-")[0];
-        baseSizes.add(baseSize);
-      } else if (entry.includes(":")) {
-        // Old format: "S:10" → extract "S"
-        const baseSize = entry.split(":")[0];
-        baseSizes.add(baseSize);
-      } else {
-        // Plain size: "S"
-        baseSizes.add(entry);
-      }
-    });
-    return Array.from(baseSizes);
-  };
-
-  const extractColors = (sizes: string[] = []) => {
-    const colors = new Set<string>();
-    sizes.forEach((entry: string) => {
-      if (entry.includes("-") && entry.includes(":")) {
-        // New format: "S-Purple:5" → extract "Purple"
-        const color = entry.split("-")[1].split(":")[0];
-        colors.add(color);
-      }
-    });
-    return Array.from(colors);
-  };
-
-  const parseSizeColorStock = (sizes: string[] = []) => {
-    const stock: Record<string, number> = {};
-    sizes.forEach((entry: string) => {
-      if (entry.includes("-") && entry.includes(":")) {
-        // New format: "S-Purple:5"
-        const [key, quantity] = entry.split(":");
-        stock[key] = parseInt(quantity) || 0;
-      }
-    });
-    return stock;
-  };
-
+  // ── Form state ──
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     slug: initialData?.slug || "",
@@ -170,219 +271,252 @@ export function ProductForm({
     isNew: initialData?.isNew ?? true,
     isBestSeller: initialData?.isBestSeller ?? false,
     sizes: extractBaseSizes(initialData?.sizes || []),
-    colors: extractColors(initialData?.sizes || []).length > 0 
-      ? extractColors(initialData?.sizes || [])
-      : (Array.isArray(initialData?.colors) ? initialData.colors : []),
+    colors:
+      extractColors(initialData?.sizes || []).length > 0
+        ? extractColors(initialData?.sizes || [])
+        : Array.isArray(initialData?.colors)
+        ? initialData.colors
+        : [],
     description: initialData?.description || "",
     features: Array.isArray(initialData?.features) ? initialData.features : [],
   });
 
-  // State for tracking size-color stock combinations
+  // ── Specs: free-form key-value rows ──
+  const [specs, setSpecs] = useState<SpecRow[]>(() =>
+    parseSpecsFromFeatures(
+      Array.isArray(initialData?.features) ? initialData.features : []
+    )
+  );
+
+  // ── Inventory matrix ──
   const [sizeColorStock, setSizeColorStock] = useState<Record<string, number>>(
     parseSizeColorStock(initialData?.sizes || [])
   );
 
+  // ── Custom color/variant inputs ──
+  const [customColorInput, setCustomColorInput] = useState("");
+  const [customVariantInput, setCustomVariantInput] = useState("");
+
+  // ── Derived ──
   const selectedCategory = categories.find((c) => c.id === formData.categoryId);
-  const isSmartAccessory =
-    selectedCategory?.name?.toLowerCase() === "smart accessories";
-  const isAccessory =
-    selectedCategory?.name?.toLowerCase() === "accessories";
-  const isSmartphone =
-    selectedCategory?.name?.toLowerCase() === "smartphones";
+  const productType = detectProductType(
+    selectedCategory?.name || "",
+    formData.subCategory
+  );
+  const specTemplate = SPEC_TEMPLATES[productType] ?? SPEC_TEMPLATES.default;
+  const variantOptions = VARIANT_PRESETS[productType] ?? VARIANT_PRESETS.default;
 
+  // ── Sync specs → features ──
   useEffect(() => {
-    if (!isEdit && !initialData && formData.categoryId) {
-      if (isSmartAccessory) {
-        setFormData((p) => ({ ...p, sizes: ["256GB", "512GB", "1TB"] }));
-      } else if (isSmartphone) {
-        setFormData((p) => ({ ...p, sizes: ["64GB", "128GB", "256GB", "512GB"] }));
-      }
-    }
-  }, [formData.categoryId, isSmartAccessory, isSmartphone, isEdit]);
+    const specFeatures = specs
+      .filter((s) => s.key.trim() && s.value.trim())
+      .map((s) => `${s.key}: ${s.value}`);
+    setFormData((p) => ({ ...p, features: specFeatures }));
+  }, [specs]);
 
-  const handleSlugify = (name: string) => {
-    const slug = name
-      .toLowerCase()
-      .replace(/ /g, "-")
-      .replace(/[^\w-]+/g, "");
-    setFormData((prev) => ({ ...prev, name, slug }));
+  // ── When product type changes (first time, not on edit), apply template ──
+  const [lastAppliedType, setLastAppliedType] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isEdit && productType !== "default" && productType !== lastAppliedType && specs.length === 0) {
+      setSpecs(specTemplate.map((k) => ({ key: k, value: "" })));
+      setLastAppliedType(productType);
+    }
+  }, [productType]); // eslint-disable-line
+
+  // ── Auto-calc discount ──
+  const recalcDiscount = (price: string, originalPrice: string) => {
+    const p = parseFloat(price);
+    const op = parseFloat(originalPrice);
+    if (p > 0 && op > 0 && p < op) {
+      return Math.round(((op - p) / op) * 100).toString();
+    }
+    return "0";
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, slot: 'main' | number) => {
+  // ── Slug ──
+  const handleSlugify = (name: string) => {
+    setFormData((p) => ({ ...p, name, slug: slugify(name) }));
+  };
+
+  // ── Upload ──
+  const handleImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    slot: "main" | number
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const id = slot === 'main' ? 'main' : `gallery-${slot}`;
+    const id = slot === "main" ? "main" : `gallery-${slot}`;
 
     try {
-      setIsUploading(prev => ({ ...prev, [id]: true }));
-      setUploadProgress(prev => ({ ...prev, [id]: 10 }));
+      setIsUploading((p) => ({ ...p, [id]: true }));
+      setUploadProgress((p) => ({ ...p, [id]: 10 }));
 
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `products/${fileName}`;
+      const ext = file.name.split(".").pop();
+      const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-      setUploadProgress(prev => ({ ...prev, [id]: 30 }));
+      setUploadProgress((p) => ({ ...p, [id]: 30 }));
 
-      const { error: uploadError } = await supabase.storage
+      const { error } = await supabase.storage
         .from("product")
-        .upload(filePath, file, { cacheControl: "3600", upsert: false });
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+      if (error) throw error;
 
-      if (uploadError) throw uploadError;
+      setUploadProgress((p) => ({ ...p, [id]: 80 }));
 
-      setUploadProgress(prev => ({ ...prev, [id]: 80 }));
+      const { data: { publicUrl } } = supabase.storage
+        .from("product")
+        .getPublicUrl(path);
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("product").getPublicUrl(filePath);
-
-      if (slot === 'main') {
-        setFormData((prev) => ({ ...prev, image: publicUrl }));
+      if (slot === "main") {
+        setFormData((p) => ({ ...p, image: publicUrl }));
       } else {
-        setFormData((prev) => {
-          const newImages = [...prev.images];
-          newImages[slot] = publicUrl;
-          return { ...prev, images: newImages };
+        setFormData((p) => {
+          const imgs = [...p.images];
+          imgs[slot as number] = publicUrl;
+          return { ...p, images: imgs };
         });
       }
-      
-      setUploadProgress(prev => ({ ...prev, [id]: 100 }));
+
+      setUploadProgress((p) => ({ ...p, [id]: 100 }));
       toast({
-        title: "Media asset synchronized",
-        description: `Image successfully uploaded to ${slot === 'main' ? 'Primary' : 'Gallery'} slot.`,
+        title: "Image uploaded",
+        description: `Successfully uploaded to ${slot === "main" ? "primary" : "gallery"} slot.`,
       });
-    } catch (error: any) {
-      console.error("Error uploading image:", error);
+    } catch (err: any) {
       toast({
         title: "Upload failed",
-        description: error.message || "Verify storage bucket permissions.",
+        description: err.message || "Check storage bucket permissions.",
         variant: "destructive",
       });
     } finally {
       setTimeout(() => {
-        setIsUploading(prev => ({ ...prev, [id]: false }));
-        setUploadProgress(prev => ({ ...prev, [id]: 0 }));
+        setIsUploading((p) => ({ ...p, [id]: false }));
+        setUploadProgress((p) => ({ ...p, [id]: 0 }));
       }, 500);
     }
   };
 
-  const handleRemoveImage = (slot: 'main' | number) => {
-    if (slot === 'main') {
-      setFormData(prev => ({ ...prev, image: "" }));
+  const handleRemoveImage = (slot: "main" | number) => {
+    if (slot === "main") {
+      setFormData((p) => ({ ...p, image: "" }));
     } else {
-      setFormData(prev => {
-        const newImages = [...prev.images];
-        newImages.splice(slot, 1);
-        return { ...prev, images: newImages };
+      setFormData((p) => {
+        const imgs = [...p.images];
+        imgs.splice(slot as number, 1);
+        return { ...p, images: imgs };
       });
     }
   };
 
-  // Validation function
-  const validateForm = (): { isValid: boolean; errors: string[] } => {
-    const errors: string[] = [];
-
-    // Product name validation
-    if (!formData.name || formData.name.trim().length === 0) {
-      errors.push("Product name is required");
-    } else if (formData.name.length > 255) {
-      errors.push("Product name must be less than 255 characters");
-    }
-
-    // Slug validation
-    if (!formData.slug || formData.slug.trim().length === 0) {
-      errors.push("Product slug is required");
-    }
-
-    // Category validation
-    if (!formData.categoryId) {
-      errors.push("Please select a category");
-    }
-
-    // Price validation
-    if (!formData.price || isNaN(parseFloat(formData.price))) {
-      errors.push("Valid price is required");
-    } else if (parseFloat(formData.price) < 0) {
-      errors.push("Price cannot be negative");
-    }
-
-    // Original price validation
-    if (!formData.originalPrice || isNaN(parseFloat(formData.originalPrice))) {
-      errors.push("Valid original price is required");
-    } else if (parseFloat(formData.originalPrice) < 0) {
-      errors.push("Original price cannot be negative");
-    }
-
-    // Price must be less than or equal to original price
-    if (
-      parseFloat(formData.price) > parseFloat(formData.originalPrice)
-    ) {
-      errors.push("Price must be less than or equal to original price");
-    }
-
-    // Image validation
-    if (!formData.image) {
-      errors.push("Main product image is required");
-    }
-
-    // Sizes validation
-    if (formData.sizes.length === 0) {
-      errors.push("At least one size must be selected");
-    }
-
-    // Colors validation
-    if (formData.colors.length === 0) {
-      errors.push("At least one color must be selected");
-    }
-
-    // Inventory validation - check if matrix has at least some values
-    const hasInventory = Object.values(sizeColorStock).some((qty) => qty > 0);
-    if (!hasInventory) {
-      errors.push("Please add inventory for at least one size-color combination");
-    }
-
-    // Check for negative inventory
-    Object.entries(sizeColorStock).forEach(([key, qty]) => {
-      if (qty < 0) {
-        errors.push(`Inventory for ${key} cannot be negative`);
-      }
-    });
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+  // ── Spec helpers ──
+  const applySpecTemplate = () => {
+    setSpecs(specTemplate.map((k) => ({ key: k, value: "" })));
   };
 
+  const addSpecRow = () => setSpecs((p) => [...p, { key: "", value: "" }]);
+
+  const updateSpec = (idx: number, field: "key" | "value", val: string) =>
+    setSpecs((p) => p.map((s, i) => (i === idx ? { ...s, [field]: val } : s)));
+
+  const removeSpec = (idx: number) =>
+    setSpecs((p) => p.filter((_, i) => i !== idx));
+
+  // ── Size helpers ──
+  const toggleSize = (size: string) => {
+    const isSelected = formData.sizes.includes(size);
+    if (isSelected) {
+      setFormData((p) => ({ ...p, sizes: p.sizes.filter((s: string) => s !== size) }));
+      setSizeColorStock((prev) => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach((k) => {
+          if (k.startsWith(`${size}-`)) delete updated[k];
+        });
+        return updated;
+      });
+    } else {
+      setFormData((p) => ({ ...p, sizes: [...p.sizes, size] }));
+    }
+  };
+
+  const addCustomVariant = () => {
+    const val = customVariantInput.trim();
+    if (val && !formData.sizes.includes(val)) {
+      setFormData((p) => ({ ...p, sizes: [...p.sizes, val] }));
+      setCustomVariantInput("");
+    }
+  };
+
+  // ── Color helpers ──
+  const toggleColor = (colorName: string) => {
+    const isSelected = formData.colors.includes(colorName);
+    if (isSelected) {
+      setFormData((p) => ({
+        ...p,
+        colors: p.colors.filter((c: string) => c !== colorName),
+      }));
+      setSizeColorStock((prev) => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach((k) => {
+          if (k.endsWith(`-${colorName}`)) delete updated[k];
+        });
+        return updated;
+      });
+    } else {
+      setFormData((p) => ({ ...p, colors: [...p.colors, colorName] }));
+    }
+  };
+
+  const addCustomColor = () => {
+    const val = customColorInput.trim();
+    if (val && !formData.colors.includes(val)) {
+      setFormData((p) => ({ ...p, colors: [...p.colors, val] }));
+      setCustomColorInput("");
+    }
+  };
+
+  // ── Validation ──
+  const validateForm = (): string[] => {
+    const errors: string[] = [];
+    if (!formData.name.trim()) errors.push("Product name is required");
+    if (!formData.slug.trim()) errors.push("Slug is required");
+    if (!formData.categoryId) errors.push("Please select a category");
+    if (!formData.price || isNaN(+formData.price) || +formData.price < 0)
+      errors.push("Valid selling price is required");
+    if (!formData.originalPrice || isNaN(+formData.originalPrice) || +formData.originalPrice < 0)
+      errors.push("Valid original / MRP price is required");
+    if (+formData.price > +formData.originalPrice)
+      errors.push("Selling price must be ≤ original price");
+    if (!formData.image) errors.push("Main product image is required");
+    if (formData.sizes.length === 0) errors.push("Select at least one variant");
+    if (formData.colors.length === 0) errors.push("Select at least one color");
+    const hasStock = Object.values(sizeColorStock).some((q) => q > 0);
+    if (!hasStock) errors.push("Add stock for at least one variant × color combination");
+    return errors;
+  };
+
+  // ── Submit ──
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const errors = validateForm();
+    if (errors.length > 0) {
+      errors.forEach((err) =>
+        toast({ title: "Validation Error", description: err, variant: "destructive", duration: 3000 })
+      );
+      return;
+    }
+
     setIsSubmitting(true);
-
     try {
-      // Validate before submitting
-      const validation = validateForm();
-      if (!validation.isValid) {
-        validation.errors.forEach((error) => {
-          toast({
-            title: "Validation Error",
-            description: error,
-            variant: "destructive",
-            duration: 3000,
-          });
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Convert sizeColorStock back to storage format: ["S-White:5", "S-Black:3", ...]
+      // "128GB-Midnight Black:25"
       const storageSizes = Object.entries(sizeColorStock)
-        .filter(([_, quantity]) => quantity > 0)
-        .map(([key, quantity]) => `${key}:${quantity}`);
+        .filter(([, qty]) => qty > 0)
+        .map(([key, qty]) => `${key}:${qty}`);
 
       const payload = {
         ...formData,
-        sizes: storageSizes, // Use converted sizes with color and quantity
-        images: formData.images.filter(Boolean)
+        sizes: storageSizes,
+        images: formData.images.filter(Boolean),
       };
 
       const result = isEdit
@@ -391,30 +525,22 @@ export function ProductForm({
 
       if (result.success) {
         toast({
-          title: isEdit ? "Persistence Updated" : "Collection Created",
-          description: `"${formData.name}" has been successfully synchronized.`,
+          title: isEdit ? "Product updated" : "Product created",
+          description: `"${formData.name}" has been saved successfully.`,
         });
         router.push("/admin/products");
         router.refresh();
       } else {
-        toast({
-          title: "Synchronization Error",
-          description: result.error || "Failed to commit changes.",
-          variant: "destructive",
-        });
+        toast({ title: "Save failed", description: result.error, variant: "destructive" });
       }
-    } catch (error) {
-      toast({
-        title: "Network Error",
-        description: "An unexpected error occurred during persistence.",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Error", description: "Unexpected error. Please try again.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  /* ── Shared preview card (rendered in sidebar & modal) ── */
+  // ── Preview Card (same original UI) ──
   const PreviewCard = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between px-1">
@@ -442,9 +568,9 @@ export function ProductForm({
             <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center text-zinc-300">
               <ImageIcon className="w-12 h-12 mb-3 opacity-50" />
               <p className="font-bold text-[10px] uppercase tracking-widest leading-relaxed">
-                Simulation requires
+                Upload an image to
                 <br />
-                Visual Identity URL
+                see the simulation
               </p>
             </div>
           )}
@@ -465,24 +591,45 @@ export function ProductForm({
         <div className="p-6 space-y-3">
           <div className="space-y-0.5">
             <p className="text-[10px] text-brand font-bold uppercase tracking-widest">
-              {categories.find((c) => c.id === formData.categoryId)?.name ||
-                "Unassigned"}{" "}
-              Collection
+              {selectedCategory?.name || "Unassigned"}{" "}
+              {formData.subCategory ? `· ${formData.subCategory}` : "Collection"}
             </p>
             <h2 className="text-lg font-bold text-zinc-900 truncate tracking-tight">
               {formData.name || "Signature Item Name"}
             </h2>
           </div>
 
+          {/* Color swatches */}
+          {formData.colors.length > 0 && (
+            <div className="flex items-center gap-1.5 pt-1">
+              {formData.colors.slice(0, 6).map((c: string) => (
+                <div
+                  key={c}
+                  title={c}
+                  className={cn(
+                    "w-4 h-4 rounded-full border shadow-sm",
+                    isLightColor(c) ? "border-zinc-300" : "border-transparent"
+                  )}
+                  style={{ backgroundColor: getColorHex(c) }}
+                />
+              ))}
+              {formData.colors.length > 6 && (
+                <span className="text-[9px] text-zinc-400 font-bold">
+                  +{formData.colors.length - 6}
+                </span>
+              )}
+            </div>
+          )}
+
           <div className="flex items-end justify-between pt-1">
             <div className="flex flex-col">
               <p className="text-xl font-bold text-zinc-900 font-heading">
-                ₹{formData.price || "000"}
+                ₹{formData.price ? Number(formData.price).toLocaleString("en-IN") : "—"}
               </p>
               {parseInt(formData.discount) > 0 && (
                 <div className="flex items-center gap-1.5">
                   <p className="text-[10px] text-zinc-400 line-through">
-                    ₹{formData.originalPrice || "000"}
+                    ₹{Number(formData.originalPrice).toLocaleString("en-IN")}
                   </p>
                   <p className="text-[9px] text-brand font-bold uppercase tracking-tighter">
                     Save {formData.discount}%
@@ -497,6 +644,36 @@ export function ProductForm({
         </div>
       </div>
 
+      {/* Quick stats */}
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          {
+            label: "Variants",
+            value: formData.sizes.length || "—",
+          },
+          {
+            label: "Colors",
+            value: formData.colors.length || "—",
+          },
+          {
+            label: "Total Stock",
+            value: Object.values(sizeColorStock).reduce((a, b) => a + b, 0) || "—",
+          },
+          {
+            label: "Specs",
+            value: specs.filter((s) => s.value.trim()).length || "—",
+          },
+        ].map(({ label, value }) => (
+          <div
+            key={label}
+            className="bg-zinc-50 rounded-2xl p-3 border border-zinc-100 text-center"
+          >
+            <p className="text-base font-bold text-zinc-900">{value}</p>
+            <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest">{label}</p>
+          </div>
+        ))}
+      </div>
+
       <div className="bg-zinc-900/5 p-5 rounded-[24px] border border-zinc-900/10 text-center space-y-3">
         <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest leading-relaxed">
           Ensure all commercial strategies
@@ -508,17 +685,17 @@ export function ProductForm({
     </div>
   );
 
+  // ─── Render ────────────────────────────────────────────────────────────────
+
   return (
     <>
-      {/* ── Mobile Preview Modal Overlay ── */}
+      {/* Mobile Preview Drawer */}
       {showPreview && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowPreview(false)}
           />
-          {/* Drawer */}
           <div className="absolute bottom-0 left-0 right-0 bg-zinc-50 rounded-t-[40px] p-5 pb-10 max-h-[92vh] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -548,7 +725,6 @@ export function ProductForm({
       >
         {/* ── Sticky Action Header ── */}
         <div className="flex items-center justify-between gap-3 sticky top-0 z-40 bg-zinc-50/90 backdrop-blur-md py-3 sm:py-4 -mx-3 px-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-100">
-          {/* Left: back + title */}
           <div className="flex items-center gap-3 min-w-0">
             <Link href="/admin/products" className="shrink-0">
               <Button
@@ -561,7 +737,7 @@ export function ProductForm({
             </Link>
             <div className="min-w-0">
               <h1 className="text-base sm:text-xl lg:text-2xl font-extrabold font-heading tracking-tight text-zinc-900 truncate">
-                {isEdit ? "Refine Creation" : "New Product"}
+                {isEdit ? "Edit Product" : "New Product"}
               </h1>
               <p className="text-[9px] text-brand font-bold uppercase tracking-[0.15em] hidden sm:block">
                 {isEdit
@@ -571,9 +747,7 @@ export function ProductForm({
             </div>
           </div>
 
-          {/* Right: actions */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Preview toggle – hidden on lg+ (sidebar is always visible) */}
             <Button
               type="button"
               variant="outline"
@@ -597,24 +771,18 @@ export function ProductForm({
             <Button
               type="submit"
               disabled={isSubmitting || Object.values(isUploading).some(Boolean)}
-              className="h-9 sm:h-11 px-4 sm:px-8 rounded-xl sm:rounded-2xl bg-brand hover:bg-brand/90 text-white font-bold shadow-xl shadow-brand/20 transition-all active:scale-95 flex items-center justify-center gap-2 text-xs sm:text-sm"
+              className="h-9 sm:h-11 px-4 sm:px-8 rounded-xl sm:rounded-2xl bg-brand hover:bg-brand/90 text-white font-bold shadow-xl shadow-brand/20 transition-all active:scale-95 flex items-center gap-2 text-xs sm:text-sm"
             >
-              {isSubmitting || Object.values(isUploading).some(Boolean) ? (
+              {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <Save className="w-4 h-4" />
               )}
               <span className="hidden sm:inline">
-                {isSubmitting
-                  ? "Committing..."
-                  : isUploading
-                  ? "Uploading..."
-                  : isEdit
-                  ? "Update"
-                  : "Publish"}
+                {isSubmitting ? "Saving…" : isEdit ? "Update" : "Publish"}
               </span>
               <span className="sm:hidden">
-                {isSubmitting || isUploading ? "..." : isEdit ? "Update" : "Save"}
+                {isSubmitting ? "…" : isEdit ? "Update" : "Save"}
               </span>
             </Button>
           </div>
@@ -622,10 +790,10 @@ export function ProductForm({
 
         {/* ── Main Layout ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10 items-start">
-          {/* Form Sections */}
+          {/* ── Left: Form Sections ── */}
           <div className="lg:col-span-2 space-y-6 sm:space-y-8">
 
-            {/* Gallery & Media Expansion */}
+            {/* ── 1. Media ── */}
             <section className="bg-white p-5 sm:p-8 rounded-3xl border border-zinc-100 shadow-sm space-y-8 transition-all hover:shadow-md">
               <div className="flex items-center gap-3 border-b border-zinc-50 pb-5">
                 <div className="w-9 h-9 rounded-xl bg-zinc-50 flex items-center justify-center shrink-0">
@@ -642,7 +810,7 @@ export function ProductForm({
               </div>
 
               <div className="space-y-8">
-                {/* Primary Asset */}
+                {/* Primary */}
                 <div className="space-y-4">
                   <div className="px-1">
                     <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
@@ -652,14 +820,14 @@ export function ProductForm({
                       This asset represents the product in all catalog views
                     </p>
                   </div>
-                  
+
                   <div className="flex flex-col sm:flex-row gap-6 items-start">
                     <div className="w-full sm:w-60 aspect-square rounded-[32px] bg-zinc-50 border border-zinc-100 flex items-center justify-center shrink-0 shadow-inner group overflow-hidden relative transition-all active:scale-95">
-                      {isUploading['main'] ? (
+                      {isUploading["main"] ? (
                         <div className="flex flex-col items-center gap-2">
                           <Loader2 className="w-8 h-8 text-brand animate-spin" />
                           <p className="text-[10px] font-extrabold text-brand uppercase tracking-widest">
-                            {uploadProgress['main']}%
+                            {uploadProgress["main"]}%
                           </p>
                         </div>
                       ) : formData.image ? (
@@ -671,7 +839,7 @@ export function ProductForm({
                           />
                           <button
                             type="button"
-                            onClick={() => handleRemoveImage('main')}
+                            onClick={() => handleRemoveImage("main")}
                             className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-xl flex items-center justify-center text-zinc-400 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -680,7 +848,9 @@ export function ProductForm({
                       ) : (
                         <div className="flex flex-col items-center gap-2 text-zinc-200">
                           <ImageIcon className="w-12 h-12" />
-                          <p className="text-[9px] font-bold uppercase tracking-widest">Awaiting Identity</p>
+                          <p className="text-[9px] font-bold uppercase tracking-widest">
+                            Awaiting Identity
+                          </p>
                         </div>
                       )}
                     </div>
@@ -690,8 +860,8 @@ export function ProductForm({
                         <input
                           type="file"
                           accept="image/*"
-                          onChange={(e) => handleImageUpload(e, 'main')}
-                          disabled={isUploading['main']}
+                          onChange={(e) => handleImageUpload(e, "main")}
+                          disabled={!!isUploading["main"]}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                         />
                         <div className="h-20 rounded-2xl border-2 border-dashed border-zinc-100 hover:border-brand/40 bg-zinc-50/50 hover:bg-brand/[0.02] transition-all flex items-center justify-center gap-3 group">
@@ -712,7 +882,7 @@ export function ProductForm({
                   </div>
                 </div>
 
-                {/* Supplemental Gallery (3 Slots) */}
+                {/* Gallery */}
                 <div className="space-y-4 pt-4 border-t border-zinc-50">
                   <div className="px-1">
                     <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
@@ -723,55 +893,55 @@ export function ProductForm({
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
-                    {[0, 1, 2].map((idx) => {
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {[0, 1, 2, 3].map((idx) => {
                       const id = `gallery-${idx}`;
                       const imageUrl = formData.images[idx];
                       const uploading = isUploading[id];
                       const progress = uploadProgress[id];
 
                       return (
-                        <div key={idx} className="space-y-3">
-                          <div className="aspect-[4/5] rounded-[24px] bg-zinc-50 border border-zinc-100 flex items-center justify-center shrink-0 shadow-inner group overflow-hidden relative transition-all active:scale-95">
-                            {uploading ? (
-                              <div className="flex flex-col items-center gap-2">
-                                <Loader2 className="w-6 h-6 text-brand animate-spin" />
-                                <p className="text-[9px] font-extrabold text-brand uppercase tracking-widest">
-                                  {progress}%
+                        <div key={idx} className="aspect-[4/5] rounded-[24px] bg-zinc-50 border border-zinc-100 flex items-center justify-center shrink-0 shadow-inner group overflow-hidden relative transition-all active:scale-95">
+                          {uploading ? (
+                            <div className="flex flex-col items-center gap-2">
+                              <Loader2 className="w-6 h-6 text-brand animate-spin" />
+                              <p className="text-[9px] font-extrabold text-brand uppercase tracking-widest">
+                                {progress}%
+                              </p>
+                            </div>
+                          ) : imageUrl ? (
+                            <>
+                              <img
+                                src={imageUrl}
+                                alt={`Gallery ${idx + 1}`}
+                                className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(idx)}
+                                className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm shadow-xl flex items-center justify-center text-zinc-400 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          ) : (
+                            <div className="relative w-full h-full">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(e, idx)}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                              />
+                              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-zinc-200 group-hover:text-zinc-300 transition-colors">
+                                <div className="w-10 h-10 rounded-2xl bg-white shadow-sm flex items-center justify-center text-zinc-200 group-hover:text-brand/40 transition-all">
+                                  <Plus className="w-6 h-6" />
+                                </div>
+                                <p className="text-[8px] font-extrabold uppercase tracking-[0.2em]">
+                                  Slot {idx + 1}
                                 </p>
                               </div>
-                            ) : imageUrl ? (
-                              <>
-                                <img
-                                  src={imageUrl}
-                                  alt={`Gallery ${idx + 1}`}
-                                  className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveImage(idx)}
-                                  className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm shadow-xl flex items-center justify-center text-zinc-400 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </>
-                            ) : (
-                              <div className="relative w-full h-full">
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => handleImageUpload(e, idx)}
-                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                                />
-                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-zinc-200 group-hover:text-zinc-300 transition-colors">
-                                  <div className="w-10 h-10 rounded-2xl bg-white shadow-sm flex items-center justify-center text-zinc-200 group-hover:text-brand/40 transition-all">
-                                    <Plus className="w-6 h-6" />
-                                  </div>
-                                  <p className="text-[8px] font-extrabold uppercase tracking-[0.2em]">Add Slot {idx + 1}</p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -780,7 +950,7 @@ export function ProductForm({
               </div>
             </section>
 
-            {/* Product Information */}
+            {/* ── 2. Product Information ── */}
             <section className="bg-white p-5 sm:p-8 rounded-3xl border border-zinc-100 shadow-sm space-y-6 transition-all hover:shadow-md">
               <div className="flex items-center gap-3 border-b border-zinc-50 pb-5">
                 <div className="w-9 h-9 rounded-xl bg-zinc-50 flex items-center justify-center shrink-0">
@@ -797,7 +967,7 @@ export function ProductForm({
               </div>
 
               <div className="space-y-6">
-                {/* Product Name */}
+                {/* Name */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between px-1">
                     <div>
@@ -808,64 +978,62 @@ export function ProductForm({
                         Display Title for Customers
                       </p>
                     </div>
-                    <span className={cn(
-                      "text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full",
-                      (formData.name || "").length > 50 
-                        ? "bg-red-50 text-red-600" 
-                        : (formData.name || "").length > 40
-                        ? "bg-yellow-50 text-yellow-600"
-                        : "bg-emerald-50 text-emerald-600"
-                    )}>
-                      {(formData.name || "").length}/60
+                    <span
+                      className={cn(
+                        "text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full",
+                        formData.name.length > 100
+                          ? "bg-red-50 text-red-600"
+                          : formData.name.length > 80
+                          ? "bg-yellow-50 text-yellow-600"
+                          : "bg-emerald-50 text-emerald-600"
+                      )}
+                    >
+                      {formData.name.length}/120
                     </span>
                   </div>
                   <Input
-                    placeholder="e.g. Classic White Oversized Tee"
-                    value={formData.name || ""}
-                    maxLength={60}
+                    placeholder="e.g. Samsung Galaxy S24 Ultra 12GB/256GB"
+                    value={formData.name}
+                    maxLength={120}
                     onChange={(e) => handleSlugify(e.target.value)}
                     className="rounded-2xl border-zinc-100 h-13 sm:h-14 font-bold text-lg sm:text-xl text-zinc-900 focus:ring-2 focus:ring-brand/20 shadow-sm"
                     required
                   />
                   <div className="px-1 flex items-center gap-2">
-                    <div className={cn(
-                      "w-1.5 h-1.5 rounded-full shrink-0",
-                      formData.slug ? "bg-emerald-500" : "bg-zinc-300"
-                    )} />
+                    <div
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full shrink-0",
+                        formData.slug ? "bg-emerald-500" : "bg-zinc-300"
+                      )}
+                    />
                     <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest truncate">
-                      URL Slug: <span className="font-mono text-zinc-600">{formData.slug || "auto-generated"}</span>
+                      URL Slug:{" "}
+                      <span className="font-mono text-zinc-600">
+                        {formData.slug || "auto-generated"}
+                      </span>
                     </p>
                   </div>
                 </div>
 
-                {/* Category & Sub-Category Grid */}
+                {/* Category + Sub-Category */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {/* Collection Category */}
+                  {/* Category */}
                   <div className="space-y-3">
                     <div className="px-1">
                       <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
                         Collection Category
                       </label>
                       <p className="text-[9px] text-zinc-300 font-bold uppercase mt-0.5">
-                        Primary Product grouping
+                        Primary Product Grouping
                       </p>
                     </div>
                     <Select
                       value={formData.categoryId}
-                      onValueChange={(v) => {
-                        setFormData((prev) => ({ ...prev, categoryId: v }));
-                        // Auto-set sizes based on category
-                        const category = categories.find(c => c.id === v);
-                        if (!isEdit) {
-                          if (category?.name?.toLowerCase() === "perfumes") {
-                            setFormData((prev) => ({ ...prev, sizes: ["50ml", "100ml"] }));
-                          } else if (category?.name?.toLowerCase() === "men") {
-                            setFormData((prev) => ({ ...prev, sizes: ["S", "M", "L", "XL"] }));
-                          }
-                        }
-                      }}
+                      onValueChange={(v) =>
+                        setFormData((p) => ({ ...p, categoryId: v }))
+                      }
                     >
-                      <SelectTrigger className="w-full h-13 sm:h-14 rounded-2xl border-zinc-100 bg-white px-5 font-bold text-zinc-900 shadow-sm transition-all focus:ring-2 focus:ring-brand/20 hover:border-brand/20 border-brand/0">
+                      <SelectTrigger className="w-full h-13 sm:h-14 rounded-2xl border-zinc-100 bg-white px-5 font-bold text-zinc-900 shadow-sm focus:ring-2 focus:ring-brand/20">
                         <SelectValue placeholder="Select a collection..." />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl border-zinc-100 shadow-2xl p-2 bg-white z-50">
@@ -883,7 +1051,7 @@ export function ProductForm({
                     {formData.categoryId && (
                       <div className="px-1 py-2 bg-brand/5 rounded-xl border border-brand/10">
                         <p className="text-[9px] font-bold text-brand uppercase tracking-widest">
-                          ✓ {categories.find(c => c.id === formData.categoryId)?.name} selected
+                          ✓ {selectedCategory?.name} selected
                         </p>
                       </div>
                     )}
@@ -900,62 +1068,54 @@ export function ProductForm({
                           Product Type Classification
                         </p>
                       </div>
-                      {(existingSubCategories[formData.categoryId]?.length > 0) && (
+                      {(existingSubCategories[formData.categoryId]?.length ?? 0) > 0 && (
                         <span className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-widest bg-emerald-50/50 px-2 py-1 rounded-full border border-emerald-200/50">
                           Suggestions
                         </span>
                       )}
                     </div>
                     <Input
-                      placeholder="e.g., T-Shirts, Hoodies, Analog..."
-                      value={formData.subCategory || ""}
+                      placeholder="e.g. Smartphone, Laptop, Split AC, LED TV..."
+                      value={formData.subCategory}
                       onChange={(e) =>
-                        setFormData((p) => ({
-                          ...p,
-                          subCategory: e.target.value,
-                        }))
+                        setFormData((p) => ({ ...p, subCategory: e.target.value }))
                       }
                       className="rounded-2xl border-zinc-100 h-13 sm:h-14 font-bold text-zinc-900 bg-white shadow-sm focus:ring-2 focus:ring-brand/20"
-                      required
                     />
-                    
-                    {/* Quick Selection Pills */}
-                    {(() => {
-                      const suggestions = existingSubCategories[formData.categoryId] || [];
-                      if (suggestions.length === 0) return null;
-                      
-                      return (
-                        <div className="pt-2 px-1 space-y-2">
-                          <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">
-                            Known Sub-Categories:
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {suggestions.map((sub) => {
-                              const isSelected = formData.subCategory === sub;
-                              return (
-                                <button
-                                  key={sub}
-                                  type="button"
-                                  onClick={() => setFormData(p => ({ ...p, subCategory: sub }))}
-                                  className={cn(
-                                    "px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all border shadow-sm active:scale-95",
-                                    isSelected
-                                      ? "bg-brand border-brand text-white shadow-brand/20"
-                                      : "bg-white border-zinc-100 text-zinc-500 hover:border-brand/30 hover:text-brand hover:bg-brand/5"
-                                  )}
-                                >
-                                  {sub}
-                                </button>
-                              );
-                            })}
-                          </div>
+                    {/* Suggestion pills */}
+                    {(existingSubCategories[formData.categoryId] ?? []).length > 0 && (
+                      <div className="pt-1 px-1 space-y-2">
+                        <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">
+                          Known Sub-Categories:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {existingSubCategories[formData.categoryId].map((sub) => {
+                            const isSelected = formData.subCategory === sub;
+                            return (
+                              <button
+                                key={sub}
+                                type="button"
+                                onClick={() =>
+                                  setFormData((p) => ({ ...p, subCategory: sub }))
+                                }
+                                className={cn(
+                                  "px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all border shadow-sm active:scale-95",
+                                  isSelected
+                                    ? "bg-brand border-brand text-white shadow-brand/20"
+                                    : "bg-white border-zinc-100 text-zinc-500 hover:border-brand/30 hover:text-brand hover:bg-brand/5"
+                                )}
+                              >
+                                {sub}
+                              </button>
+                            );
+                          })}
                         </div>
-                      );
-                    })()}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Product Description */}
+                {/* Description */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between px-1">
                     <div>
@@ -966,86 +1126,146 @@ export function ProductForm({
                         Detailed Features & Benefits
                       </p>
                     </div>
-                    <span className={cn(
-                      "text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full",
-                      (formData.description || "").length > 400
-                        ? "bg-red-50 text-red-600"
-                        : (formData.description || "").length > 350
-                        ? "bg-yellow-50 text-yellow-600"
-                        : "bg-emerald-50 text-emerald-600"
-                    )}>
-                      {(formData.description || "").length}/500
+                    <span
+                      className={cn(
+                        "text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full",
+                        formData.description.length > 500
+                          ? "bg-red-50 text-red-600"
+                          : formData.description.length > 400
+                          ? "bg-yellow-50 text-yellow-600"
+                          : "bg-emerald-50 text-emerald-600"
+                      )}
+                    >
+                      {formData.description.length}/600
                     </span>
                   </div>
                   <textarea
-                    placeholder="Describe key features, materials, care instructions, benefits..."
+                    placeholder="Describe key features, compatibility, what's in the box, warranty..."
                     value={formData.description}
-                    maxLength={500}
+                    maxLength={600}
+                    rows={5}
                     onChange={(e) =>
-                      setFormData((p) => ({
-                        ...p,
-                        description: e.target.value,
-                      }))
+                      setFormData((p) => ({ ...p, description: e.target.value }))
                     }
-                    className="w-full rounded-2xl border border-zinc-100 p-5 sm:p-6 min-h-[140px] sm:min-h-[160px] font-medium text-zinc-900 focus:ring-2 focus:ring-brand/20 focus:border-brand/20 transition-all shadow-sm outline-none resize-none bg-white leading-relaxed text-sm focus:bg-white"
-                    required
+                    className="w-full rounded-2xl border border-zinc-100 p-5 sm:p-6 font-medium text-zinc-900 focus:ring-2 focus:ring-brand/20 focus:border-brand/20 transition-all shadow-sm outline-none resize-none bg-white leading-relaxed text-sm"
                   />
-                  <div className="px-1 text-[9px] text-zinc-400 font-bold uppercase tracking-widest">
-                    💡 Tip: Include key features, materials, and care info for better conversion
-                  </div>
                 </div>
-
-                {/* Phone Specifications */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between px-1">
-                    <div>
-                      <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                        Phone Specifications
-                      </label>
-                      <p className="text-[9px] text-zinc-300 font-bold uppercase mt-0.5">
-                        Technical Details for Product Page
-                      </p>
-                    </div>
-                    {Object.values(phoneSpecs).some((v) => v.trim() !== "") && (
-                      <span className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
-                        {Object.values(phoneSpecs).filter((v) => v.trim() !== "").length} Added
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {PHONE_SPEC_KEYS.map((specKey) => (
-                      <div key={specKey} className="space-y-1">
-                        <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest px-1">
-                          {specKey}
-                        </label>
-                        <Input
-                          placeholder={
-                            specKey === "Processor" ? "e.g. Snapdragon 8 Gen 3" :
-                            specKey === "RAM"       ? "e.g. 12GB" :
-                            specKey === "Display"   ? "e.g. 6.7\" AMOLED 120Hz" :
-                            specKey === "Battery"   ? "e.g. 5000mAh" :
-                            specKey === "Camera"    ? "e.g. 50MP + 12MP + 10MP" :
-                            specKey === "OS"        ? "e.g. Android 14" :
-                                                     "e.g. 5G, WiFi 6E, Bluetooth 5.3"
-                          }
-                          value={phoneSpecs[specKey] || ""}
-                          onChange={(e) => handleSpecChange(specKey, e.target.value)}
-                          className="rounded-2xl border-zinc-100 h-11 sm:h-12 font-medium text-zinc-900 bg-white shadow-sm focus:ring-2 focus:ring-brand/20 text-sm"
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="px-1 text-[9px] text-zinc-400 font-bold uppercase tracking-widest">
-                    Specs will appear in the &quot;Technical Specs&quot; card on the product page
-                  </div>
-                </div>
-
               </div>
             </section>
 
-            {/* Variant Orchestration */}
+            {/* ── 3. Technical Specifications ── */}
+            <section className="bg-white p-5 sm:p-8 rounded-3xl border border-zinc-100 shadow-sm space-y-6 transition-all hover:shadow-md">
+              <div className="flex items-center gap-3 border-b border-zinc-50 pb-5">
+                <div className="w-9 h-9 rounded-xl bg-zinc-50 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4 text-brand" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-base sm:text-lg font-bold text-zinc-900 tracking-tight">
+                    Technical Specifications
+                  </h2>
+                  <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">
+                    Custom Key-Value Pairs · Works for Any Product
+                  </p>
+                </div>
+                {/* Template banner inline */}
+                <div className="hidden sm:flex items-center gap-3 bg-zinc-50 rounded-2xl px-4 py-2.5 border border-zinc-100">
+                  <div className="text-right">
+                    <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
+                      Detected
+                    </p>
+                    <p className="text-[10px] font-extrabold text-brand capitalize">
+                      {productType.replace("_", " ")}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={applySpecTemplate}
+                    className="h-8 px-3 rounded-xl bg-brand/10 hover:bg-brand/20 text-brand text-[10px] font-extrabold border-0 shadow-none uppercase tracking-wider"
+                  >
+                    Apply
+                  </Button>
+                </div>
+              </div>
+
+              {/* Mobile template banner */}
+              <div className="sm:hidden flex items-center justify-between bg-zinc-50 rounded-2xl px-4 py-3 border border-zinc-100">
+                <div>
+                  <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
+                    Detected Product Type
+                  </p>
+                  <p className="text-xs font-extrabold text-brand capitalize mt-0.5">
+                    {productType.replace("_", " ")}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={applySpecTemplate}
+                  className="h-9 px-4 rounded-xl bg-brand/10 hover:bg-brand/20 text-brand text-[10px] font-extrabold border-0 shadow-none uppercase tracking-wider"
+                >
+                  Apply Template
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {/* Header row */}
+                {specs.length > 0 && (
+                  <div className="grid grid-cols-[1fr_1.5fr_36px] gap-2 px-1">
+                    <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+                      Parameter
+                    </p>
+                    <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+                      Value
+                    </p>
+                  </div>
+                )}
+
+                {/* Spec rows */}
+                {specs.map((spec, idx) => (
+                  <div
+                    key={idx}
+                    className="grid grid-cols-[1fr_1.5fr_36px] gap-2 items-center"
+                  >
+                    <Input
+                      placeholder="e.g. RAM"
+                      value={spec.key}
+                      onChange={(e) => updateSpec(idx, "key", e.target.value)}
+                      className="h-11 rounded-2xl border-zinc-100 text-xs font-bold text-zinc-600 bg-zinc-50/50 focus:bg-white focus:ring-2 focus:ring-brand/20 shadow-sm"
+                    />
+                    <Input
+                      placeholder="e.g. 12GB LPDDR5X"
+                      value={spec.value}
+                      onChange={(e) => updateSpec(idx, "value", e.target.value)}
+                      className="h-11 rounded-2xl border-zinc-100 text-xs font-medium text-zinc-900 focus:ring-2 focus:ring-brand/20 shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeSpec(idx)}
+                      className="w-9 h-9 rounded-xl flex items-center justify-center text-zinc-300 hover:text-red-400 hover:bg-red-50 transition-all active:scale-90"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+
+                {/* Add row button */}
+                <button
+                  type="button"
+                  onClick={addSpecRow}
+                  className="w-full h-11 rounded-2xl border-2 border-dashed border-zinc-100 hover:border-brand/30 text-zinc-400 hover:text-brand text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-[0.99] bg-zinc-50/30 hover:bg-brand/[0.02]"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Specification Row
+                </button>
+
+                {specs.filter((s) => s.value.trim()).length > 0 && (
+                  <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest text-center pt-1">
+                    {specs.filter((s) => s.value.trim()).length} specifications will appear on the product page
+                  </p>
+                )}
+              </div>
+            </section>
+
+            {/* ── 4. Variants & Inventory ── */}
             <section className="bg-white p-5 sm:p-8 rounded-3xl border border-zinc-100 shadow-sm space-y-6 transition-all hover:shadow-md">
               <div className="flex items-center gap-3 border-b border-zinc-50 pb-5">
                 <div className="w-9 h-9 rounded-xl bg-zinc-50 flex items-center justify-center shrink-0">
@@ -1053,337 +1273,301 @@ export function ProductForm({
                 </div>
                 <div>
                   <h2 className="text-base sm:text-lg font-bold text-zinc-900 tracking-tight">
-                    Variant Orchestration
+                    Structural Configuration
                   </h2>
                   <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">
-                    Sizing & Color Palettes
+                    Variants, Colors & Inventory Matrix
                   </p>
                 </div>
               </div>
 
               <div className="space-y-12">
-                {/* Section 1: Select Sizes */}
+
+                {/* ── Step 1: Variants ── */}
                 <div className="space-y-5 pb-8 border-b border-zinc-100">
-                  <div className="flex flex-col gap-1 px-1">
-                    <label className="text-[12px] font-bold text-zinc-700 uppercase tracking-[0.1em]">
-                      Step 1: Select Sizes
-                    </label>
-                    <p className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wide">
-                      Choose available sizes for this product
-                    </p>
+                  <div className="flex items-center justify-between px-1">
+                    <div>
+                      <label className="text-[12px] font-bold text-zinc-700 uppercase tracking-[0.1em]">
+                        Step 1 — Select Variants
+                      </label>
+                      <p className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wide mt-0.5 capitalize">
+                        {productType.replace("_", " ")} options pre-loaded
+                      </p>
+                    </div>
+                    {formData.sizes.length > 0 && (
+                      <span className="text-[9px] font-bold text-brand bg-brand/10 px-2.5 py-1 rounded-full">
+                        {formData.sizes.length} selected
+                      </span>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-                  {(isSmartAccessory
-                    ? ["50ml", "100ml"]
-                    : isAccessory
-                    ? ["40mm", "42mm", "44mm"]
-                      : ["XS", "S", "M", "L", "XL", "XXL", "3XL"]
-                    ).map((sizeLabel) => {
-                      const isSelected = formData.sizes.includes(sizeLabel);
-
+                  {/* Preset pills */}
+                  <div className="flex flex-wrap gap-2.5">
+                    {variantOptions.map((v) => {
+                      const selected = formData.sizes.includes(v);
                       return (
-                        <div key={sizeLabel}>
-                          {/* Default State - Just shows size option */}
-                          {!isSelected && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setFormData((p) => ({
-                                  ...p,
-                                  sizes: Array.from(new Set([...p.sizes, sizeLabel])),
-                                }));
-                              }}
-                              className="w-full p-5 rounded-xl border-2 border-zinc-200 bg-white hover:bg-zinc-50 hover:border-brand/40 transition-all duration-200 cursor-pointer group"
-                            >
-                              <div className="flex flex-col items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-zinc-100 group-hover:bg-brand/10 flex items-center justify-center transition-all">
-                                  <div className="w-2 h-2 rounded-full bg-zinc-400 group-hover:bg-brand"></div>
-                                </div>
-                                <span className="text-lg font-bold text-zinc-700 group-hover:text-brand transition-colors">
-                                  {sizeLabel}
-                                </span>
-                              </div>
-                            </button>
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => toggleSize(v)}
+                          className={cn(
+                            "px-4 py-2.5 rounded-xl border-2 text-sm font-bold transition-all duration-200 active:scale-95 flex items-center gap-2",
+                            selected
+                              ? "bg-brand text-white border-brand shadow-md shadow-brand/20"
+                              : "bg-white text-zinc-600 border-zinc-200 hover:border-brand/40 hover:text-brand"
                           )}
-
-                          {/* Selected State - Shows input for stock */}
-                          {isSelected && (
-                            <div className="bg-gradient-to-br from-brand/5 to-brand/10 p-5 rounded-xl border-2 border-brand shadow-md">
-                              <div className="flex flex-col gap-4">
-                                {/* Header with size and remove button */}
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center">
-                                      <CheckCircle2 className="w-5 h-5" />
-                                    </div>
-                                    <span className="text-xl font-bold text-zinc-900">
-                                      {sizeLabel}
-                                    </span>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setFormData((p) => ({
-                                        ...p,
-                                        sizes: p.sizes.filter(
-                                          (s: string) => s !== sizeLabel
-                                        ),
-                                      }));
-                                      // Clean up size-color stock entries for this size
-                                      setSizeColorStock((prev) => {
-                                        const updated = { ...prev };
-                                        Object.keys(updated).forEach((key) => {
-                                          if (key.startsWith(sizeLabel + "-")) {
-                                            delete updated[key];
-                                          }
-                                        });
-                                        return updated;
-                                      });
-                                    }}
-                                    className="text-zinc-400 hover:text-brand transition-colors"
-                                  >
-                                    <X className="w-5 h-5" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                        >
+                          {selected && <CheckCircle2 className="w-3.5 h-3.5" />}
+                          {v}
+                        </button>
                       );
                     })}
-                    </div>
                   </div>
 
-                {/* Section 2: Color Palette */}
-                <div className="space-y-5 pt-8">
-                  <div className="flex flex-col gap-1 px-1">
-                    <label className="text-[12px] font-bold text-zinc-700 uppercase tracking-[0.1em]">
-                      Step 2: Select Colors
-                    </label>
-                    <p className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wide">
-                      Choose available colors
-                    </p>
+                  {/* Custom variant */}
+                  <div className="flex gap-2 pt-1">
+                    <Input
+                      placeholder="Custom variant (e.g. 3TB, 96GB RAM, 2.5 Ton)…"
+                      value={customVariantInput}
+                      onChange={(e) => setCustomVariantInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addCustomVariant();
+                        }
+                      }}
+                      className="h-11 rounded-2xl border-zinc-100 bg-zinc-50/50 focus:bg-white text-sm font-medium focus:ring-2 focus:ring-brand/20"
+                    />
+                    <Button
+                      type="button"
+                      onClick={addCustomVariant}
+                      className="h-11 px-5 rounded-2xl bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-widest shadow-lg active:scale-95 shrink-0"
+                    >
+                      Add
+                    </Button>
                   </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-                      {[
-                        "Black",
-                        "White",
-                        "Grey",
-                        "Navy",
-                        "Red",
-                        "Blue",
-                        "Green",
-                        "Yellow",
-                        "Orange",
-                        "Purple",
-                        "Brown",
-                        ...formData.colors.filter((c: string) => ![
-                          "Black", "White", "Grey", "Navy", "Red", "Blue", "Green", "Yellow", "Orange", "Purple", "Brown"
-                        ].includes(c))
-                      ].map((color) => {
-                        const isSelected = formData.colors.includes(color);
-                        return (
-                          <button
-                            key={color}
-                            type="button"
-                            onClick={() => {
-                              const newColors = isSelected
-                                ? formData.colors.filter(
-                                    (c: string) => c !== color
-                                  )
-                                : Array.from(new Set([...formData.colors, color]));
-                              setFormData((p) => ({
-                                ...p,
-                                colors: newColors,
-                              }));
-                              
-                              // Clean up size-color stock entries when color is removed
-                              if (isSelected) {
-                                setSizeColorStock((prev) => {
-                                  const updated = { ...prev };
-                                  Object.keys(updated).forEach((key) => {
-                                    if (key.endsWith(`-${color}`)) {
-                                      delete updated[key];
-                                    }
-                                  });
-                                  return updated;
-                                });
-                              }
-                            }}
-                            className={cn(
-                              "p-5 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center gap-3 h-full cursor-pointer group",
-                              isSelected
-                                ? "bg-brand/10 border-brand shadow-md hover:shadow-lg"
-                                : "bg-white border-zinc-200 hover:border-brand/40 hover:bg-zinc-50"
-                            )}
-                          >
-                            <div
-                              className={cn(
-                                "w-14 h-14 rounded-full shadow-sm transition-all border-2",
-                                isSelected ? "border-brand ring-2 ring-brand/30 scale-110" : "border-zinc-200 group-hover:scale-105"
-                              )}
-                              style={{ 
-                                borderColor: isSelected ? undefined : (color.toLowerCase() === "white" ? "#d1d5db" : "transparent"),
-                                backgroundColor: color.toLowerCase() === "white" 
-                                  ? "#ffffff" 
-                                  : color.toLowerCase() 
-                              }}
-                            />
-                            <div className="flex flex-col items-center gap-1 w-full">
-                              <span className="text-sm font-bold text-center text-zinc-900">{color}</span>
-                              {isSelected && (
-                                <CheckCircle2 className="w-4 h-4 text-brand" />
-                              )}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Custom Color Input */}
-                    <div className="flex gap-2 pt-2 px-1">
-                      <div className="relative flex-1">
-                        <Input
-                          placeholder="Add Custom Color..."
-                          id="customColor"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              const input = e.currentTarget;
-                              const val = input.value.trim();
-                              if (val && !formData.colors.includes(val)) {
-                                setFormData(p => ({
-                                  ...p,
-                                  colors: Array.from(new Set([...p.colors, val]))
-                                }));
-                                input.value = '';
-                              }
-                            }
-                          }}
-                          className="h-10 sm:h-12 rounded-lg sm:rounded-2xl border-zinc-100 bg-zinc-50/50 focus:bg-white text-[9px] sm:text-[10px] font-bold uppercase tracking-widest pl-8 sm:pl-10"
-                        />
-                        <div className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2">
-                          <Sparkles className="w-3 sm:w-4 h-3 sm:h-4 text-zinc-300" />
-                        </div>
+                  {/* Selected variants display */}
+                  {formData.sizes.filter((s: string) => !variantOptions.includes(s)).length > 0 && (
+                    <div className="space-y-2 px-1">
+                      <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">
+                        Custom Variants:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.sizes
+                          .filter((s: string) => !variantOptions.includes(s))
+                          .map((v: string) => (
+                            <span
+                              key={v}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand/10 text-brand text-xs font-bold border border-brand/20"
+                            >
+                              {v}
+                              <button
+                                type="button"
+                                onClick={() => toggleSize(v)}
+                                className="hover:text-red-500 transition-colors"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          ))}
                       </div>
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          const input = document.getElementById('customColor') as HTMLInputElement;
-                          const val = input.value.trim();
-                          if (val && !formData.colors.includes(val)) {
-                            setFormData(p => ({
-                              ...p,
-                              colors: Array.from(new Set([...p.colors, val]))
-                            }));
-                            input.value = '';
-                          }
-                        }}
-                        className="h-10 sm:h-12 rounded-lg sm:rounded-2xl bg-zinc-900 text-white px-3 sm:px-6 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest shadow-lg active:scale-95 shrink-0"
-                      >
-                        Add
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Size-Color Stock Matrix */}
-                  {formData.sizes.length > 0 && formData.colors.length > 0 && (
-                    <div className="space-y-4 pt-6 border-t border-zinc-100">
-                      <div className="flex items-center justify-between px-1">
-                        <div>
-                          <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-[0.1em]">
-                            Inventory Matrix
-                          </label>
-                          <p className="text-[9px] text-zinc-300 font-bold uppercase tracking-widest mt-0.5">
-                            Stock per Size & Color Combination
-                          </p>
-                        </div>
-                        <span className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
-                          Granular Tracking
-                        </span>
-                      </div>
-
-                      {/* Matrix Table */}
-                      <div className="overflow-x-auto">
-                        <table className="w-full min-w-max border-collapse">
-                          <thead>
-                            <tr>
-                              <th className="sticky left-0 bg-zinc-50 border border-zinc-200 px-4 py-3 text-left z-10">
-                                <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">
-                                  Size
-                                </span>
-                              </th>
-                              {formData.colors.map((color: string) => (
-                                <th
-                                  key={`header-${color}`}
-                                  className="border border-zinc-200 px-4 py-3 text-center bg-zinc-50 min-w-[100px]"
-                                >
-                                  <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest block">
-                                    {color}
-                                  </span>
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {formData.sizes.map((size: string) => (
-                              <tr key={`row-${size}`}>
-                                <td className="sticky left-0 bg-white border border-zinc-200 px-4 py-3 font-bold text-zinc-900 text-sm z-[5]">
-                                  {size}
-                                </td>
-                                {formData.colors.map((color: string) => {
-                                  const key = `${size}-${color}`;
-                                  const quantity = sizeColorStock[key] || 0;
-
-                                  return (
-                                    <td
-                                      key={`cell-${key}`}
-                                      className="border border-zinc-200 px-4 py-3 text-center"
-                                    >
-                                      <Input
-                                        type="number"
-                                        min="0"
-                                        value={quantity > 0 ? quantity : ""}
-                                        placeholder="0"
-                                        onFocus={(e) => {
-                                          if (!e.target.value) {
-                                            e.target.placeholder = "";
-                                          }
-                                        }}
-                                        onBlur={(e) => {
-                                          e.target.placeholder = "0";
-                                        }}
-                                        onChange={(e) => {
-                                          const val = e.target.value.trim();
-                                          const newQuantity = val ? parseInt(val) || 0 : 0;
-
-                                          setSizeColorStock((prev) => {
-                                            const updated = { ...prev };
-                                            if (newQuantity > 0) {
-                                              updated[key] = newQuantity;
-                                            } else {
-                                              delete updated[key];
-                                            }
-                                            return updated;
-                                          });
-                                        }}
-                                        className="w-full h-10 text-center rounded-lg border-emerald-200 bg-emerald-50 font-bold text-emerald-700 text-sm focus:ring-2 focus:ring-emerald-300"
-                                      />
-                                    </td>
-                                  );
-                                })}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
                     </div>
                   )}
+                </div>
+
+                {/* ── Step 2: Colors ── */}
+                <div className="space-y-5 pb-8 border-b border-zinc-100">
+                  <div className="flex items-center justify-between px-1">
+                    <div>
+                      <label className="text-[12px] font-bold text-zinc-700 uppercase tracking-[0.1em]">
+                        Step 2 — Select Colors
+                      </label>
+                      <p className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wide mt-0.5">
+                        Choose all available color options
+                      </p>
+                    </div>
+                    {formData.colors.length > 0 && (
+                      <span className="text-[9px] font-bold text-brand bg-brand/10 px-2.5 py-1 rounded-full">
+                        {formData.colors.length} selected
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Color grid */}
+                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
+                    {[
+                      ...PRESET_COLORS,
+                      // Also show any custom colors that were added
+                      ...formData.colors
+                        .filter((c: string) => !PRESET_COLORS.find((p) => p.name === c))
+                        .map((c: string) => ({ name: c, hex: c.toLowerCase() })),
+                    ].map(({ name, hex }) => {
+                      const selected = formData.colors.includes(name);
+                      const light = isLightColor(name);
+                      return (
+                        <button
+                          key={name}
+                          type="button"
+                          onClick={() => toggleColor(name)}
+                          className={cn(
+                            "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all duration-200 active:scale-95 group",
+                            selected
+                              ? "border-brand bg-brand/5 shadow-md"
+                              : "border-zinc-100 bg-white hover:border-zinc-200 hover:shadow-sm"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "w-9 h-9 rounded-full shadow-sm transition-transform duration-200 group-hover:scale-110 border-2",
+                              selected
+                                ? "scale-110 ring-2 ring-brand/30 ring-offset-2"
+                                : "",
+                              light ? "border-zinc-200" : "border-transparent"
+                            )}
+                            style={{ backgroundColor: hex }}
+                          />
+                          <span
+                            className={cn(
+                              "text-[8px] font-bold text-center leading-tight uppercase tracking-wide",
+                              selected ? "text-brand" : "text-zinc-500"
+                            )}
+                          >
+                            {name}
+                          </span>
+                          {selected && (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-brand -mt-1" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom color */}
+                  <div className="flex gap-2 pt-1">
+                    <div className="relative flex-1">
+                      <Input
+                        placeholder="Custom color (e.g. Sage Green, Coral Red)…"
+                        value={customColorInput}
+                        onChange={(e) => setCustomColorInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addCustomColor();
+                          }
+                        }}
+                        className="h-11 rounded-2xl border-zinc-100 bg-zinc-50/50 focus:bg-white text-sm font-medium pl-10 focus:ring-2 focus:ring-brand/20"
+                      />
+                      <Sparkles className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300" />
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={addCustomColor}
+                      className="h-11 px-5 rounded-2xl bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-widest shadow-lg active:scale-95 shrink-0"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+
+                {/* ── Step 3: Stock Matrix ── */}
+                {formData.sizes.length > 0 && formData.colors.length > 0 && (
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between px-1">
+                      <div>
+                        <label className="text-[12px] font-bold text-zinc-700 uppercase tracking-[0.1em]">
+                          Step 3 — Inventory Matrix
+                        </label>
+                        <p className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wide mt-0.5">
+                          Stock per Variant × Color · Enter 0 to mark unavailable
+                        </p>
+                      </div>
+                      <span className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                        Total:{" "}
+                        {Object.values(sizeColorStock).reduce((a, b) => a + b, 0)} units
+                      </span>
+                    </div>
+
+                    {/* Matrix */}
+                    <div className="overflow-x-auto rounded-2xl border border-zinc-100">
+                      <table className="w-full min-w-max border-collapse">
+                        <thead>
+                          <tr className="bg-zinc-50">
+                            <th className="sticky left-0 z-10 bg-zinc-50 border-b border-r border-zinc-100 px-4 py-3 text-left min-w-[110px]">
+                              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
+                                Variant
+                              </span>
+                            </th>
+                            {formData.colors.map((color: string) => (
+                              <th
+                                key={color}
+                                className="border-b border-zinc-100 px-4 py-3 text-center min-w-[110px]"
+                              >
+                                <div className="flex flex-col items-center gap-1.5">
+                                  <div
+                                    className={cn(
+                                      "w-5 h-5 rounded-full mx-auto border",
+                                      isLightColor(color) ? "border-zinc-300" : "border-transparent"
+                                    )}
+                                    style={{ backgroundColor: getColorHex(color) }}
+                                  />
+                                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
+                                    {color}
+                                  </span>
+                                </div>
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {formData.sizes.map((size: string, sIdx: number) => (
+                            <tr
+                              key={size}
+                              className={sIdx % 2 === 0 ? "bg-white" : "bg-zinc-50/40"}
+                            >
+                              <td className="sticky left-0 z-[5] bg-inherit border-r border-zinc-100 px-4 py-3 font-bold text-zinc-800 text-sm">
+                                {size}
+                              </td>
+                              {formData.colors.map((color: string) => {
+                                const key = `${size}-${color}`;
+                                const qty = sizeColorStock[key] ?? 0;
+                                return (
+                                  <td key={key} className="px-3 py-2 text-center">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      value={qty > 0 ? qty : ""}
+                                      placeholder="0"
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value) || 0;
+                                        setSizeColorStock((prev) => {
+                                          const updated = { ...prev };
+                                          if (val > 0) updated[key] = val;
+                                          else delete updated[key];
+                                          return updated;
+                                        });
+                                      }}
+                                      className={cn(
+                                        "h-10 text-center rounded-xl text-sm font-bold w-full transition-all",
+                                        qty > 0
+                                          ? "border-emerald-200 bg-emerald-50 text-emerald-700 focus:ring-2 focus:ring-emerald-200"
+                                          : "border-zinc-100 bg-white text-zinc-400 focus:ring-2 focus:ring-brand/20"
+                                      )}
+                                    />
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
+
+            {/* ── 5. Pricing ── */}
             <section className="bg-white p-5 sm:p-8 rounded-3xl border border-zinc-100 shadow-sm space-y-6 transition-all hover:shadow-md">
               <div className="flex items-center gap-3 border-b border-zinc-50 pb-5">
                 <div className="w-9 h-9 rounded-xl bg-zinc-50 flex items-center justify-center shrink-0">
@@ -1400,7 +1584,6 @@ export function ProductForm({
               </div>
 
               <div className="space-y-6">
-                {/* Prices Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Selling Price */}
                   <div className="space-y-2">
@@ -1410,23 +1593,13 @@ export function ProductForm({
                     <div className="relative">
                       <Input
                         type="number"
-                        placeholder="999"
-                        value={formData.price || ""}
+                        min="0"
+                        placeholder="79999"
+                        value={formData.price}
                         onChange={(e) => {
-                          const newPrice = parseFloat(e.target.value) || 0;
-                          const originalPrice = parseFloat(formData.originalPrice) || 0;
-                          
-                          setFormData((prev) => {
-                            const updatedData = { ...prev, price: e.target.value };
-                            
-                            // Auto-calculate discount if both prices are valid
-                            if (newPrice > 0 && originalPrice > 0 && newPrice < originalPrice) {
-                              const discount = Math.round(((originalPrice - newPrice) / originalPrice) * 100);
-                              updatedData.discount = discount.toString();
-                            }
-                            
-                            return updatedData;
-                          });
+                          const price = e.target.value;
+                          const disc = recalcDiscount(price, formData.originalPrice);
+                          setFormData((p) => ({ ...p, price, discount: disc }));
                         }}
                         className="rounded-2xl border-zinc-100 h-13 sm:h-14 font-bold text-lg sm:text-xl text-zinc-900 pl-10 shadow-sm focus:ring-2 focus:ring-brand/20"
                         required
@@ -1440,30 +1613,20 @@ export function ProductForm({
                   {/* Original Price */}
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
-                      Original Price (₹)
+                      Original / MRP (₹)
                     </label>
                     <div className="relative">
                       <Input
                         type="number"
-                        placeholder="1299"
-                        value={formData.originalPrice || ""}
+                        min="0"
+                        placeholder="99999"
+                        value={formData.originalPrice}
                         onChange={(e) => {
-                          const newOriginalPrice = parseFloat(e.target.value) || 0;
-                          const price = parseFloat(formData.price) || 0;
-                          
-                          setFormData((prev) => {
-                            const updatedData = { ...prev, originalPrice: e.target.value };
-                            
-                            // Auto-calculate discount if both prices are valid
-                            if (price > 0 && newOriginalPrice > 0 && price < newOriginalPrice) {
-                              const discount = Math.round(((newOriginalPrice - price) / newOriginalPrice) * 100);
-                              updatedData.discount = discount.toString();
-                            }
-                            
-                            return updatedData;
-                          });
+                          const originalPrice = e.target.value;
+                          const disc = recalcDiscount(formData.price, originalPrice);
+                          setFormData((p) => ({ ...p, originalPrice, discount: disc }));
                         }}
-                        className="rounded-2xl border-zinc-100 h-13 sm:h-14 font-medium text-zinc-600 pl-10 bg-zinc-50/50 shadow-sm focus:ring-2 focus:ring-brand/20"
+                        className="rounded-2xl border-zinc-100 h-13 sm:h-14 font-medium text-zinc-500 pl-10 bg-zinc-50/50 shadow-sm focus:ring-2 focus:ring-brand/20"
                         required
                       />
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 font-bold text-sm">
@@ -1473,7 +1636,6 @@ export function ProductForm({
                   </div>
                 </div>
 
-                {/* Discount & Savings */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Discount */}
                   <div className="space-y-2">
@@ -1486,12 +1648,11 @@ export function ProductForm({
                         min="0"
                         max="100"
                         placeholder="20"
-                        value={formData.discount || ""}
+                        value={formData.discount}
                         onChange={(e) =>
                           setFormData((p) => ({ ...p, discount: e.target.value }))
                         }
-                        className="rounded-2xl border-brand/20 h-13 sm:h-14 font-bold text-lg text-brand bg-brand/5 shadow-sm focus:ring-2 focus:ring-brand/30 text-center"
-                        required
+                        className="rounded-2xl border-brand/20 h-13 sm:h-14 font-bold text-lg text-brand bg-brand/5 shadow-sm focus:ring-2 focus:ring-brand/30 text-center pr-8"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-brand font-bold text-sm">
                         %
@@ -1504,24 +1665,51 @@ export function ProductForm({
                     <label className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest px-1">
                       Customer Saves (₹)
                     </label>
-                    <div className="relative">
-                      <Input
-                        type="text"
-                        disabled
-                        value={
-                          formData.price && formData.originalPrice
-                            ? `₹${Math.max(0, Math.round(parseFloat(formData.originalPrice) - parseFloat(formData.price))).toLocaleString()}`
-                            : "₹0"
-                        }
-                        className="rounded-2xl border-emerald-200 h-13 sm:h-14 font-bold text-lg text-emerald-700 bg-emerald-50 shadow-sm cursor-not-allowed"
-                      />
-                    </div>
+                    <Input
+                      disabled
+                      value={
+                        formData.price && formData.originalPrice
+                          ? `₹${Math.max(
+                              0,
+                              Math.round(
+                                parseFloat(formData.originalPrice) -
+                                  parseFloat(formData.price)
+                              )
+                            ).toLocaleString("en-IN")}`
+                          : "₹0"
+                      }
+                      className="rounded-2xl border-emerald-200 h-13 sm:h-14 font-bold text-lg text-emerald-700 bg-emerald-50 shadow-sm cursor-default text-center"
+                    />
                   </div>
                 </div>
+
+                {/* Sanity check */}
+                {formData.price && formData.originalPrice && (
+                  <div
+                    className={cn(
+                      "flex items-center gap-2.5 px-4 py-3 rounded-2xl text-xs font-bold border",
+                      parseFloat(formData.price) > parseFloat(formData.originalPrice)
+                        ? "bg-red-50 text-red-600 border-red-200"
+                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    )}
+                  >
+                    {parseFloat(formData.price) > parseFloat(formData.originalPrice) ? (
+                      <>
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        Selling price exceeds MRP — please review pricing.
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        Pricing looks correct — {formData.discount}% discount applied.
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </section>
 
-            {/* Market Visibility */}
+            {/* ── 6. Market Visibility ── */}
             <section className="bg-white p-5 sm:p-8 rounded-3xl border border-zinc-100 shadow-sm space-y-6 transition-all hover:shadow-md">
               <div className="flex items-center gap-3 border-b border-zinc-50 pb-5">
                 <div className="w-9 h-9 rounded-xl bg-zinc-50 flex items-center justify-center shrink-0">
@@ -1538,43 +1726,43 @@ export function ProductForm({
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 bg-zinc-50/50 p-5 sm:p-6 rounded-2xl border border-zinc-100">
-                <div className="flex-1 flex items-center space-x-4 group cursor-pointer">
-                  <Checkbox
-                    id="isNew"
-                    checked={formData.isNew}
-                    onCheckedChange={(c) =>
-                      setFormData((p) => ({ ...p, isNew: !!c }))
-                    }
-                    className="w-5 h-5 rounded-lg border-zinc-200 data-[state=checked]:bg-brand data-[state=checked]:border-brand"
-                  />
-                  <label
-                    htmlFor="isNew"
-                    className="text-sm font-bold text-zinc-600 cursor-pointer group-hover:text-zinc-900 transition-colors uppercase tracking-tight"
+                {[
+                  {
+                    id: "isNew",
+                    label: "Highlight as New Arrival",
+                    key: "isNew" as const,
+                  },
+                  {
+                    id: "isBestSeller",
+                    label: "Mark as Bestseller",
+                    key: "isBestSeller" as const,
+                  },
+                ].map(({ id, label, key }) => (
+                  <div
+                    key={id}
+                    className="flex-1 flex items-center space-x-4 group cursor-pointer"
                   >
-                    Highlight as New Arrival
-                  </label>
-                </div>
-                <div className="flex-1 flex items-center space-x-4 group cursor-pointer">
-                  <Checkbox
-                    id="isBestSeller"
-                    checked={formData.isBestSeller}
-                    onCheckedChange={(c) =>
-                      setFormData((p) => ({ ...p, isBestSeller: !!c }))
-                    }
-                    className="w-5 h-5 rounded-lg border-zinc-200 data-[state=checked]:bg-brand data-[state=checked]:border-brand"
-                  />
-                  <label
-                    htmlFor="isBestSeller"
-                    className="text-sm font-bold text-zinc-600 cursor-pointer group-hover:text-zinc-900 transition-colors uppercase tracking-tight"
-                  >
-                    Mark as Bestseller
-                  </label>
-                </div>
+                    <Checkbox
+                      id={id}
+                      checked={formData[key]}
+                      onCheckedChange={(c) =>
+                        setFormData((p) => ({ ...p, [key]: !!c }))
+                      }
+                      className="w-5 h-5 rounded-lg border-zinc-200 data-[state=checked]:bg-brand data-[state=checked]:border-brand"
+                    />
+                    <label
+                      htmlFor={id}
+                      className="text-sm font-bold text-zinc-600 cursor-pointer group-hover:text-zinc-900 transition-colors uppercase tracking-tight"
+                    >
+                      {label}
+                    </label>
+                  </div>
+                ))}
               </div>
             </section>
           </div>
 
-          {/* ── Desktop Sidebar Preview (lg+) ── */}
+          {/* ── Right: Sticky Preview ── */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-24">
               <PreviewCard />

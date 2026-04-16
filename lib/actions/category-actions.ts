@@ -6,6 +6,12 @@ import { revalidatePath } from "next/cache";
 export async function getCategories() {
   try {
     return await prisma.category.findMany({
+      include: {
+        parent: {
+          select: { name: true }
+        },
+        children: true
+      },
       orderBy: { name: "asc" },
     });
   } catch (error) {
@@ -14,7 +20,7 @@ export async function getCategories() {
   }
 }
 
-export async function createCategory(name: string, image: string = "") {
+export async function createCategory(name: string, image: string = "", parentId: string | null = null) {
   try {
     // Validate input
     if (!name || name.trim().length === 0) {
@@ -38,6 +44,7 @@ export async function createCategory(name: string, image: string = "") {
         name: name.trim(),
         slug,
         image: image || "",
+        parentId: parentId || null,
       },
     });
 
@@ -68,6 +75,31 @@ export async function updateCategoryImage(id: string, imageUrl: string) {
   }
 }
 
+export async function updateCategory(id: string, data: { name?: string, image?: string, parentId?: string | null }) {
+  try {
+    const updateData: any = { ...data };
+    
+    // If name is being updated, regenerate slug
+    if (data.name) {
+      updateData.slug = data.name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    }
+
+    const category = await prisma.category.update({
+      where: { id },
+      data: updateData,
+    });
+
+    revalidatePath("/admin/categories");
+    revalidatePath("/admin/featured-categories");
+    revalidatePath("/");
+    
+    return { success: true, category };
+  } catch (error) {
+    console.error("Failed to update category:", error);
+    return { success: false, error: "Failed to update category" };
+  }
+}
+
 export async function deleteCategory(id: string) {
   try {
     // Check if category has any products
@@ -79,6 +111,18 @@ export async function deleteCategory(id: string) {
       return { 
         success: false, 
         error: `Cannot delete category with ${productsCount} product(s). Please move or delete the products first.` 
+      };
+    }
+
+    // Check if category has any children
+    const childrenCount = await prisma.category.count({
+      where: { parentId: id },
+    });
+
+    if (childrenCount > 0) {
+      return { 
+        success: false, 
+        error: `Cannot delete category with ${childrenCount} sub-collection(s). Please move or delete the sub-collections first.` 
       };
     }
 

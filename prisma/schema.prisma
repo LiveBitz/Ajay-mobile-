@@ -34,14 +34,36 @@ model Category {
   slug      String    @unique
   image     String?
   products  Product[]
-  isFeatured Boolean @default(false)
-  featuredOrder Int @default(999)
+  
+  // ✅ Hierarchy
+  parentId      String?
+  parent        Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children      Category[] @relation("CategoryToCategory")
+
+  // ✅ NEW: Strict Separation - Link to Featured Group
+  featuredGroupId String?
+  featuredGroup   FeaturedGroup? @relation(fields: [featuredGroupId], references: [id])
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  // ✅ PHASE 1: Index for category page queries (/category/[slug])
   @@index([slug])
-  @@index([isFeatured])
+  @@index([parentId])
+  @@index([featuredGroupId])
+}
+
+model FeaturedGroup {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  slug          String    @unique
+  image         String?
+  order         Int       @default(0)
+  categories    Category[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([order])
 }
 
 model Product {

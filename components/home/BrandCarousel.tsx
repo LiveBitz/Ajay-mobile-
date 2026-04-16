@@ -15,6 +15,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPausedRef = useRef(false);
   const isDraggingRef = useRef(false);
+  const draggedRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
   const [hasOverflow, setHasOverflow] = useState(false);
@@ -70,9 +71,9 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
     pauseAutoForInteraction();
     if (e.pointerType === "mouse") {
       isDraggingRef.current = true;
+      draggedRef.current = false;
       dragStartXRef.current = e.clientX;
       dragStartScrollLeftRef.current = e.currentTarget.scrollLeft;
-      e.currentTarget.setPointerCapture(e.pointerId);
     }
   }, [pauseAutoForInteraction]);
 
@@ -80,14 +81,32 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
     if (!isDraggingRef.current || e.pointerType !== "mouse") return;
     const el = carouselRef.current;
     if (!el) return;
-    e.preventDefault();
-    el.scrollLeft = dragStartScrollLeftRef.current - (e.clientX - dragStartXRef.current);
+
+    const deltaX = e.clientX - dragStartXRef.current;
+    
+    // Threshold to distinguish between click and drag
+    if (!draggedRef.current && Math.abs(deltaX) > 5) {
+      draggedRef.current = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+
+    if (draggedRef.current) {
+      e.preventDefault();
+      el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
+    }
   }, []);
 
   const handlePointerUp = useCallback((e?: React.PointerEvent<HTMLDivElement>) => {
     isDraggingRef.current = false;
     if (e?.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  }, []);
+
+  const handleClickCapture = useCallback((e: React.MouseEvent) => {
+    if (draggedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
     }
   }, []);
 
@@ -182,6 +201,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
           onPointerCancel={handlePointerUp}
           onMouseLeave={handleMouseLeave}
           onWheel={handleWheel}
+          onClickCapture={handleClickCapture}
           className="brand-carousel"
         >
           {items.map((category, idx) => (

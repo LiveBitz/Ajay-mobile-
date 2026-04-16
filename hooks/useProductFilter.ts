@@ -65,30 +65,17 @@ export function useProductFilter(products: Product[], slug: string) {
   
   const [sortBy, setSortBy] = useState("relevance");
 
-  // Filter products by category/slug first
+  // ✅ Trust the server: The 'products' array is already scoped to the slug by CategoryPage
   const baseProducts = useMemo(() => {
-    if (!products || !slug) return [];
+    if (!products) return [];
     
-    const targetSlug = String(slug).toLowerCase();
-    
-    let filtered = products;
-    if (targetSlug === "sale") filtered = products.filter((p) => p.discount > 0);
-    else if (targetSlug === "new-arrivals") filtered = products.filter((p) => p.isNew);
-    else {
-      filtered = products.filter((p) => {
-        const categorySlug = p.category?.slug?.toLowerCase();
-        return (categorySlug && categorySlug === targetSlug) || p.categoryId === slug;
-      });
-    }
-    
-    // Filter out products with no available stock (sum of all size variants)
-    return filtered.filter((p) => {
+    // Filter out products with no available inventory
+    return products.filter((p) => {
       const totalStock = getTotalStock(normalizeArray(p.sizes));
       const legacyStock = (p as any).stock || 0;
-      // Show if either has stock: total from variants OR legacy stock field
       return totalStock > 0 || legacyStock > 0;
     });
-  }, [products, slug]);
+  }, [products]);
 
   // Compute counts based on data in this category
   const counts = useMemo(() => {

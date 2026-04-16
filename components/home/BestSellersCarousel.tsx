@@ -29,6 +29,7 @@ interface BestSellersCarouselProps {
 export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
   const carouselRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+  const draggedRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -56,9 +57,9 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
     if (e.pointerType === "mouse" && e.button !== 0) return;
     if (e.pointerType !== "mouse") return;
     isDraggingRef.current = true;
+    draggedRef.current = false;
     dragStartXRef.current = e.clientX;
     dragStartScrollLeftRef.current = e.currentTarget.scrollLeft;
-    e.currentTarget.setPointerCapture(e.pointerId);
   }, []);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -66,13 +67,29 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
     const el = carouselRef.current;
     if (!el) return;
     const deltaX = e.clientX - dragStartXRef.current;
-    el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
+    
+    // Threshold to distinguish between click and drag
+    if (!draggedRef.current && Math.abs(deltaX) > 5) {
+      draggedRef.current = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+
+    if (draggedRef.current) {
+      el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
+    }
   }, []);
 
   const handlePointerUp = useCallback((e?: React.PointerEvent<HTMLDivElement>) => {
     isDraggingRef.current = false;
     if (e && e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  }, []);
+
+  const handleClickCapture = useCallback((e: React.MouseEvent) => {
+    if (draggedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
     }
   }, []);
 
@@ -181,6 +198,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
           onMouseLeave={handleMouseLeave}
+          onClickCapture={handleClickCapture}
           className="carousel-touch-pan flex gap-3 sm:gap-4 md:gap-5 overflow-x-auto pb-2 scrollbar-hide cursor-grab active:cursor-grabbing"
         >
           {products.map((product) => (

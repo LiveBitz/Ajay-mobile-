@@ -157,12 +157,16 @@ export function Navbar() {
   useEffect(() => {
     if (!searchOpen) return;
     const handleOutside = (e: TouchEvent | MouseEvent) => {
-      if (
-        searchPillRef.current &&
-        !searchPillRef.current.contains(e.target as Node)
-      ) {
+      const target = e.target as Node;
+      const isInsideMobile = searchPillRef.current?.contains(target);
+      const isInsideDesktop = document.getElementById("desktop-search-container")?.contains(target);
+
+      if (!isInsideMobile && !isInsideDesktop) {
         setSearchOpen(false);
-        setSearchQuery("");
+        // We only clear query if we want it to fully reset, 
+        // but often users just want to close the dropdown.
+        // Let's keep the query but close results.
+        if (!isInsideDesktop) setSearchQuery(""); 
       }
     };
     document.addEventListener("touchstart", handleOutside, { passive: true });
@@ -290,7 +294,7 @@ export function Navbar() {
       ref={navRef}
       suppressHydrationWarning
       style={{ borderBottomLeftRadius: "24px", borderBottomRightRadius: "24px" }}
-      className="relative w-full z-50 bg-white md:overflow-hidden border border-black shadow-sm"
+      className="relative w-full z-50 bg-white border border-black shadow-sm"
     >
 
       {/* ══════════════════════════════════════════
@@ -611,9 +615,14 @@ export function Navbar() {
         </div>
 
         {/* Search bar */}
-        <form onSubmit={onSearchSubmit} className="flex flex-1 mx-4 lg:mx-6 max-w-2xl relative group">
+        <form 
+          id="desktop-search-container"
+          onSubmit={onSearchSubmit} 
+          className="flex flex-1 mx-4 lg:mx-6 max-w-2xl relative group"
+        >
           <div className="w-full relative">
             <div
+              onClick={() => setSearchOpen(true)}
               className="flex items-center gap-3 px-4 py-2.5 rounded-lg
                          bg-zinc-50/80 border-2 border-rose-500
                          group-focus-within:border-brand group-focus-within:bg-white
@@ -642,7 +651,7 @@ export function Navbar() {
             </div>
 
             {/* Dropdown results */}
-            {searchQuery && (
+            {searchOpen && searchQuery && (
               <div
                 className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl
                            border border-zinc-200 shadow-xl shadow-black/8

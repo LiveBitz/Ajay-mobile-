@@ -73,26 +73,47 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
     draggedRef.current = false;
     dragStartXRef.current = e.clientX;
     dragStartScrollLeftRef.current = e.currentTarget.scrollLeft;
-    e.currentTarget.setPointerCapture(e.pointerId);
   }, []);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current || e.pointerType !== "mouse") return;
     const el = carouselRef.current;
     if (!el) return;
+    
     const deltaX = e.clientX - dragStartXRef.current;
-    if (Math.abs(deltaX) > 4) draggedRef.current = true;
-    el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
+    
+    // Threshold to distinguish between click and drag
+    if (!draggedRef.current && Math.abs(deltaX) > 5) {
+      draggedRef.current = true;
+      // Only capture if we've moved significantly
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+
+    if (draggedRef.current) {
+      el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
+    }
   }, []);
 
   const handlePointerUp = useCallback((e?: React.PointerEvent<HTMLDivElement>) => {
     isDraggingRef.current = false;
+    // We keep draggedRef.current as is for the click event to detect it, 
+    // it will be reset on next pointerdown.
     if (e?.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
   }, []);
 
-  const handleMouseLeave = useCallback(() => { isDraggingRef.current = false; }, []);
+  const handleClickCapture = useCallback((e: React.MouseEvent) => {
+    // If we dragged, prevent the click from reaching child Links
+    if (draggedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => { 
+    isDraggingRef.current = false; 
+  }, []);
 
   useEffect(() => {
     updateScrollButtons();
@@ -204,6 +225,7 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         onMouseLeave={handleMouseLeave}
+        onClickCapture={handleClickCapture}
         className="hurryup-carousel"
       >
         {products.map((product: any) => (

@@ -2,23 +2,25 @@ import React from "react";
 import prisma from "@/lib/prisma";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 
-async function getFeaturedCategories() {
-  const categories = await prisma.category.findMany({
-    where: {
-      isFeatured: true,
-    },
+async function getFeaturedGroups() {
+  const groups = await prisma.featuredGroup.findMany({
     orderBy: {
-      featuredOrder: 'asc',
+      order: 'asc',
     },
+    include: {
+      categories: true
+    }
   });
 
-  return categories;
+  return groups;
 }
 
 export async function FeaturedCategoriesSection() {
-  const categories = await getFeaturedCategories();
+  const groups = await getFeaturedGroups();
 
-  if (categories.length === 0) return null;
+  if (groups.length === 0) return null;
 
-  return <CategoryGrid categories={categories} />;
+  // Map FeaturedGroup to the format CategoryGrid expects
+  // Although CategoryGrid might need refinement to handle "Featured Groups" specifically
+  return <CategoryGrid categories={groups as any} />;
 }

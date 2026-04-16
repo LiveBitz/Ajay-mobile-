@@ -59,32 +59,42 @@ export default async function CategoryPage({
   const isSpecialSlug = slug === "sale" || slug === "new-arrivals";
 
   // ✅ Verify category exists for non-special slugs
-  if (!isSpecialSlug) {
-    const categoryExists = await prisma.category.findFirst({
-      where: {
-        slug: { equals: slug, mode: "insensitive" },
-      },
-      select: { id: true },
-    });
+  // ✅ Attempt to find as Category or FeaturedGroup
+  const [category, featuredGroup] = await Promise.all([
+    prisma.category.findFirst({
+      where: { slug: { equals: slug, mode: "insensitive" } },
+      include: { children: { select: { id: true } } }
+    }),
+    prisma.featuredGroup.findFirst({
+      where: { slug: { equals: slug, mode: "insensitive" } },
+      include: { categories: { select: { id: true } } }
+    })
+  ]);
 
-    if (!categoryExists) {
-      notFound();
-    }
+  const targetEntity = category || featuredGroup;
+
+  if (!isSpecialSlug && !targetEntity) {
+    notFound();
   }
 
   // ✅ Clean where clause
-  const whereClause =
+  const whereClause: any =
     slug === "sale"
       ? { discount: { gt: 0 } }
       : slug === "new-arrivals"
       ? { isNew: true }
+      : featuredGroup
+      ? {
+          OR: [
+            { categoryId: { in: featuredGroup.categories.map((c) => c.id) } },
+            { category: { parentId: { in: featuredGroup.categories.map((c) => c.id) } } },
+          ],
+        }
       : {
-          category: {
-            slug: {
-              equals: slug,
-              mode: "insensitive" as const,
-            },
-          },
+          OR: [
+            { category: { slug: { equals: slug, mode: "insensitive" } } },
+            { category: { parent: { slug: { equals: slug, mode: "insensitive" } } } },
+          ],
         };
 
   const products = await prisma.product.findMany({

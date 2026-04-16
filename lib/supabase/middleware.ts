@@ -69,8 +69,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Global Primary Identity Protection - but allow admin entry page and admin paths with passcode without login
-  if (!user && !isPublicPath && !isAdminPath) {
+  // Global Primary Identity Protection
+  if (!user && !isPublicPath) {
     console.log('[MIDDLEWARE] Redirecting unauthenticated user to login')
     const url = request.nextUrl.clone()
     url.pathname = '/login'

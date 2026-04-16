@@ -16,6 +16,10 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPausedRef = useRef(false);
   const isUserScrollingRef = useRef(false);
+  const isDraggingRef = useRef(false);
+  const draggedRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartScrollLeftRef = useRef(0);
   const lastScrollLeft = useRef(0);
 
   const stopAuto = useCallback(() => {
@@ -74,17 +78,45 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
     if (isUserScrollingRef.current) stopAuto();
   }, [stopAuto]);
 
-  const handlePointerDown = useCallback(() => {
+  const handlePointerDown = useCallback((e: React.MouseEvent) => {
     isUserScrollingRef.current = true;
+    isDraggingRef.current = true;
+    draggedRef.current = false;
+    dragStartXRef.current = e.clientX;
+    dragStartScrollLeftRef.current = scrollRef.current?.scrollLeft || 0;
     stopAuto();
   }, [stopAuto]);
 
+  const handlePointerMove = useCallback((e: React.MouseEvent) => {
+    if (!isDraggingRef.current) return;
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const deltaX = e.clientX - dragStartXRef.current;
+    if (!draggedRef.current && Math.abs(deltaX) > 5) {
+      draggedRef.current = true;
+    }
+
+    if (draggedRef.current) {
+      el.scrollLeft = dragStartScrollLeftRef.current - deltaX;
+    }
+  }, []);
+
   const handlePointerUp = useCallback(() => {
     isUserScrollingRef.current = false;
+    isDraggingRef.current = false;
+  }, []);
+
+  const handleClickCapture = useCallback((e: React.MouseEvent) => {
+    if (draggedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   }, []);
 
   const handleTouchStart = useCallback(() => {
     isUserScrollingRef.current = true;
+    draggedRef.current = false;
     stopAuto();
   }, [stopAuto]);
 
@@ -131,8 +163,10 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
         ref={scrollRef}
         onScroll={handleScroll}
         onMouseDown={handlePointerDown}
+        onMouseMove={handlePointerMove}
         onMouseUp={handlePointerUp}
         onMouseLeave={handlePointerUp}
+        onClickCapture={handleClickCapture}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         className="relative z-[5] flex items-center gap-4 md:gap-6 lg:gap-8 overflow-x-auto py-3 md:py-4 lg:py-5 cursor-grab active:cursor-grabbing slider-scroll"

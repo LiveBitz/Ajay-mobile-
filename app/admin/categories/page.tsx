@@ -15,8 +15,7 @@ import {
   Edit2,
   Search
 } from "lucide-react";
-import { getCategories, updateCategoryImage, createCategory, deleteCategory } from "@/lib/actions/category-actions";
-import { toggleCategoryFeatured, updateCategoryFeaturedOrder } from "@/lib/actions/featured-category-actions";
+import { getCategories, updateCategoryImage, createCategory, deleteCategory, updateCategory } from "@/lib/actions/category-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +34,7 @@ export default function CategoriesAdminPage() {
   // Add category form state
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryImage, setNewCategoryImage] = useState("");
+  const [newParentId, setNewParentId] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
@@ -57,7 +57,27 @@ export default function CategoriesAdminPage() {
         title: "Image Updated",
         description: "Category image has been updated successfully.",
       });
-      setCategories(prev => prev.map(c => c.id === id ? { ...c, image: newUrl } : c));
+      fetchCategories(); // Refresh all to get updated data
+    } else {
+      toast({
+        title: "Error",
+        description: result.error as string,
+        variant: "destructive",
+      });
+    }
+    setUpdatingId(null);
+  };
+
+  const handleUpdateCategory = async (id: string, data: any) => {
+    setUpdatingId(id);
+    const result = await updateCategory(id, data);
+    
+    if (result.success) {
+      toast({
+        title: "Category Updated",
+        description: "Details have been updated successfully.",
+      });
+      fetchCategories();
     } else {
       toast({
         title: "Error",
@@ -79,7 +99,7 @@ export default function CategoriesAdminPage() {
     }
 
     setIsCreating(true);
-    const result = await createCategory(newCategoryName, newCategoryImage);
+    const result = await createCategory(newCategoryName, newCategoryImage, newParentId || null);
     
     if (result.success) {
       toast({
@@ -89,7 +109,9 @@ export default function CategoriesAdminPage() {
       setCategories([...categories, result.category]);
       setNewCategoryName("");
       setNewCategoryImage("");
+      setNewParentId("");
       setShowAddForm(false);
+      fetchCategories(); // Refresh to include full related data
     } else {
       toast({
         title: "Error",
@@ -122,28 +144,6 @@ export default function CategoriesAdminPage() {
       });
     }
     setDeletingId(null);
-  };
-
-  const handleToggleFeatured = async (id: string) => {
-    const result = await toggleCategoryFeatured(id);
-    
-    if (result.success) {
-      toast({
-        title: "Success",
-        description: result.message,
-      });
-      setCategories(prev =>
-        prev.map(c =>
-          c.id === id ? { ...c, isFeatured: result.isFeatured } : c
-        )
-      );
-    } else {
-      toast({
-        title: "Error",
-        description: result.message,
-        variant: "destructive",
-      });
-    }
   };
 
   const filteredCategories = categories.filter(cat =>
@@ -234,6 +234,24 @@ export default function CategoriesAdminPage() {
                 className="h-10 rounded-lg border-zinc-200"
               />
             </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-zinc-700">
+                Parent Category
+              </label>
+              <select
+                value={newParentId}
+                onChange={(e) => setNewParentId(e.target.value)}
+                className="w-full h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20"
+              >
+                <option value="">No Parent (Top Level)</option>
+                {categories
+                  .filter(c => !c.parentId) // Only top-level categories can be parents
+                  .map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+              </select>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 pt-2">
@@ -309,7 +327,7 @@ export default function CategoriesAdminPage() {
                     Name
                   </th>
                   <th className="py-3 px-4 text-left text-xs font-bold text-zinc-600 uppercase tracking-wide">
-                    Featured
+                    Hierarchy
                   </th>
                   <th className="py-3 px-4 text-left text-xs font-bold text-zinc-600 uppercase tracking-wide">
                     Created
@@ -345,18 +363,13 @@ export default function CategoriesAdminPage() {
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <button
-                        onClick={() => handleToggleFeatured(cat.id)}
-                        className={cn(
-                          "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-xs font-semibold",
-                          cat.isFeatured
-                            ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                            : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                        )}
-                      >
-                        <Star className="w-3 h-3" />
-                        {cat.isFeatured ? "Featured" : "Not Featured"}
-                      </button>
+                      {cat.parent ? (
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-100 text-[10px] font-bold text-zinc-600 border border-zinc-200 uppercase tracking-wider">
+                          Sub of {cat.parent.name}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Master</span>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-sm text-zinc-600">
                       {new Date(cat.createdAt).toLocaleDateString("en-IN")}
@@ -365,7 +378,8 @@ export default function CategoriesAdminPage() {
                       <div className="flex items-center justify-end gap-2">
                         <EditCategoryButton
                           category={cat}
-                          onUpdate={handleUpdateImage}
+                          allCategories={categories}
+                          onUpdate={handleUpdateCategory}
                           isUpdating={updatingId === cat.id}
                         />
                         <button
@@ -393,9 +407,11 @@ export default function CategoriesAdminPage() {
   );
 }
 
-function EditCategoryButton({ category, onUpdate, isUpdating }: { category: any, onUpdate: (id: string, url: string) => void, isUpdating: boolean }) {
+function EditCategoryButton({ category, allCategories, onUpdate, isUpdating }: { category: any, allCategories: any[], onUpdate: (id: string, data: any) => void, isUpdating: boolean }) {
   const [showModal, setShowModal] = useState(false);
   const [tempUrl, setTempUrl] = useState(category.image || "");
+  const [tempName, setTempName] = useState(category.name || "");
+  const [tempParentId, setTempParentId] = useState(category.parentId || "");
 
   return (
     <>
@@ -433,6 +449,32 @@ function EditCategoryButton({ category, onUpdate, isUpdating }: { category: any,
               />
             </div>
 
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-zinc-700">Display Name</label>
+              <Input 
+                value={tempName}
+                onChange={(e) => setTempName(e.target.value)}
+                placeholder="Category Name"
+                className="h-10 rounded-lg border-zinc-200"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-zinc-700">Parent Category</label>
+              <select
+                value={tempParentId}
+                onChange={(e) => setTempParentId(e.target.value)}
+                className="w-full h-10 rounded-lg border border-zinc-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/20"
+              >
+                <option value="">No Parent (Top Level)</option>
+                {allCategories
+                  .filter(c => !c.parentId && c.id !== category.id) // Avoid circular ref
+                  .map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+              </select>
+            </div>
+
             {tempUrl && (
               <div className="w-full h-32 rounded-lg bg-zinc-100 overflow-hidden flex items-center justify-center">
                 <img
@@ -449,10 +491,14 @@ function EditCategoryButton({ category, onUpdate, isUpdating }: { category: any,
             <div className="flex items-center gap-2 pt-4">
               <Button
                 onClick={() => {
-                  onUpdate(category.id, tempUrl);
+                  onUpdate(category.id, { 
+                    image: tempUrl, 
+                    name: tempName, 
+                    parentId: tempParentId || null 
+                  });
                   setShowModal(false);
                 }}
-                disabled={isUpdating || tempUrl === category.image}
+                disabled={isUpdating || (tempUrl === category.image && tempName === category.name && tempParentId === category.parentId)}
                 className="h-10 rounded-lg bg-brand hover:bg-brand/90 gap-2"
               >
                 {isUpdating ? (
