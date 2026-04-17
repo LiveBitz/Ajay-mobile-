@@ -48,10 +48,8 @@ export class Logger {
       JSON.stringify(logEntry)
     );
 
-    // Optional: Store critical errors in database for analytics
-    if (level === LogLevel.CRITICAL || level === LogLevel.ERROR) {
-      // captureErrorToDatabase(logEntry); // TODO: implement if needed
-    }
+    // Optional: pipe CRITICAL/ERROR logs to an external service
+    // e.g. Sentry, Datadog, CloudWatch — integrate here when needed
   }
 
   static debug(message: string, context?: Record<string, unknown>) {

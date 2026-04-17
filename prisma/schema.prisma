@@ -178,10 +178,11 @@ model Order {
   
   @@index([userId])
   @@index([orderNumber])
-  @@index([status])        // ✅ For filtering orders by status
-  @@index([userId, createdAt])  // ✅ For user's order history with sorting
-  @@index([status, createdAt])  // ✅ PHASE 6: For dashboard status breakdown queries
-  @@index([createdAt])     // ✅ PHASE 6: For time-based filtering
+  @@index([status])                    // For filtering orders by status
+  @@index([userId, createdAt])         // For user's order history with sorting
+  @@index([status, createdAt])         // For dashboard status breakdown queries
+  @@index([createdAt])                 // For time-based filtering
+  @@index([customerEmail, createdAt])  // For newCustomersCount DISTINCT query on dashboard
 }
 
 model OrderItem {
