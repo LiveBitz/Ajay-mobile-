@@ -277,7 +277,7 @@ export default function FeaturedGroupsAdminPage() {
                   allCategories={allCategories}
                   onUpdate={fetchData}
                   onDelete={() => handleDeleteGroup(group.id, group.name)}
-                  onUpdateOrder={(newOrder) => handleUpdateOrder(group.id, newOrder)}
+                  onUpdateOrder={(newOrder: number) => handleUpdateOrder(group.id, newOrder)}
                 />
               ))
             )}
@@ -288,7 +288,13 @@ export default function FeaturedGroupsAdminPage() {
   );
 }
 
-function CategoryGridPicker({ availableCategories, selectedIds, onToggle }: { availableCategories: any[], selectedIds: string[], onToggle: (id: string) => void }) {
+interface CategoryGridPickerProps {
+  availableCategories: any[];
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+}
+
+function CategoryGridPicker({ availableCategories, selectedIds, onToggle }: CategoryGridPickerProps) {
   const [search, setSearch] = useState("");
   
   const filtered = useMemo(() => {
@@ -352,7 +358,17 @@ function CategoryGridPicker({ availableCategories, selectedIds, onToggle }: { av
   );
 }
 
-function ShowcaseCard({ group, index, total, allCategories, onUpdate, onDelete, onUpdateOrder }: any) {
+interface ShowcaseCardProps {
+  group: any;
+  index: number;
+  total: number;
+  allCategories: any[];
+  onUpdate: () => void;
+  onDelete: () => void;
+  onUpdateOrder: (newOrder: number) => void;
+}
+
+function ShowcaseCard({ group, index, total, allCategories, onUpdate, onDelete, onUpdateOrder }: ShowcaseCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(group.name);
   const [image, setImage] = useState(group.image || "");
