@@ -82,8 +82,18 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return items.some((item) => item.productId === productId);
   }, [items]);
 
-  // Add to wishlist
+  // Add to wishlist — optimistic update
   const addToWishlist = useCallback(async (productId: string) => {
+    // Immediately reflect in UI
+    const tempItem: WishlistItem = {
+      id: `temp-${productId}`,
+      userId: "",
+      productId,
+      product: { id: productId, name: "", slug: "", price: 0, originalPrice: 0, discount: 0, image: "" },
+      createdAt: new Date().toISOString(),
+    };
+    setItems((prev) => [tempItem, ...prev]);
+
     try {
       setError(null);
       const response = await fetch("/api/wishlist", {
@@ -93,29 +103,37 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Please login to add items to wishlist");
-        }
-        if (response.status === 404) {
-          throw new Error("Product not found");
-        }
+        // Revert optimistic update
+        setItems((prev) => prev.filter((item) => item.id !== tempItem.id));
+        if (response.status === 401) throw new Error("Please login to add items to wishlist");
+        if (response.status === 404) throw new Error("Product not found");
         throw new Error("Failed to add to wishlist");
       }
 
       const data = await response.json();
       if (data.action === "added" && data.data) {
-        setItems((prev) => [data.data, ...prev]);
+        // Replace temp item with real data from server
+        setItems((prev) =>
+          prev.map((item) => (item.id === tempItem.id ? { ...data.data, userId: item.userId } : item))
+        );
       }
     } catch (err) {
+      setItems((prev) => prev.filter((item) => item.id !== tempItem.id));
       const errorMsg = err instanceof Error ? err.message : "Failed to add to wishlist";
       setError(errorMsg);
-      console.error("Error adding to wishlist:", err);
       throw err;
     }
   }, []);
 
-  // Remove from wishlist
+  // Remove from wishlist — optimistic update
   const removeFromWishlist = useCallback(async (productId: string) => {
+    // Capture item before removing so we can restore on failure
+    let removedItem: WishlistItem | undefined;
+    setItems((prev) => {
+      removedItem = prev.find((item) => item.productId === productId);
+      return prev.filter((item) => item.productId !== productId);
+    });
+
     try {
       setError(null);
       const response = await fetch("/api/wishlist", {
@@ -125,20 +143,15 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Please login to manage wishlist");
-        }
+        // Revert optimistic update
+        if (removedItem) setItems((prev) => [removedItem!, ...prev]);
+        if (response.status === 401) throw new Error("Please login to manage wishlist");
         throw new Error("Failed to remove from wishlist");
       }
-
-      const data = await response.json();
-      if (data.action === "removed") {
-        setItems((prev) => prev.filter((item) => item.productId !== productId));
-      }
     } catch (err) {
+      if (removedItem) setItems((prev) => [removedItem!, ...prev]);
       const errorMsg = err instanceof Error ? err.message : "Failed to remove from wishlist";
       setError(errorMsg);
-      console.error("Error removing from wishlist:", err);
       throw err;
     }
   }, []);
