@@ -130,6 +130,7 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
   if (!products || products.length === 0) return null;
 
   return (
+    <>
     <div>
       {/* ─── Section Header ─── */}
       <div className="hurryup-header">
@@ -235,94 +236,24 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
         ))}
       </div>
 
-      <style>{`
-        /* ── Header layout ── */
-        .hurryup-header {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          margin-bottom: 20px;
-        }
-        @media (min-width: 1024px) {
-          .hurryup-header {
-            flex-direction: row;
-            align-items: flex-end;
-            justify-content: space-between;
-            gap: 24px;
-            margin-bottom: 28px;
-          }
-        }
-
-        /* Right column: timer + arrows stacked */
-        .hurryup-right {
-          display: flex;
-          flex-direction: row;
-          align-items: flex-end;
-          gap: 20px;
-        }
-        @media (min-width: 1024px) {
-          .hurryup-right {
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 16px;
-          }
-        }
-
-        /* ── Title scaling ── */
-        .hurryup-title {
-          font-size: clamp(22px, 4.5vw, 52px);
-        }
-        .hurryup-subtitle {
-          font-size: clamp(14px, 2.8vw, 34px);
-        }
-
-        /* ── Timer block ── */
-        .timer-block-box {
-          width: clamp(38px, 5vw, 52px);
-          height: clamp(38px, 5vw, 52px);
-        }
-        .timer-block-num {
-          font-size: clamp(15px, 2.2vw, 22px);
-        }
-
-        /* ── Carousel ── */
-        .hurryup-carousel {
-          display: flex;
-          flex-direction: row;
-          overflow-x: auto;
-          overflow-y: hidden;
-          gap: 10px;
-          padding-bottom: 10px;
-          scroll-behavior: smooth;
-          touch-action: manipulation;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          cursor: grab;
-          user-select: none;
-        }
-        .hurryup-carousel:active {
-          cursor: grabbing;
-        }
-        .hurryup-carousel::-webkit-scrollbar {
-          display: none;
-        }
-        @media (min-width: 640px) {
-          .hurryup-carousel { gap: 12px; }
-        }
-        @media (min-width: 768px) {
-          .hurryup-carousel { gap: 14px; }
-        }
-        @media (min-width: 1024px) {
-          .hurryup-carousel { gap: 16px; }
-        }
-
-        /* ── Card width — fluid across all breakpoints ── */
-        .hurryup-card-wrap {
-          flex-shrink: 0;
-          width: clamp(130px, 13vw, 210px);
-        }
-      `}</style>
     </div>
+    <style>{`
+      .hurryup-header { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+      @media (min-width: 1024px) { .hurryup-header { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; } }
+      .hurryup-right { display: flex; flex-direction: row; align-items: flex-end; gap: 20px; }
+      @media (min-width: 1024px) { .hurryup-right { flex-direction: column; align-items: flex-end; gap: 16px; } }
+      .hurryup-title { font-size: clamp(22px, 4.5vw, 52px); }
+      .hurryup-subtitle { font-size: clamp(14px, 2.8vw, 34px); }
+      .timer-block-box { width: clamp(38px, 5vw, 52px); height: clamp(38px, 5vw, 52px); }
+      .timer-block-num { font-size: clamp(15px, 2.2vw, 22px); }
+      .hurryup-carousel { display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 10px; padding-bottom: 10px; scroll-behavior: smooth; touch-action: manipulation; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; cursor: grab; user-select: none; }
+      .hurryup-carousel:active { cursor: grabbing; }
+      .hurryup-carousel::-webkit-scrollbar { display: none; }
+      @media (min-width: 640px) { .hurryup-carousel { gap: 12px; } }
+      @media (min-width: 768px) { .hurryup-carousel { gap: 14px; } }
+      @media (min-width: 1024px) { .hurryup-carousel { gap: 16px; } }
+      .hurryup-card-wrap { flex-shrink: 0; width: clamp(130px, 13vw, 210px); }
+    `}</style>
+    </>
   );
 }

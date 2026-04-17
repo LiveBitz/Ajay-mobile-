@@ -212,35 +212,12 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
       </div>
 
       <style>{`
-        .brand-carousel {
-          display: flex;
-          flex-direction: row;
-          gap: 10px;
-          overflow-x: auto;
-          overflow-y: hidden;
-          padding-bottom: 6px;
-          cursor: grab;
-          user-select: none;
-          -webkit-overflow-scrolling: touch;
-          touch-action: manipulation;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-        .brand-carousel:active {
-          cursor: grabbing;
-        }
-        .brand-carousel::-webkit-scrollbar {
-          display: none;
-        }
-        @media (min-width: 640px) {
-          .brand-carousel { gap: 12px; }
-        }
-        @media (min-width: 768px) {
-          .brand-carousel { gap: 14px; }
-        }
-        @media (min-width: 1024px) {
-          .brand-carousel { gap: 16px; }
-        }
+        .brand-carousel { display: flex; flex-direction: row; gap: 10px; overflow-x: auto; overflow-y: hidden; padding-bottom: 6px; cursor: grab; user-select: none; -webkit-overflow-scrolling: touch; touch-action: manipulation; scrollbar-width: none; -ms-overflow-style: none; }
+        .brand-carousel:active { cursor: grabbing; }
+        .brand-carousel::-webkit-scrollbar { display: none; }
+        @media (min-width: 640px) { .brand-carousel { gap: 12px; } }
+        @media (min-width: 768px) { .brand-carousel { gap: 14px; } }
+        @media (min-width: 1024px) { .brand-carousel { gap: 16px; } }
       `}</style>
     </section>
   );

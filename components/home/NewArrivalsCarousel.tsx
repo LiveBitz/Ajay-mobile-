@@ -196,6 +196,7 @@ export function NewArrivalsCarousel({ products }: Props) {
   }, [applyTransforms, onScroll, products.length, scrollToIndex, setEdgePadding]);
 
   return (
+    <>
     <div className="na-root">
       <div className="na-bg" />
 
@@ -256,117 +257,29 @@ export function NewArrivalsCarousel({ products }: Props) {
         </div>
       </div>
 
-      <style>{`
-        .na-root {
-          position: relative;
-          width: 100%;
-          overflow: hidden;
-          background: #ffffff;
-          padding-bottom: 20px;
-        }
-        .na-bg {
-          position: absolute;
-          left: 0; right: 0; top: 0; bottom: 60px;
-          background: radial-gradient(
-            ellipse 90% 70% at 50% 40%,
-            rgba(244,244,245,0.9) 0%,
-            rgba(255,255,255,0) 100%
-          );
-          pointer-events: none;
-          z-index: 0;
-        }
-        .na-track {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          align-items: center;
-          overflow-x: auto;
-          overflow-y: visible;
-          gap: 14px;
-          padding-top: 20px;
-          padding-bottom: 28px;
-          /* No scroll-snap — scrollToIndex handles all snapping */
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          /* touch-action managed by touchmove preventDefault */
-          box-sizing: border-box;
-          transform: translateZ(0);
-          -webkit-transform: translateZ(0);
-        }
-        .na-track::-webkit-scrollbar { display: none; }
-
-        .na-card {
-          flex-shrink: 0;
-          width: 50vw;
-          max-width: 230px;
-          cursor: pointer;
-          position: relative;
-          z-index: 1;
-        }
-
-        .na-card-inner {
-          border-radius: 20px;
-          overflow: hidden;
-          background: #ffffff;
-          border: 1px solid rgba(0,0,0,0.07);
-          transition:
-            box-shadow 0.4s ease,
-            transform  0.4s cubic-bezier(.25,.46,.45,.94);
-          transform: translateZ(0);
-          -webkit-transform: translateZ(0);
-        }
-
-        .na-controls {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 18px;
-          gap: 10px;
-        }
-        .na-counter { display: flex; align-items: center; gap: 7px; min-width: 56px; }
-        .na-cur {
-          font-size: 20px; font-weight: 900; color: #09090b;
-          letter-spacing: -0.05em; line-height: 1;
-        }
-        .na-sep { width: 1px; height: 16px; background: #e4e4e7; flex-shrink: 0; }
-        .na-tot { font-size: 13px; font-weight: 500; color: #a1a1aa; line-height: 1; }
-        .na-dots {
-          display: flex; align-items: center;
-          justify-content: center; gap: 5px; flex: 1;
-        }
-        .na-dot {
-          height: 5px; width: 5px; border-radius: 9999px;
-          border: none; padding: 0; cursor: pointer; background: #e4e4e7;
-          transition:
-            width 0.3s cubic-bezier(.25,.46,.45,.94),
-            background-color 0.3s ease;
-        }
-        .na-dot[data-active="true"] { width: 24px; background: #dc2626; }
-        .na-arrows {
-          display: flex; align-items: center;
-          gap: 7px; min-width: 56px; justify-content: flex-end;
-        }
-        .na-arrow {
-          width: 32px; height: 32px; border-radius: 50%;
-          border: 1px solid #e4e4e7; background: #ffffff;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; color: #52525b;
-          transition: all 0.18s ease; padding: 0;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-        }
-        .na-arrow:disabled { opacity: 0.25; cursor: not-allowed; box-shadow: none; }
-        .na-arrow:not(:disabled):active { transform: scale(0.92); background: #f4f4f5; }
-        .na-arrow-next:not(:disabled) {
-          background: #dc2626; border-color: #dc2626; color: #ffffff;
-          box-shadow: 0 4px 12px rgba(220,38,38,0.28);
-        }
-        .na-arrow-next:not(:disabled):active {
-          transform: scale(0.92); background: #b91c1c;
-        }
-      `}</style>
     </div>
+    <style>{`
+      .na-root { position: relative; width: 100%; overflow: hidden; background: #ffffff; padding-bottom: 20px; }
+      .na-bg { position: absolute; left: 0; right: 0; top: 0; bottom: 60px; background: radial-gradient(ellipse 90% 70% at 50% 40%, rgba(244,244,245,0.9) 0%, rgba(255,255,255,0) 100%); pointer-events: none; z-index: 0; }
+      .na-track { position: relative; z-index: 1; display: flex; align-items: center; overflow-x: auto; overflow-y: visible; gap: 14px; padding-top: 20px; padding-bottom: 28px; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; box-sizing: border-box; transform: translateZ(0); -webkit-transform: translateZ(0); }
+      .na-track::-webkit-scrollbar { display: none; }
+      .na-card { flex-shrink: 0; width: 50vw; max-width: 230px; cursor: pointer; position: relative; z-index: 1; }
+      .na-card-inner { border-radius: 20px; overflow: hidden; background: #ffffff; border: 1px solid rgba(0,0,0,0.07); transition: box-shadow 0.4s ease, transform 0.4s cubic-bezier(.25,.46,.45,.94); transform: translateZ(0); -webkit-transform: translateZ(0); }
+      .na-controls { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; gap: 10px; }
+      .na-counter { display: flex; align-items: center; gap: 7px; min-width: 56px; }
+      .na-cur { font-size: 20px; font-weight: 900; color: #09090b; letter-spacing: -0.05em; line-height: 1; }
+      .na-sep { width: 1px; height: 16px; background: #e4e4e7; flex-shrink: 0; }
+      .na-tot { font-size: 13px; font-weight: 500; color: #a1a1aa; line-height: 1; }
+      .na-dots { display: flex; align-items: center; justify-content: center; gap: 5px; flex: 1; }
+      .na-dot { height: 5px; width: 5px; border-radius: 9999px; border: none; padding: 0; cursor: pointer; background: #e4e4e7; transition: width 0.3s cubic-bezier(.25,.46,.45,.94), background-color 0.3s ease; }
+      .na-dot[data-active="true"] { width: 24px; background: #dc2626; }
+      .na-arrows { display: flex; align-items: center; gap: 7px; min-width: 56px; justify-content: flex-end; }
+      .na-arrow { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e4e4e7; background: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #52525b; transition: all 0.18s ease; padding: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+      .na-arrow:disabled { opacity: 0.25; cursor: not-allowed; box-shadow: none; }
+      .na-arrow:not(:disabled):active { transform: scale(0.92); background: #f4f4f5; }
+      .na-arrow-next:not(:disabled) { background: #dc2626; border-color: #dc2626; color: #ffffff; box-shadow: 0 4px 12px rgba(220,38,38,0.28); }
+      .na-arrow-next:not(:disabled):active { transform: scale(0.92); background: #b91c1c; }
+    `}</style>
+    </>
   );
 }

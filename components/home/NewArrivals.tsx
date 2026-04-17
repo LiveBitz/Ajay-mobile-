@@ -54,46 +54,12 @@ export async function NewArrivals() {
       </div>
 
       <style>{`
-        /* MOBILE: show carousel, hide grid */
-        .na-mobile-wrapper {
-          display: block;
-        }
-        .new-arrivals-grid {
-          display: none;
-        }
-
-        /* DESKTOP (768px+): hide carousel, show grid */
-        @media (min-width: 768px) {
-          .na-mobile-wrapper {
-            display: none;
-          }
-          .new-arrivals-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 14px;
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .new-arrivals-grid {
-            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-            gap: 16px;
-          }
-        }
-
-        @media (min-width: 1280px) {
-          .new-arrivals-grid {
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 18px;
-          }
-        }
-
-        @media (min-width: 1536px) {
-          .new-arrivals-grid {
-            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-            gap: 20px;
-          }
-        }
+        .na-mobile-wrapper { display: block; }
+        .new-arrivals-grid { display: none; }
+        @media (min-width: 768px) { .na-mobile-wrapper { display: none; } .new-arrivals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; } }
+        @media (min-width: 1024px) { .new-arrivals-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; } }
+        @media (min-width: 1280px) { .new-arrivals-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; } }
+        @media (min-width: 1536px) { .new-arrivals-grid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 20px; } }
       `}</style>
     </section>
   );

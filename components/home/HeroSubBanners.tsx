@@ -177,38 +177,10 @@ export function HeroSubBanners({
 
       {/* All mobile scroll logic in plain CSS — no jsx, no Tailwind conflicts */}
       <style>{`
-        .hero-sub-scroll {
-          display: flex;
-          flex-direction: row;
-          overflow-x: auto;
-          overflow-y: hidden;
-          gap: 12px;
-          padding-bottom: 8px;
-          scroll-snap-type: x mandatory;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          cursor: grab;
-          user-select: none;
-          white-space: nowrap;
-        }
-
-        .hero-sub-scroll:active {
-          cursor: grabbing;
-        }
-
-        .hero-sub-scroll::-webkit-scrollbar {
-          display: none;
-        }
-
-        .hero-sub-mobile-card {
-          display: inline-block;
-          flex-shrink: 0;
-          width: 84vw;
-          max-width: 480px;
-          scroll-snap-align: start;
-          white-space: normal;
-        }
+        .hero-sub-scroll { display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 12px; padding-bottom: 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; cursor: grab; user-select: none; white-space: nowrap; }
+        .hero-sub-scroll:active { cursor: grabbing; }
+        .hero-sub-scroll::-webkit-scrollbar { display: none; }
+        .hero-sub-mobile-card { display: inline-block; flex-shrink: 0; width: 84vw; max-width: 480px; scroll-snap-align: start; white-space: normal; }
       `}</style>
     </>
   );

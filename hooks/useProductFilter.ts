@@ -112,27 +112,25 @@ export function useProductFilter(
     }
 
     countSource.forEach((p) => {
-      // Sum actual inventory units per size (handles both "SIZE:QTY", "SIZE-COLOR:QTY", and "SIZE" formats)
+      // Count products per size (not inventory units) — show how many products have each size in stock
+      const seenSizes = new Set<string>();
       normalizeArray(p.sizes).forEach((s) => {
         const parts = s.split(":");
-        // Handle both "S:10" and "S-White:5" formats
         const fullSize = parts[0];
         const size = fullSize.includes("-") ? fullSize.split("-")[0] : fullSize;
-        
-        // If format has quantity (both "SIZE:QTY" and "SIZE-COLOR:QTY")
-        let quantity = 0;
+
+        // Check if this size has available stock
+        let hasStock = false;
         if (parts.length > 1) {
-          quantity = parseInt(parts[1]) || 0;
+          hasStock = (parseInt(parts[1]) || 0) > 0;
         } else {
-          // Legacy format without qty - distribute total stock across all sizes
-          const totalStock = (p as any).stock || 0;
-          const sizeCount = normalizeArray(p.sizes).length;
-          quantity = sizeCount > 0 ? Math.ceil(totalStock / sizeCount) : totalStock;
+          hasStock = ((p as any).stock || 0) > 0;
         }
-        
-        // Only count if size has available stock
-        if (quantity > 0) {
-          sCounts[size] = (sCounts[size] || 0) + quantity;
+
+        // Count each size once per product (not per unit)
+        if (hasStock && !seenSizes.has(size)) {
+          seenSizes.add(size);
+          sCounts[size] = (sCounts[size] || 0) + 1;
         }
       });
       
