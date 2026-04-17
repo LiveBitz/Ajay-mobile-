@@ -3,8 +3,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import prisma from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
+import { generateAdminToken } from "@/lib/admin-token";
+
+// Rate limit: 5 attempts per 15 minutes per IP
+const ADMIN_LOGIN_RATE_LIMIT = { interval: 15 * 60 * 1000, maxRequests: 5 };
 
 export async function signIn(formData: FormData) {
   const email = formData.get("email") as string;
@@ -20,25 +25,22 @@ export async function signIn(formData: FormData) {
     return { error: error.message };
   }
 
-  // ✅ Create or update user in database on login
+  // Sync user record — non-fatal: a DB failure must not block login
   if (data.user?.id && data.user?.email) {
-    try {
-      await prisma.user.upsert({
-        where: { id: data.user.id },
-        update: {
-          email: data.user.email,
-          name: data.user.user_metadata?.name || data.user.email.split("@")[0] || "User",
-        },
-        create: {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.user_metadata?.name || data.user.email.split("@")[0] || "User",
-        },
-      });
-    } catch (err) {
-      console.error("Error upserting user on login:", err);
-      // Don't block login if user creation fails
-    }
+    prisma.user.upsert({
+      where: { id: data.user.id },
+      update: {
+        email: data.user.email,
+        name: data.user.user_metadata?.name || data.user.email.split("@")[0] || "User",
+      },
+      create: {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.user_metadata?.name || data.user.email.split("@")[0] || "User",
+      },
+    }).catch((err: unknown) => {
+      console.error("[signIn] Failed to sync user record:", err);
+    });
   }
 
   revalidatePath("/", "layout");
@@ -48,7 +50,19 @@ export async function signIn(formData: FormData) {
 export async function signUp(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
-  const name = formData.get("name") as string; // Get name from form
+  const name = formData.get("name") as string;
+
+  // Server-side password strength enforcement
+  if (!password || password.length < 8) {
+    return { error: "Password must be at least 8 characters." };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { error: "Password must contain at least one uppercase letter." };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { error: "Password must contain at least one number." };
+  }
+
   const supabase = await createClient();
 
   const { error, data } = await supabase.auth.signUp({
@@ -66,20 +80,17 @@ export async function signUp(formData: FormData) {
     return { error: error.message };
   }
 
-  // ✅ Create user in database immediately upon signup
+  // Sync user record — non-fatal: a DB failure must not block signup
   if (data.user?.id && email) {
-    try {
-      await prisma.user.create({
-        data: {
-          id: data.user.id,
-          email: email,
-          name: name || email.split("@")[0],
-        },
-      });
-    } catch (err) {
-      console.error("Error creating user in database:", err);
-      // Don't block signup if user creation fails
-    }
+    prisma.user.create({
+      data: {
+        id: data.user.id,
+        email,
+        name: name || email.split("@")[0],
+      },
+    }).catch((err: unknown) => {
+      console.error("[signUp] Failed to create user record:", err);
+    });
   }
 
   revalidatePath("/", "layout");
@@ -99,18 +110,53 @@ export async function signOut() {
 }
 
 export async function verifyAdminPasscode(formData: FormData) {
-  const passcode = formData.get("passcode") as string;
-  const adminPasscode = process.env.ADMIN_PASSCODE || "7014";
+  // --- Rate limiting ---
+  const headersList = await headers();
+  const ip =
+    headersList.get("x-forwarded-for")?.split(",")[0].trim() ||
+    headersList.get("x-real-ip") ||
+    "unknown";
+  const { allowed, resetIn } = rateLimit(
+    `admin_login:${ip}`,
+    ADMIN_LOGIN_RATE_LIMIT
+  );
+  if (!allowed) {
+    const minutes = Math.ceil(resetIn / 60000);
+    return { error: `Too many attempts. Try again in ${minutes} minute(s).` };
+  }
 
-  if (passcode === adminPasscode) {
+  // --- Passcode validation ---
+  const adminPasscode = process.env.ADMIN_PASSCODE;
+  if (!adminPasscode || adminPasscode.length < 8) {
+    // Misconfigured server — do not hint at details to the client
+    console.error(
+      "[ADMIN] ADMIN_PASSCODE is not set or is too short (minimum 8 characters)."
+    );
+    return { error: "Admin access is not configured. Contact the system administrator." };
+  }
+
+  const passcode = formData.get("passcode") as string;
+
+  // Constant-time string comparison to prevent timing attacks
+  const encoder = new TextEncoder();
+  const a = encoder.encode(passcode.padEnd(adminPasscode.length));
+  const b = encoder.encode(adminPasscode);
+  let mismatch = a.length !== b.length ? 1 : 0;
+  const len = Math.min(a.length, b.length);
+  for (let i = 0; i < len; i++) mismatch |= a[i] ^ b[i];
+
+  if (mismatch === 0) {
+    // Generate a signed token so the cookie cannot be forged
+    const token = await generateAdminToken();
     const cookieStore = await cookies();
-    cookieStore.set("admin_access", "true", {
+    cookieStore.set("admin_access", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 60 * 60 * 24, // 24 hours
       path: "/",
     });
-    
+
     revalidatePath("/admin", "layout");
     redirect("/admin");
   }

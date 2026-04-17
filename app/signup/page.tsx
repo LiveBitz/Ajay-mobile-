@@ -10,10 +10,26 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+function getPasswordStrength(password: string): { score: number; label: string; color: string } {
+  if (!password) return { score: 0, label: "", color: "" };
+  let score = 0;
+  if (password.length >= 8)  score++;
+  if (password.length >= 12) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  if (score <= 1) return { score, label: "Weak",   color: "bg-red-500" };
+  if (score <= 3) return { score, label: "Fair",   color: "bg-yellow-500" };
+  if (score === 4) return { score, label: "Good",  color: "bg-blue-500" };
+  return             { score, label: "Strong", color: "bg-emerald-500" };
+}
+
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [password, setPassword] = useState("");
   const { toast } = useToast();
+  const strength = getPasswordStrength(password);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -133,9 +149,28 @@ export default function SignupPage() {
                   name="password"
                   type="password"
                   required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="h-12 pl-10 rounded-xl bg-zinc-50 border border-zinc-200 focus:border-zinc-400 focus:bg-white text-sm text-zinc-900 transition-all"
                 />
+                {password && (
+                  <div className="mt-2 space-y-1">
+                    <div className="flex gap-1">
+                      {[1,2,3,4,5].map((i) => (
+                        <div
+                          key={i}
+                          className={`h-1 flex-1 rounded-full transition-colors ${i <= strength.score ? strength.color : "bg-zinc-200"}`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-zinc-500">
+                      Strength: <span className="font-semibold">{strength.label}</span>
+                      {strength.score < 3 && " — add uppercase letters, numbers, or symbols"}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

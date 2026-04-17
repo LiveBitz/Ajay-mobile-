@@ -92,11 +92,11 @@ export default function CheckoutPage() {
       }
       const orderData = await orderResponse.json();
       const createdOrder = orderData.order;
-      const orderDetails = {
+      // Only pass order number + items — no customer PII in the WhatsApp message
+      const orderMessageData = {
+        orderNumber: createdOrder.orderNumber,
         items: items.map((item) => ({ name: item.name, quantity: item.quantity, price: item.price })),
-        subtotal: totalPrice, tax: 0, shipping: 0, total: totalPrice,
-        customerName: address.name, customerEmail: userEmail, customerPhone: address.phone,
-        deliveryAddress: { street: address.street, city: address.city, state: address.state, zipCode: address.zipCode },
+        total: totalPrice,
       };
       const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_PHONE;
       if (!adminPhone) {
@@ -105,7 +105,7 @@ export default function CheckoutPage() {
         return;
       }
       clearCart();
-      redirectToWhatsApp(adminPhone, orderDetails);
+      redirectToWhatsApp(adminPhone, orderMessageData);
       setTimeout(() => { router.push(`/order-confirmation/${createdOrder.id}`); }, 300);
     } catch (error: any) {
       setIsLoading(false);

@@ -1,16 +1,13 @@
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { addCacheHeaders, CACHE_STRATEGIES } from "@/lib/cache-headers";
+import { verifyAdminRequest } from "@/lib/admin-auth";
 
 export async function GET(req: NextRequest) {
   try {
-    // Check authentication
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.getUser();
-
-    if (error || !data.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await verifyAdminRequest(req);
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     // Get parameters from query
@@ -293,11 +290,10 @@ export async function GET(req: NextRequest) {
     response.headers.set("Cache-Control", "private, max-age=300, s-maxage=0");
     return response;
   } catch (error) {
+    // Log full error server-side; never expose DB internals to the client
     console.error("Dashboard API error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error details:", errorMessage);
     return NextResponse.json(
-      { error: `Failed to fetch dashboard data: ${errorMessage}` },
+      { error: "Failed to fetch dashboard data." },
       { status: 500 }
     );
   }

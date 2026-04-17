@@ -2,27 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-
-/**
- * Verify admin authentication
- */
-const verifyAdminAuth = async (): Promise<{ isValid: boolean; error?: string }> => {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.getUser();
-    
-    if (error || !data.user) {
-      return { isValid: false, error: "Unauthorized: You must be logged in" };
-    }
-    
-    // TODO: Add role-based check if you have admin roles in Supabase
-    // For now, just verify user is authenticated
-    return { isValid: true };
-  } catch (err) {
-    return { isValid: false, error: "Authentication check failed" };
-  }
-};
+import { verifyAdminAction } from "@/lib/admin-auth";
 
 /**
  * Validates product data before saving to database
@@ -114,11 +94,8 @@ const validateProductData = (data: any): { isValid: boolean; errors: string[] } 
 
 export async function createProduct(data: any) {
   try {
-    // ✅ VERIFY ADMIN AUTH FIRST
-    const authCheck = await verifyAdminAuth();
-    if (!authCheck.isValid) {
-      return { success: false, error: authCheck.error || "Unauthorized" };
-    }
+    const auth = await verifyAdminAction();
+    if (!auth.authorized) return { success: false, error: auth.error };
 
     // Validate data before saving
     const validation = validateProductData(data);
@@ -184,11 +161,8 @@ export async function createProduct(data: any) {
 
 export async function updateProduct(id: string, data: any) {
   try {
-    // ✅ VERIFY ADMIN AUTH FIRST
-    const authCheck = await verifyAdminAuth();
-    if (!authCheck.isValid) {
-      return { success: false, error: authCheck.error || "Unauthorized" };
-    }
+    const auth = await verifyAdminAction();
+    if (!auth.authorized) return { success: false, error: auth.error };
 
     // Validate data before saving
     const validation = validateProductData(data);
@@ -244,11 +218,8 @@ export async function updateProduct(id: string, data: any) {
 
 export async function deleteProduct(id: string) {
   try {
-    // ✅ VERIFY ADMIN AUTH FIRST
-    const authCheck = await verifyAdminAuth();
-    if (!authCheck.isValid) {
-      return { success: false, error: authCheck.error || "Unauthorized" };
-    }
+    const auth = await verifyAdminAction();
+    if (!auth.authorized) return { success: false, error: auth.error };
 
     await prisma.product.delete({
       where: { id }
@@ -265,11 +236,8 @@ export async function deleteProduct(id: string) {
 
 export async function toggleBestSeller(id: string) {
   try {
-    // ✅ VERIFY ADMIN AUTH FIRST
-    const authCheck = await verifyAdminAuth();
-    if (!authCheck.isValid) {
-      return { success: false, error: authCheck.error || "Unauthorized" };
-    }
+    const auth = await verifyAdminAction();
+    if (!auth.authorized) return { success: false, error: auth.error };
 
     // Get current state
     const product = await prisma.product.findUnique({
@@ -299,11 +267,8 @@ export async function toggleBestSeller(id: string) {
 
 export async function toggleNewArrival(id: string) {
   try {
-    // ✅ VERIFY ADMIN AUTH FIRST
-    const authCheck = await verifyAdminAuth();
-    if (!authCheck.isValid) {
-      return { success: false, error: authCheck.error || "Unauthorized" };
-    }
+    const auth = await verifyAdminAction();
+    if (!auth.authorized) return { success: false, error: auth.error };
 
     // Get current state
     const product = await prisma.product.findUnique({

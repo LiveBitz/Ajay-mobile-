@@ -3,6 +3,38 @@ import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
+import { z } from "zod";
+
+// ── Zod schema for POST /api/orders ─────────────────────────────────────────
+
+const orderItemSchema = z.object({
+  productId: z.string().min(1),
+  quantity:  z.number().int().min(1).max(99),
+  size:      z.string().max(20).optional(),
+  color:     z.string().max(50).optional(),
+});
+
+const addressSchema = z.object({
+  name:    z.string().min(1).max(100),
+  phone:   z.string().min(7).max(20),
+  street:  z.string().min(1).max(200),
+  city:    z.string().min(1).max(100),
+  state:   z.string().min(1).max(100),
+  zipCode: z.string().min(3).max(20),
+});
+
+const contactInfoSchema = z.object({
+  name:  z.string().min(1).max(100),
+  email: z.string().email().max(254),
+  phone: z.string().min(7).max(20),
+});
+
+const createOrderSchema = z.object({
+  items:         z.array(orderItemSchema).min(1).max(50),
+  address:       addressSchema,
+  contactInfo:   contactInfoSchema,
+  paymentMethod: z.enum(["whatsapp", "cod", "online"]).default("whatsapp"),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -63,9 +95,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(order);
     }
 
-    // Fetch user's orders with pagination - Phase 7: Prevent loading all orders at once
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("limit") || "10");
+    // Fetch user's orders with pagination — cap pageSize to prevent resource exhaustion
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const pageSize = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "10")));
     const skip = (page - 1) * pageSize;
 
     const orders = await prisma.order.findMany({
@@ -138,28 +170,31 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = data.user.id;
-    const body = await request.json();
-    const { items, address, contactInfo, paymentMethod = "whatsapp" } = body;
 
-    // Validate required fields
-    if (!items || items.length === 0) {
-      return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
-    }
-
-    if (!address || !contactInfo) {
+    // Require verified email before placing orders
+    if (!data.user.email_confirmed_at) {
       return NextResponse.json(
-        { error: "Missing address or contact info" },
-        { status: 400 }
+        { error: "Please verify your email address before placing an order." },
+        { status: 403 }
       );
     }
 
-    // Validate address fields
-    if (!address.street || !address.city || !address.state || !address.zipCode) {
-      return NextResponse.json(
-        { error: "Invalid address information" },
-        { status: 400 }
-      );
+    // Parse + validate request body with Zod
+    let body: z.infer<typeof createOrderSchema>;
+    try {
+      const raw = await request.json();
+      body = createOrderSchema.parse(raw);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return NextResponse.json(
+          { error: "Invalid request data.", details: err.issues.map((i) => `${i.path.join(".")}: ${i.message}`) },
+          { status: 400 }
+        );
+      }
+      return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
+
+    const { items, address, contactInfo, paymentMethod } = body;
 
     // Calculate totals and validate products
     // Phase 7: Batch fetch all products instead of N+1 loop
@@ -349,25 +384,19 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error("Error creating order:", error);
-    
-    // Provide more detailed error information
+
     if (error.code === "P2002") {
-      return NextResponse.json(
-        { error: "Order already exists" },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: "Order already exists." }, { status: 409 });
     }
-
     if (error.code === "P2025") {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Product not found." }, { status: 404 });
+    }
+    // For stock errors thrown inside the transaction, surface the message
+    if (error.message?.startsWith("Insufficient stock")) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
 
-    return NextResponse.json(
-      { error: error.message || "Failed to create order" },
-      { status: 500 }
-    );
+    // All other errors: log internally, return generic message to client
+    return NextResponse.json({ error: "Failed to create order. Please try again." }, { status: 500 });
   }
 }

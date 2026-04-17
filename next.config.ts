@@ -47,6 +47,23 @@ const nextConfig: NextConfig = {
   // SECURITY HEADERS & CACHE CONTROL
   // ============================================
   async headers() {
+    // Content-Security-Policy — tightened per actual usage:
+    //   - next.js needs 'unsafe-inline' for its runtime style injection
+    //   - WhatsApp redirect opens an external URL (handled client-side, no fetch)
+    //   - Images come from several external CDNs (listed in img-src)
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  // unsafe-eval needed by Next.js dev/turbopack
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://picsum.photos https://i.pinimg.com https://images.unsplash.com https://i.imgur.com https://zmsbmnxqhmxaaemnswzc.supabase.co https://zjhxlwanzqdigsvqxzau.supabase.co https://api.dicebear.com",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "upgrade-insecure-requests",
+    ].join("; ");
+
     return [
       // HTML pages - short cache for real-time updates
       {
@@ -54,7 +71,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "X-Frame-Options",
-            value: "SAMEORIGIN",
+            value: "DENY",
           },
           {
             key: "X-Content-Type-Options",
@@ -72,7 +89,15 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "geolocation=(self), microphone=(), camera=()",
           },
-          // ✅ Short cache for HTML pages (5 minutes) + revalidate + CDN
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=31536000; includeSubDomains",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: csp,
+          },
+          // Short cache for HTML pages (5 minutes) + revalidate + CDN
           {
             key: "Cache-Control",
             value: "public, max-age=300, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400",

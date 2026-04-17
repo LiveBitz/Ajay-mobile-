@@ -130,26 +130,15 @@ export default function OrderConfirmationPage() {
     setIsResending(true);
 
     try {
-      // Format order details for WhatsApp
+      // Only send order number + items — no customer PII in the WhatsApp message
       const orderDetails = {
+        orderNumber: order.orderNumber,
         items: order.items.map((item) => ({
           name: item.product.name,
           quantity: item.quantity,
           price: item.price,
         })),
-        subtotal: order.subtotal,
-        tax: order.tax,
-        shipping: order.shipping,
         total: order.total,
-        customerName: order.customerName,
-        customerEmail: order.customerEmail,
-        customerPhone: order.customerPhone,
-        deliveryAddress: {
-          street: order.street,
-          city: order.city,
-          state: order.state,
-          zipCode: order.zipCode,
-        },
       };
 
       // Get admin WhatsApp number from environment

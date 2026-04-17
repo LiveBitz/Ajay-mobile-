@@ -2,21 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "next-dev",
+      "name": "souled-store",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3000
-    },
-    {
-      "name": "next-dev-clean",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:clean"],
-      "port": 3000
-    },
-    {
-      "name": "next-start",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start"],
       "port": 3000
     }
   ]

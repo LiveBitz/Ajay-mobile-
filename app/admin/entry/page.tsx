@@ -73,23 +73,22 @@ export default function AdminEntryPage() {
             {/* Passcode Form */}
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="space-y-4">
-                <Label 
+                <Label
                   htmlFor="passcode"
                   className="text-[11px] font-black uppercase tracking-[0.25em] text-zinc-400 px-2"
                 >
-                  Administrative Key (4 Digits)
+                  Administrative Key
                 </Label>
                 <div className="relative group/input">
                   <Key className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300 group-focus-within/input:text-zinc-900 transition-colors" />
-                  <Input 
+                  <Input
                     id="passcode"
                     name="passcode"
                     type="password"
                     required
-                    maxLength={4}
                     value={passcode}
                     onChange={(e) => setPasscode(e.target.value)}
-                    placeholder="••••"
+                    placeholder="••••••••"
                     className="h-20 pl-14 text-3xl tracking-[1em] font-black rounded-[28px] border-zinc-100 bg-zinc-50/50 text-zinc-900 focus:bg-white focus:ring-4 focus:ring-zinc-100 transition-all shadow-sm placeholder:text-zinc-200"
                   />
                 </div>
@@ -98,7 +97,7 @@ export default function AdminEntryPage() {
               <div className="grid grid-cols-1 gap-4">
                 <Button 
                   type="submit"
-                  disabled={isLoading || passcode.length < 4}
+                  disabled={isLoading || passcode.length < 8}
                   className="w-full h-18 rounded-[28px] bg-zinc-900 text-white hover:bg-zinc-800 font-bold text-base uppercase tracking-widest gap-3 shadow-2xl shadow-zinc-300 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
                 >
                   {isLoading ? (

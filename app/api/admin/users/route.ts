@@ -1,12 +1,14 @@
 import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { verifyAdminRequest } from "@/lib/admin-auth";
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("=== Users API Called ===");
-    
-    // ✅ Note: Middleware protects /admin routes, so no additional auth needed here
-    // The page is only accessible to authenticated admins
+    // API routes are excluded from middleware — auth must be enforced here explicitly
+    const auth = await verifyAdminRequest(request);
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
 
     // ✅ FIRST: Try to fetch from User table
     let dbUsers: any = await prisma.user.findMany({
