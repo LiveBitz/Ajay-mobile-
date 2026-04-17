@@ -4,8 +4,11 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     // Simple auth check with secret header
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    }
     const secret = request.headers.get("x-seed-secret");
-    if (secret !== "seed-banners-dev") {
+    if (!secret || secret !== process.env.SEED_SECRET) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -59,7 +62,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Failed to seed banners:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to seed banners", details: String(error) },
+      { success: false, error: "Failed to seed banners." },
       { status: 500 }
     );
   }

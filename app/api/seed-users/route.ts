@@ -6,8 +6,11 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     // Security: require secret header
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    }
     const secret = request.headers.get("x-seed-secret");
-    if (secret !== "seed-users-dev") {
+    if (!secret || secret !== process.env.SEED_SECRET) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }

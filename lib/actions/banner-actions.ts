@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { verifyAdminAction } from "@/lib/admin-auth";
 
 export async function getBanners(type?: string) {
   try {
@@ -42,11 +43,31 @@ export async function getAllBanners() {
   }
 }
 
-export async function createBanner(data: any) {
+interface BannerInput {
+  type: string;
+  title: string;
+  subtitle?: string | null;
+  image?: string | null;
+  buttonText?: string | null;
+  link?: string | null;
+  order?: number;
+  isActive?: boolean;
+}
+
+export async function createBanner(data: BannerInput) {
+  const auth = await verifyAdminAction();
+  if (!auth.authorized) return { success: false, error: auth.error };
   try {
     const banner = await prisma.banner.create({
       data: {
-        ...data,
+        type: data.type,
+        title: data.title,
+        subtitle: data.subtitle ?? null,
+        image: data.image ?? null,
+        buttonText: data.buttonText ?? null,
+        link: data.link ?? null,
+        order: data.order ?? 0,
+        isActive: data.isActive ?? true,
       },
     });
     revalidatePath("/");
@@ -57,12 +78,21 @@ export async function createBanner(data: any) {
   }
 }
 
-export async function updateBanner(id: string, data: any) {
+export async function updateBanner(id: string, data: Partial<BannerInput>) {
+  const auth = await verifyAdminAction();
+  if (!auth.authorized) return { success: false, error: auth.error };
   try {
     const banner = await prisma.banner.update({
       where: { id },
       data: {
-        ...data,
+        ...(data.type !== undefined && { type: data.type }),
+        ...(data.title !== undefined && { title: data.title }),
+        ...(data.subtitle !== undefined && { subtitle: data.subtitle }),
+        ...(data.image !== undefined && { image: data.image }),
+        ...(data.buttonText !== undefined && { buttonText: data.buttonText }),
+        ...(data.link !== undefined && { link: data.link }),
+        ...(data.order !== undefined && { order: data.order }),
+        ...(data.isActive !== undefined && { isActive: data.isActive }),
       },
     });
     revalidatePath("/");
@@ -74,6 +104,8 @@ export async function updateBanner(id: string, data: any) {
 }
 
 export async function deleteBanner(id: string) {
+  const auth = await verifyAdminAction();
+  if (!auth.authorized) return { success: false, error: auth.error };
   try {
     await prisma.banner.delete({
       where: { id },
@@ -87,6 +119,8 @@ export async function deleteBanner(id: string) {
 }
 
 export async function toggleBannerStatus(id: string, isActive: boolean) {
+  const auth = await verifyAdminAction();
+  if (!auth.authorized) return { success: false, error: auth.error };
   try {
     await prisma.banner.update({
       where: { id },

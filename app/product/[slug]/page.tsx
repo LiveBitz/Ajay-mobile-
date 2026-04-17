@@ -15,7 +15,17 @@ import { cn } from "@/lib/utils";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { ProductSelection } from "@/components/catalog/ProductSelection";
 
-export const revalidate = 300; // 5 minutes - real-time updates
+export const revalidate = 300; // ISR: regenerate in background every 5 minutes
+
+// Pre-generate all product pages at build time so they're served as static HTML.
+// New products added after build are still handled by the fallback (SSR on first hit,
+// then cached) because dynamicParams defaults to true.
+export async function generateStaticParams() {
+  const products = await prisma.product.findMany({
+    select: { slug: true },
+  });
+  return products.map((p) => ({ slug: p.slug }));
+}
 
 async function getProduct(slug: string) {
   return await prisma.product.findUnique({

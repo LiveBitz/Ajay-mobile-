@@ -1,9 +1,28 @@
 import React from "react";
 import prisma from "@/lib/prisma";
 import { SearchCatalog } from "@/components/catalog/SearchCatalog";
+import type { Metadata } from "next";
 
-// ✅ Static regeneration - cache search results for 30 minutes
-export const revalidate = 300; // 5 minutes - real-time updates
+export const revalidate = 300;
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}): Promise<Metadata> {
+  const { q = "" } = await searchParams;
+  const title = q ? `Results for "${q}" | NEXUS` : "Search | NEXUS";
+  const description = q
+    ? `Shop NEXUS for "${q}" — premium smartphones and accessories.`
+    : "Search our full range of premium smartphones and accessories.";
+  return {
+    title,
+    description,
+    openGraph: { title, description },
+    // Search results are user-specific — tell crawlers not to index them
+    robots: { index: false, follow: true },
+  };
+}
 
 export default async function SearchPage({
   searchParams,

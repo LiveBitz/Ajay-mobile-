@@ -70,7 +70,7 @@ export default function AdminOrdersPage() {
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/admin/orders");
+      const response = await fetch("/api/admin/orders", { cache: "no-store" });
 
       if (!response.ok) {
         throw new Error("Failed to fetch orders");

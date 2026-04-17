@@ -4,18 +4,17 @@ export function normalizeBannerLink(rawLink: unknown): string {
   const trimmed = rawLink.trim();
   if (!trimmed) return "/";
 
-  if (/^(https?:\/\/|mailto:|tel:)/i.test(trimmed)) {
-    return trimmed;
+  // Only allow relative paths (no external redirects via banner links)
+  if (trimmed.startsWith("/")) {
+    // Strip any protocol-relative or double-slash attempts (e.g. //evil.com)
+    return `/${trimmed.replace(/^\/+/, "")}`;
   }
 
   if (trimmed.startsWith("#")) {
     return trimmed;
   }
 
-  if (trimmed.startsWith("/")) {
-    return trimmed;
-  }
-
+  // Reject absolute URLs (http/https/mailto/tel) — banners link within the store only
   return `/${trimmed.replace(/^\/+/, "")}`;
 }
 
@@ -32,19 +31,6 @@ function toTitleCaseFromSlug(value: string): string {
 
 export function getBannerLinkTag(rawLink: unknown): string {
   const href = normalizeBannerLink(rawLink);
-
-  if (href.startsWith("mailto:")) return "Email Us";
-  if (href.startsWith("tel:")) return "Call Now";
-
-  if (/^https?:\/\//i.test(href)) {
-    try {
-      const url = new URL(href);
-      const host = url.hostname.replace(/^www\./i, "");
-      return toTitleCaseFromSlug(host.split(".")[0] || "Visit Site");
-    } catch {
-      return "Visit Site";
-    }
-  }
 
   const cleanPath = href.split("?")[0].split("#")[0] || "/";
   if (cleanPath === "/") return "Home";

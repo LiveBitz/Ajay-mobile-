@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { verifyAdminAction } from "@/lib/admin-auth";
 
 export async function getCategories() {
   try {
@@ -21,6 +22,8 @@ export async function getCategories() {
 }
 
 export async function createCategory(name: string, image: string = "", parentId: string | null = null) {
+  const auth = await verifyAdminAction();
+  if (!auth.authorized) return { success: false, error: auth.error };
   try {
     // Validate input
     if (!name || name.trim().length === 0) {
@@ -59,6 +62,8 @@ export async function createCategory(name: string, image: string = "", parentId:
 }
 
 export async function updateCategoryImage(id: string, imageUrl: string) {
+  const auth = await verifyAdminAction();
+  if (!auth.authorized) return { success: false, error: auth.error };
   try {
     const category = await prisma.category.update({
       where: { id },
@@ -76,6 +81,8 @@ export async function updateCategoryImage(id: string, imageUrl: string) {
 }
 
 export async function updateCategory(id: string, data: { name?: string, image?: string, parentId?: string | null }) {
+  const auth = await verifyAdminAction();
+  if (!auth.authorized) return { success: false, error: auth.error };
   try {
     const updateData: any = { ...data };
     
@@ -101,6 +108,8 @@ export async function updateCategory(id: string, data: { name?: string, image?: 
 }
 
 export async function deleteCategory(id: string) {
+  const auth = await verifyAdminAction();
+  if (!auth.authorized) return { success: false, error: auth.error };
   try {
     // Check if category has any products
     const productsCount = await prisma.product.count({

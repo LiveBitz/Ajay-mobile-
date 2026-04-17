@@ -18,6 +18,7 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { CartSheet } from "@/components/cart/CartSheet";
 import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
 import { signOut } from "@/lib/actions/auth-actions";
 
 export function Navbar() {
@@ -179,16 +180,31 @@ export function Navbar() {
 
   /* ── Search ── */
   useEffect(() => {
+    // One AbortController per query — aborted immediately when the user types
+    // the next character, so stale responses can never overwrite fresh ones.
+    const controller = new AbortController();
+
     const timer = setTimeout(async () => {
       if (!searchQuery.trim()) { setSearchResults([]); return; }
       setSearchLoading(true);
       try {
-        const res = await fetch(`/api/products/search?q=${encodeURIComponent(searchQuery)}`);
+        const res = await fetch(
+          `/api/products/search?q=${encodeURIComponent(searchQuery)}`,
+          { signal: controller.signal }
+        );
         setSearchResults(await res.json());
-      } catch { setSearchResults([]); }
-      finally  { setSearchLoading(false); }
+      } catch (err) {
+        // AbortError just means a newer request superseded this one — not a real error
+        if ((err as Error).name !== "AbortError") setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
     }, 300);
-    return () => clearTimeout(timer);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [searchQuery]);
 
   const handleLogout = async () => { await signOut(); };
@@ -522,11 +538,15 @@ export function Navbar() {
                                    hover:bg-zinc-50 active:bg-zinc-100 transition-colors
                                    text-left"
                       >
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-12 h-14 object-cover rounded-lg bg-zinc-100 shrink-0"
-                        />
+                        <div className="relative w-12 h-14 rounded-lg bg-zinc-100 shrink-0 overflow-hidden">
+                          <Image
+                            src={product.image}
+                            alt={product.name}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-zinc-900 truncate text-sm">{product.name}</p>
                           <p className="text-xs text-zinc-400 capitalize mt-0.5">{product.category.name}</p>
@@ -676,11 +696,15 @@ export function Navbar() {
                         className="w-full flex items-center gap-3 p-3 rounded-lg
                                    hover:bg-zinc-50 transition-colors text-left"
                       >
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-10 h-12 object-cover rounded-lg bg-zinc-100 shrink-0"
-                        />
+                        <div className="relative w-10 h-12 rounded-lg bg-zinc-100 shrink-0 overflow-hidden">
+                          <Image
+                            src={product.image}
+                            alt={product.name}
+                            fill
+                            sizes="40px"
+                            className="object-cover"
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-zinc-900 truncate">{product.name}</p>
                           <p className="text-xs text-zinc-400 capitalize">{product.category.name}</p>

@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { verifyAdminAction } from "@/lib/admin-auth";
 
 // 🚀 Get all featured groups with their associated categories
 export async function getFeaturedGroups() {
@@ -37,6 +38,8 @@ export async function getFeaturedGroups() {
 
 // 🚀 Create a new Featured Group
 export async function createFeaturedGroup(data: { name: string, image?: string, categoryIds?: string[] }) {
+  const auth = await verifyAdminAction();
+  if (!auth.authorized) return { success: false, message: auth.error };
   try {
     const { name, image, categoryIds } = data;
     
@@ -69,6 +72,8 @@ export async function createFeaturedGroup(data: { name: string, image?: string, 
 
 // 🚀 Update a Featured Group
 export async function updateFeaturedGroup(id: string, data: { name?: string, image?: string, order?: number, categoryIds?: string[] }) {
+  const auth = await verifyAdminAction();
+  if (!auth.authorized) return { success: false, message: auth.error };
   try {
     const { name, image, order, categoryIds } = data;
     const updateData: any = {};
@@ -111,6 +116,8 @@ export async function updateFeaturedGroup(id: string, data: { name?: string, ima
 
 // 🚀 Delete a Featured Group
 export async function deleteFeaturedGroup(id: string) {
+  const auth = await verifyAdminAction();
+  if (!auth.authorized) return { success: false, message: auth.error };
   try {
     // Note: Category relation is optional, so we can just delete the group.
     // The categories will remain but their featuredGroupId will become null (Prisma handles this if not Cascade)

@@ -47,7 +47,9 @@ interface OrderData {
 export default function OrderConfirmationPage() {
   const params = useParams();
   const router = useRouter();
-  const orderId = params.id as string;
+  const rawId = params.id as string;
+  // Validate CUID format before using in requests (prevents path traversal / injection)
+  const orderId = /^c[a-z0-9]{24,}$/i.test(rawId) ? rawId : "";
 
   const [order, setOrder] = useState<OrderData | null>(null);
   const [isLoading, setIsLoading] = useState(true);

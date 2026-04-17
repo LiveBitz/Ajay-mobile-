@@ -37,7 +37,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedCart = localStorage.getItem("souled_cart");
     if (savedCart) {
       try {
-        setItems(JSON.parse(savedCart));
+        const parsed = JSON.parse(savedCart);
+        if (Array.isArray(parsed)) {
+          const validItems = parsed.filter(
+            (item): item is CartItem =>
+              item !== null &&
+              typeof item === "object" &&
+              typeof item.id === "string" &&
+              typeof item.productId === "string" &&
+              typeof item.name === "string" &&
+              typeof item.price === "number" &&
+              typeof item.image === "string" &&
+              typeof item.quantity === "number" &&
+              item.quantity > 0
+          );
+          setItems(validItems);
+        }
       } catch (err) {
         console.error("Failed to parse cart", err);
       }

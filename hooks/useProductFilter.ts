@@ -54,22 +54,40 @@ const getTotalStock = (sizes: string[]): number => {
   }, 0);
 };
 
-export function useProductFilter(products: Product[], slug: string) {
+export function useProductFilter(
+  products: Product[],
+  slug: string,
+  /**
+   * Optional: pass the FULL category product list (lightweight fields) so the
+   * filter sidebar always shows accurate counts even when `products` is only
+   * a single page of results. When omitted, counts are derived from `products`.
+   */
+  facetProducts?: Product[]
+) {
   const [filters, setFilters] = useState<Filters>({
     sizes: [],
     colors: [],
-    priceRange: [0, 10000], // Increased for real data
+    priceRange: [0, 10000],
     discount: 0,
     subCategories: [],
   });
-  
+
   const [sortBy, setSortBy] = useState("relevance");
 
-  // ✅ Trust the server: The 'products' array is already scoped to the slug by CategoryPage
+  // For filter sidebar counts: use the full category list when available,
+  // otherwise fall back to the current page of products.
+  const countSource = useMemo(() => {
+    const source = facetProducts && facetProducts.length > 0 ? facetProducts : products;
+    return source.filter((p) => {
+      const totalStock = getTotalStock(normalizeArray(p.sizes));
+      const legacyStock = (p as any).stock || 0;
+      return totalStock > 0 || legacyStock > 0;
+    });
+  }, [facetProducts, products]);
+
+  // For product grid: only the products passed in (one page from the API).
   const baseProducts = useMemo(() => {
     if (!products) return [];
-    
-    // Filter out products with no available inventory
     return products.filter((p) => {
       const totalStock = getTotalStock(normalizeArray(p.sizes));
       const legacyStock = (p as any).stock || 0;
@@ -84,9 +102,8 @@ export function useProductFilter(products: Product[], slug: string) {
     const subCounts: Record<string, number> = {};
     let max = 0;
 
-    // Calculate max from baseProducts (filtered by category)
-    if (baseProducts && baseProducts.length > 0) {
-      baseProducts.forEach((p) => {
+    if (countSource && countSource.length > 0) {
+      countSource.forEach((p) => {
         const price = typeof p.price === 'number' ? p.price : parseFloat(String(p.price) || '0');
         if (!isNaN(price) && price > max) {
           max = price;
@@ -94,7 +111,7 @@ export function useProductFilter(products: Product[], slug: string) {
       });
     }
 
-    baseProducts.forEach((p) => {
+    countSource.forEach((p) => {
       // Sum actual inventory units per size (handles both "SIZE:QTY", "SIZE-COLOR:QTY", and "SIZE" formats)
       normalizeArray(p.sizes).forEach((s) => {
         const parts = s.split(":");
@@ -125,13 +142,13 @@ export function useProductFilter(products: Product[], slug: string) {
 
     const calculatedMax = max > 0 ? Math.ceil(max / 100) * 100 : 1000;
 
-    return { 
-      sizes: sCounts, 
-      colors: cCounts, 
+    return {
+      sizes: sCounts,
+      colors: cCounts,
       subCategories: subCounts,
-      maxPrice: calculatedMax
+      maxPrice: calculatedMax,
     };
-  }, [baseProducts, products]);
+  }, [countSource]);
 
   // Update price range when category maxPrice changes
   useEffect(() => {

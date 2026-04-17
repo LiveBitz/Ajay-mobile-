@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 
 export const revalidate = 300; // 5 minutes - real-time updates
 
-// ✅ Dynamic metadata per category
+// ✅ Dynamic metadata per category (with OG image for social share previews)
 export async function generateMetadata({
   params,
 }: {
@@ -25,9 +25,58 @@ export async function generateMetadata({
           .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
           .join(" ");
 
+  // Fetch OG image: use category/featuredGroup image, or fall back to first product image
+  let ogImage: string | undefined;
+  if (slug !== "sale" && slug !== "new-arrivals") {
+    const category = await prisma.category.findFirst({
+      where: { slug: { equals: slug, mode: "insensitive" } },
+      select: { image: true },
+    });
+    const featuredGroup = !category
+      ? await prisma.featuredGroup.findFirst({
+          where: { slug: { equals: slug, mode: "insensitive" } },
+          select: { image: true },
+        })
+      : null;
+    ogImage = category?.image ?? featuredGroup?.image ?? undefined;
+  }
+
+  // If no category/group image, grab the first product image in that category
+  if (!ogImage) {
+    const first = await prisma.product.findFirst({
+      where:
+        slug === "sale"
+          ? { discount: { gt: 0 } }
+          : slug === "new-arrivals"
+          ? { isNew: true }
+          : {
+              OR: [
+                { category: { slug: { equals: slug, mode: "insensitive" } } },
+                { category: { parent: { slug: { equals: slug, mode: "insensitive" } } } },
+              ],
+            },
+      select: { image: true },
+      orderBy: { createdAt: "desc" },
+    });
+    ogImage = first?.image;
+  }
+
+  const description = `Browse our ${label} collection — premium smartphones and accessories.`;
+
   return {
     title: `${label} | NEXUS`,
-    description: `Browse our ${label} collection — premium smartphones and accessories.`,
+    description,
+    openGraph: {
+      title: `${label} | NEXUS`,
+      description,
+      ...(ogImage ? { images: [{ url: ogImage, width: 1200, height: 630, alt: label }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${label} | NEXUS`,
+      description,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
   };
 }
 
@@ -97,32 +146,50 @@ export default async function CategoryPage({
           ],
         };
 
-  const products = await prisma.product.findMany({
-    where: whereClause,
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      subCategory: true,
-      categoryId: true,
-      price: true,
-      originalPrice: true,
-      discount: true,
-      image: true,
-      stock: true,
-      sizes: true,
-      colors: true,
-      isNew: true,
-      isBestSeller: true,
-      category: {
-        select: {
-          name: true,
-          slug: true,
-        },
+  // Fetch only the first page of products for SSR (fast initial load) +
+  // a lightweight facet query over ALL products so the filter sidebar has
+  // accurate counts even before the user loads more pages.
+  const productSelect = {
+    id: true,
+    name: true,
+    slug: true,
+    subCategory: true,
+    categoryId: true,
+    price: true,
+    originalPrice: true,
+    discount: true,
+    image: true,
+    stock: true,
+    sizes: true,
+    colors: true,
+    isNew: true,
+    isBestSeller: true,
+    category: { select: { name: true, slug: true } },
+  } as const;
+
+  const [products, totalCount, facetProducts] = await Promise.all([
+    // First 24 products for immediate render
+    prisma.product.findMany({
+      where: whereClause,
+      select: productSelect,
+      orderBy: { createdAt: "desc" },
+      take: 24,
+    }),
+    // Total matching products (for "Load More" logic)
+    prisma.product.count({ where: whereClause }),
+    // Lightweight: only the fields needed to compute filter sidebar counts
+    prisma.product.findMany({
+      where: whereClause,
+      select: {
+        sizes: true,
+        colors: true,
+        subCategory: true,
+        price: true,
+        discount: true,
+        stock: true,
       },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+    }),
+  ]);
 
   // ✅ Human-readable label
   const categoryLabel =
@@ -143,11 +210,11 @@ export default async function CategoryPage({
       : "Collection";
 
   const productCountLabel =
-    products.length === 0
+    totalCount === 0
       ? "No products"
-      : products.length === 1
+      : totalCount === 1
       ? "1 product"
-      : `${products.length} products`;
+      : `${totalCount} products`;
 
   return (
     <div className="min-h-screen bg-white pt-8 md:pt-0">
@@ -247,6 +314,8 @@ export default async function CategoryPage({
       ) : (
         <CategoryCatalog
           initialProducts={products as any}
+          facetProducts={facetProducts as any}
+          totalCount={totalCount}
           slug={slug}
         />
       )}

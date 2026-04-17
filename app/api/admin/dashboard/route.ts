@@ -242,19 +242,16 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Phase 6: Optimized new customers query with limit and select
-    const newCustomersCount = await prisma.order.findMany({
-      select: {
-        customerEmail: true,
-      },
+    // Count distinct customers via groupBy — runs as a single COUNT(DISTINCT) in the DB,
+    // no row-fetching required regardless of order volume.
+    const newCustomersGroups = await prisma.order.groupBy({
+      by: ["customerEmail"],
       where: {
         createdAt: {
           gte: firstDay,
           lte: lastDay,
         },
       },
-      distinct: ["customerEmail"],
-      take: 1000, // Limit query to prevent full table scan
     });
 
     // Phase 6: Add ISR caching for dashboard (5 mins)
@@ -271,7 +268,7 @@ export async function GET(req: NextRequest) {
         totalCategories: categoryCount,
         totalOrders: revenueAgg._count.id,
         totalRevenue: totalRevenue,
-        newCustomers: newCustomersCount.length,
+        newCustomers: newCustomersGroups.length,
       },
       ordersByStatus: statusCounts,
       revenueChart: filledRevenueData,

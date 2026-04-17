@@ -1,21 +1,28 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { allProducts } from "@/lib/data";
 
-export async function GET() {
-  try {
-    console.log("Seeding started via API...");
+// Development-only seeding endpoint.
+// Blocked entirely in production regardless of secret.
+export async function GET(request: NextRequest) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found." }, { status: 404 });
+  }
 
-    // 1. Create Categories
+  const secret = request.headers.get("x-seed-secret");
+  if (!secret || secret !== process.env.SEED_SECRET) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  try {
     const categories = [
-      { name: "Men", slug: "men", image: "https://picsum.photos/seed/cat-men/600/600" },
-      { name: "Watches", slug: "watches", image: "https://picsum.photos/seed/cat-watch/600/600" },
-      { name: "Perfumes", slug: "perfumes", image: "https://picsum.photos/seed/cat-perf/600/600" },
-      { name: "Accessories", slug: "accessories", image: "https://picsum.photos/seed/cat-acc/600/600" },
+      { name: "Men",         slug: "men",         image: "https://picsum.photos/seed/cat-men/600/600"   },
+      { name: "Watches",     slug: "watches",     image: "https://picsum.photos/seed/cat-watch/600/600" },
+      { name: "Perfumes",    slug: "perfumes",    image: "https://picsum.photos/seed/cat-perf/600/600"  },
+      { name: "Accessories", slug: "accessories", image: "https://picsum.photos/seed/cat-acc/600/600"   },
     ];
 
     const categoryMap: Record<string, string> = {};
-
     for (const catData of categories) {
       const cat = await prisma.category.upsert({
         where: { slug: catData.slug },
@@ -25,34 +32,31 @@ export async function GET() {
       categoryMap[catData.slug] = cat.id;
     }
 
-    // Phase 6: Batch upsert products instead of one-by-one (10x faster)
-    const productData = allProducts.map(p => ({
-      slug: p.name.toLowerCase().replace(/ /g, "-"),
-      name: p.name,
-      subCategory: p.subCategory,
-      price: p.price,
-      originalPrice: p.originalPrice,
-      discount: p.discount,
-      sizes: p.sizes,
-      colors: p.colors,
-      image: p.image,
-      isNew: p.isNew,
-      isBestSeller: p.isBestSeller,
-      categoryId: categoryMap[p.category.toLowerCase()],
-    }));
-
-    // Create or skip if exists
-    for (const pData of productData) {
+    for (const p of allProducts) {
+      const slug = p.name.toLowerCase().replace(/ /g, "-");
       await prisma.product.upsert({
-        where: { slug: pData.slug },
+        where: { slug },
         update: {},
-        create: pData,
+        create: {
+          slug,
+          name: p.name,
+          subCategory: p.subCategory,
+          price: p.price,
+          originalPrice: p.originalPrice,
+          discount: p.discount,
+          sizes: p.sizes,
+          colors: p.colors,
+          image: p.image,
+          isNew: p.isNew,
+          isBestSeller: p.isBestSeller,
+          categoryId: categoryMap[p.category.toLowerCase()],
+        },
       });
     }
 
-    return NextResponse.json({ success: true, message: "Database seeded successfully" });
-  } catch (error: any) {
+    return NextResponse.json({ success: true, message: "Database seeded successfully." });
+  } catch (error) {
     console.error("Seed error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Seeding failed." }, { status: 500 });
   }
 }

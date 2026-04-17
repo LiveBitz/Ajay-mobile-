@@ -12,9 +12,9 @@ export async function GET(request: NextRequest) {
 
     // Phase 7: Extract pagination parameters from query string
     const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("limit") || "50");
-    
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50")));
+
     const take = pageSize;
     const skip = (page - 1) * pageSize;
     
@@ -24,14 +24,25 @@ export async function GET(request: NextRequest) {
         orderNumber: true,
         customerName: true,
         customerEmail: true,
+        customerPhone: true,
+        street: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        subtotal: true,
+        tax: true,
+        shipping: true,
         total: true,
         status: true,
+        paymentMethod: true,
+        paymentStatus: true,
         createdAt: true,
         items: {
           select: {
             id: true,
             quantity: true,
             size: true,
+            color: true,
             price: true,
             product: {
               select: {
@@ -49,7 +60,7 @@ export async function GET(request: NextRequest) {
     });
 
     const response = NextResponse.json(orders);
-    response.headers.set("Cache-Control", "private, max-age=60");
+    response.headers.set("Cache-Control", "no-store");
     return response;
   } catch (error: any) {
     console.error("Error fetching orders:", error);
