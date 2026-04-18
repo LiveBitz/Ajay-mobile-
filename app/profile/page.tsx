@@ -16,6 +16,7 @@ import Link from "next/link";
 import { AddressesManager } from "@/components/profile/AddressesManager";
 import { OrderHistory } from "@/components/profile/OrderHistory";
 import { LogoutButton } from "@/components/profile/LogoutButton";
+import { CibilChat } from "@/components/profile/CibilChat";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -162,6 +163,9 @@ export default async function ProfilePage() {
                 <OrderHistory />
               </div>
             </section>
+
+            {/* CIBIL Score Checker */}
+            <CibilChat />
 
             {/* Account Details */}
             <section className="pf-section">
