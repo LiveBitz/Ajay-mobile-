@@ -57,7 +57,7 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://picsum.photos https://i.pinimg.com https://images.unsplash.com https://i.imgur.com https://zmsbmnxqhmxaaemnswzc.supabase.co https://zjhxlwanzqdigsvqxzau.supabase.co https://api.dicebear.com https://placehold.co",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://nominatim.openstreetmap.org",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

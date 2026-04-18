@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { Mail, Lock, Loader2, ArrowRight } from "lucide-react";
 import { signIn } from "@/lib/actions/auth-actions";
 import { Button } from "@/components/ui/button";
@@ -42,11 +43,15 @@ export default function LoginPage() {
         <div className="bg-white border border-zinc-100 rounded-3xl shadow-xl p-8 md:p-10">
           {/* Logo + Heading */}
           <div className="text-center mb-8">
-            <div
-              className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4"
-              style={{ backgroundColor: "#dc2626" }}
-            >
-              <span className="text-white text-xl font-black">N</span>
+            <div className="inline-flex mb-4">
+              <Image
+                src="/images/cropped_circle_image.png"
+                alt="Priya Mobile Park"
+                width={64}
+                height={64}
+                className="rounded-full object-cover"
+                priority
+              />
             </div>
             <h1 className="text-2xl font-bold text-zinc-900">Welcome back</h1>
             <p className="text-zinc-500 text-sm mt-1">Sign in to continue</p>

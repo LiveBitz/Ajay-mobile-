@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { CartSheet } from "@/components/cart/CartSheet";
@@ -34,9 +35,11 @@ export function Navbar() {
   const [searchLoading,   setSearchLoading]   = useState(false);
   const [location,        setLocation]        = useState<{ city: string; postalCode: string } | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [locationPermission, setLocationPermission] = useState<"unknown" | "granted" | "denied" | "unavailable">("unknown");
 
   const { totalItems, setIsOpen: setOpenCart } = useCart();
   const { items: wishlistItems }               = useWishlist();
+  const { toast } = useToast();
   const supabase = createClient();
   // Ref to the search pill container — used to detect outside touches on iOS
   const searchPillRef = React.useRef<HTMLDivElement>(null);
@@ -81,11 +84,11 @@ export function Navbar() {
   }, []);
 
   /* ── Geocoding ── */
-  const reverseGeocode = async (lat: number, lon: number) => {
+  const reverseGeocode = React.useCallback(async (lat: number, lon: number) => {
     try {
-      const res  = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`,
-        { headers: { "Accept": "application/json", "User-Agent": "Nexus-App/1.0" } }
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
+        { headers: { "Accept": "application/json", "User-Agent": "PriyaMobilePark/1.0" } }
       );
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
@@ -98,16 +101,22 @@ export function Navbar() {
       localStorage.setItem("userLocation",     JSON.stringify(loc));
       localStorage.setItem("userLocationTime", Date.now().toString());
       setLocation(loc);
+      setLocationPermission("granted");
       return loc;
     } catch {
-      const fallback = { city: "Your Location", postalCode: "" };
-      setLocation(fallback);
-      return fallback;
+      // Geocode failed but GPS worked — still show coords-based fallback
+      const loc = { city: "Your Location", postalCode: "" };
+      setLocation(loc);
+      return loc;
     }
-  };
+  }, []);
 
-  const requestLocation = () => {
-    if (!navigator.geolocation) { setLocation({ city: "Not Available", postalCode: "" }); return; }
+  const requestLocation = React.useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationPermission("unavailable");
+      setLocation({ city: "Not Supported", postalCode: "" });
+      return;
+    }
     setLocationLoading(true);
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
@@ -115,29 +124,82 @@ export function Navbar() {
         setLocationLoading(false);
       },
       (err) => {
-        const msgs: Record<number, string> = { 1: "Enable Location", 2: "Unavailable", 3: "Timed Out" };
-        setLocation({ city: msgs[err.code] ?? "Location Error", postalCode: "" });
         setLocationLoading(false);
+        if (err.code === 1) {
+          // User denied
+          setLocationPermission("denied");
+          setLocation(null);
+          localStorage.removeItem("userLocation");
+          localStorage.removeItem("userLocationTime");
+        } else if (err.code === 2) {
+          setLocation({ city: "Location Unavailable", postalCode: "" });
+        } else {
+          // Timeout — retry once with lower accuracy
+          navigator.geolocation.getCurrentPosition(
+            async ({ coords }) => {
+              await reverseGeocode(coords.latitude, coords.longitude);
+              setLocationLoading(false);
+            },
+            () => {
+              setLocationLoading(false);
+              setLocation({ city: "Timed Out", postalCode: "Tap to retry" });
+            },
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 }
+          );
+        }
       },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 300000 }
     );
-  };
+  }, [reverseGeocode]);
 
+  // On mount: load cache or check permission state first
   useEffect(() => {
     const cached = localStorage.getItem("userLocation");
     const time   = localStorage.getItem("userLocationTime");
-    if (cached && time && Date.now() - parseInt(time) < 86400000) {
+    // Use cache if fresh (6 hours)
+    if (cached && time && Date.now() - parseInt(time) < 21600000) {
       setLocation(JSON.parse(cached));
-    } else {
-      setTimeout(requestLocation, 1000);
+      setLocationPermission("granted");
+      return;
     }
-  }, []);
+    // Check permission API if available (Chrome/Firefox/Edge)
+    if (typeof navigator !== "undefined" && navigator.permissions) {
+      navigator.permissions.query({ name: "geolocation" }).then((result) => {
+        if (result.state === "granted") {
+          requestLocation();
+        } else if (result.state === "denied") {
+          setLocationPermission("denied");
+        } else {
+          // "prompt" — auto-fire so the browser popup appears on page load
+          requestLocation();
+        }
+        result.onchange = () => {
+          if (result.state === "granted") requestLocation();
+          else if (result.state === "denied") setLocationPermission("denied");
+          else setLocationPermission("unknown");
+        };
+      }).catch(() => {
+        // permissions API not supported — fire directly (Safari etc.)
+        requestLocation();
+      });
+    } else {
+      // No permissions API — fire directly
+      requestLocation();
+    }
+  }, [requestLocation]);
 
-  const handleRefreshLocation = () => {
+  const handleRefreshLocation = React.useCallback(() => {
+    if (locationPermission === "denied") {
+      toast({
+        title: "Location blocked",
+        description: "Go to browser Settings → Site Settings → Location → find this site and set it to Allow.",
+      });
+      return;
+    }
     localStorage.removeItem("userLocation");
     localStorage.removeItem("userLocationTime");
     requestLocation();
-  };
+  }, [requestLocation, locationPermission, toast]);
 
   /* ── Auth ── */
   useEffect(() => {
@@ -322,14 +384,15 @@ export function Navbar() {
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand to-brand/70
-                            flex items-center justify-center shadow-sm shadow-brand/20">
-              <span className="text-white font-black text-sm">N</span>
-            </div>
-            <span className="text-xl font-black tracking-tight text-zinc-950">
-              NEXUS
-            </span>
+          <Link href="/" className="flex items-center shrink-0">
+            <Image
+              src="/images/cropped_circle_image.png"
+              alt="Priya Mobile Park"
+              width={44}
+              height={44}
+              className="rounded-full object-cover"
+              priority
+            />
           </Link>
 
           {/* Right icons */}
@@ -413,39 +476,55 @@ export function Navbar() {
                     <span className="text-xs font-bold text-zinc-400">Language</span>
                     <span className="text-xs font-bold text-zinc-800">English (IN)</span>
                   </div>
-                  <p className="text-[10px] text-zinc-400">© 2026 NEXUS. All Rights Reserved.</p>
+                  <p className="text-[10px] text-zinc-400">© 2026 Priya Mobile Park. All Rights Reserved.</p>
                 </div>
               </SheetContent>
             </Sheet>
           </div>
         </div>
 
-        {/* ── Row 2: Location — always renders, shows placeholder until resolved ── */}
+        {/* ── Row 2: Location ── */}
         <button
           onClick={handleRefreshLocation}
           disabled={locationLoading}
+          suppressHydrationWarning
           className="flex items-center gap-2 px-4 pb-2 w-full text-left group disabled:opacity-60"
         >
           <MapPin className="w-4 h-4 text-brand shrink-0" />
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            {locationLoading ? (
+          <div className="flex items-center gap-1.5 min-w-0 flex-1" suppressHydrationWarning>
+            {!mounted ? (
+              <div className="flex flex-col leading-none">
+                <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wide">Set location</span>
+                <span className="text-[17px] font-black text-brand leading-tight">Enable Location</span>
+              </div>
+            ) : locationLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin text-zinc-400 shrink-0" />
                 <span className="text-base font-bold text-zinc-400">Detecting…</span>
               </>
-            ) : (
+            ) : locationPermission === "denied" ? (
+              <div className="flex flex-col leading-none">
+                <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wide">Location</span>
+                <span className="text-[15px] font-bold text-zinc-500 leading-tight">Blocked · Allow in browser</span>
+              </div>
+            ) : locationPermission === "granted" && location ? (
               <>
-                {/* Bold large city name — the Sangeetha "48 Hours" equivalent */}
-                <span className="text-[22px] font-black text-zinc-900 leading-none truncate">
-                  {location?.city ?? "Set Location"}
-                </span>
-                {location?.postalCode && (
-                  <span className="text-sm font-bold text-zinc-500 shrink-0 leading-none">
-                    {location.postalCode}
-                  </span>
-                )}
-                <ChevronDown className="w-4 h-4 text-zinc-400 shrink-0 group-hover:text-brand transition-colors" />
+                <div className="flex flex-col leading-none min-w-0">
+                  <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wide">Deliver to</span>
+                  <div className="flex items-baseline gap-1.5 min-w-0">
+                    <span className="text-[18px] font-black text-zinc-900 leading-tight truncate">{location.city}</span>
+                    {location.postalCode && (
+                      <span className="text-[13px] font-bold text-brand shrink-0 leading-tight">{location.postalCode}</span>
+                    )}
+                  </div>
+                </div>
+                <ChevronDown className="w-4 h-4 text-zinc-400 shrink-0 group-hover:text-brand transition-colors ml-0.5" />
               </>
+            ) : (
+              <div className="flex flex-col leading-none">
+                <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wide">Set location</span>
+                <span className="text-[17px] font-black text-brand leading-tight">Enable Location</span>
+              </div>
             )}
           </div>
         </button>
@@ -587,23 +666,20 @@ export function Navbar() {
                       py-2 md:py-3">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center shrink-0 group">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand to-brand/70
-                            flex items-center justify-center shadow-md shadow-brand/20
-                            group-hover:shadow-lg group-hover:shadow-brand/30 transition-all">
-              <span className="text-white font-black text-base">N</span>
-            </div>
-            <span className="text-xl lg:text-2xl font-black tracking-tight text-zinc-950
-                             group-hover:text-brand transition-colors">
-              NEXUS
-            </span>
-          </div>
+        <Link href="/" className="flex items-center shrink-0">
+          <Image
+            src="/images/cropped_circle_image.png"
+            alt="Priya Mobile Park"
+            width={52}
+            height={52}
+            className="rounded-full object-cover"
+            priority
+          />
         </Link>
 
         {/* Location pill (lg+) */}
         <div className="hidden lg:flex items-center shrink-0">
-          {locationLoading ? (
+          {mounted && locationLoading ? (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-zinc-50 border border-zinc-200">
               <Loader2 className="w-4 h-4 animate-spin text-brand" />
               <span className="text-sm font-semibold text-zinc-500">Detecting…</span>
@@ -611,24 +687,31 @@ export function Navbar() {
           ) : (
             <button
               onClick={handleRefreshLocation}
-              title="Click to refresh location"
+              suppressHydrationWarning
+              title={mounted && locationPermission === "denied" ? "Allow location in browser settings" : "Click to set location"}
               className="group flex items-center gap-3 px-4 py-2.5 rounded-lg border border-zinc-200
                          bg-white hover:bg-brand/5 hover:border-brand/30
                          transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <MapPin className="w-4 h-4 text-brand/70 group-hover:text-brand transition-colors shrink-0" />
-              <div className="text-left">
-                <p className="text-[10px] font-semibold text-zinc-400 leading-none uppercase tracking-wide">
-                  Deliver to
+              <div className="text-left" suppressHydrationWarning>
+                <p className="text-[10px] font-semibold text-zinc-400 leading-none uppercase tracking-wide" suppressHydrationWarning>
+                  {!mounted ? "Set location" : locationPermission === "denied" ? "Blocked" : locationPermission === "granted" ? "Deliver to" : "Set location"}
                 </p>
-                <p className="text-sm font-bold text-zinc-900 leading-tight mt-0.5">
-                  {location?.city ?? "—"}
-                  {location?.postalCode && (
-                    <span className="text-xs font-normal text-zinc-400 ml-1.5">
-                      {location.postalCode}
-                    </span>
+                <div className="flex items-baseline gap-1.5 mt-0.5" suppressHydrationWarning>
+                  <p className="text-sm font-bold leading-tight text-zinc-900" suppressHydrationWarning>
+                    {!mounted
+                      ? "Enable Location"
+                      : locationPermission === "denied"
+                      ? "Allow in settings"
+                      : locationPermission === "granted" && location
+                      ? location.city
+                      : "Enable Location"}
+                  </p>
+                  {mounted && locationPermission === "granted" && location?.postalCode && (
+                    <span className="text-xs font-bold text-brand leading-tight">{location.postalCode}</span>
                   )}
-                </p>
+                </div>
               </div>
             </button>
           )}

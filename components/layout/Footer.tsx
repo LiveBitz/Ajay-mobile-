@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Mail,
   Phone,
@@ -70,7 +71,13 @@ export function Footer() {
           {/* ── Col 1: Brand ── */}
           <div className="sm:col-span-2 lg:col-span-1 flex flex-col gap-5">
             <Link href="/" className="inline-block w-fit">
-              <span className="text-2xl font-black tracking-tight text-zinc-100">NEXUS</span>
+              <Image
+                src="/images/cropped_circle_image.png"
+                alt="Priya Mobile Park"
+                width={56}
+                height={56}
+                className="rounded-full object-cover"
+              />
             </Link>
 
             <p className="text-sm text-zinc-400 leading-relaxed max-w-xs">
@@ -170,7 +177,7 @@ export function Footer() {
         <div className="container mx-auto px-4 md:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-zinc-500 text-center sm:text-left">
             © {currentYear}{" "}
-            <span className="text-zinc-200 font-bold">NEXUS</span>. All rights reserved.
+            <span className="text-zinc-200 font-bold">Priya Mobile Park</span>. All rights reserved.
           </p>
           <p className="text-xs text-zinc-500 text-center sm:text-right">
             Built by{" "}
