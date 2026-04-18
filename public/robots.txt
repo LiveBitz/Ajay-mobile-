@@ -1,30 +1,21 @@
-# Robots.txt for SOULED - Premium Clothing Store
-# SEO Optimization for Search Engines
-
-# Allow all bots (default)
 User-agent: *
 Allow: /
 
-# Specific rules for crawlers
 User-agent: Googlebot
 Allow: /
 
 User-agent: Bingbot
 Allow: /
 
-# Disallow sensitive paths
+# Disallow private/admin paths
 Disallow: /admin/
 Disallow: /api/
 Disallow: /profile/
 Disallow: /cart/
 Disallow: /checkout/
-Disallow: /account/
+Disallow: /order-confirmation/
 Disallow: /*.json$
 Disallow: /?*sort=
 Disallow: /?*filter=
 
-# Crawl delay for respectful crawling
-Crawl-delay: 1
-
-# Sitemap location
-Sitemap: https://souled.com/sitemap.xml
+Sitemap: https://www.priyamobilepark.com/sitemap.xml

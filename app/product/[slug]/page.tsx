@@ -63,11 +63,19 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await getProduct(slug);
   if (!product) return { title: "Product Not Found" };
+  const price = (product.price / 100).toLocaleString("en-IN");
   return {
-    title: `${product.name} | NEXUS`,
+    title: `${product.name} — Buy at ₹${price}`,
     description:
-      product.description || `Buy ${product.name} at the best price.`,
-    openGraph: { images: [product.image] },
+      product.description ||
+      `Buy ${product.name} at ₹${price}. Genuine product, fast delivery & 7-day easy returns. Shop at Priya Mobile Park.`,
+    alternates: { canonical: `/product/${product.slug}` },
+    openGraph: {
+      title: `${product.name} | Priya Mobile Park`,
+      description: `Buy ${product.name} at ₹${price}. Genuine product with fast delivery.`,
+      images: [{ url: product.image, alt: product.name }],
+      type: "website",
+    },
   };
 }
 
