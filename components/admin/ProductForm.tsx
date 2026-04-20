@@ -18,7 +18,9 @@ import {
   AlertCircle,
   X,
   Plus,
+  Pipette,
 } from "lucide-react";
+import { useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -30,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PRESET_COLORS, getColorHex, isLightColor } from "@/lib/colors";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createProduct, updateProduct } from "@/app/admin/actions/product";
 import { useToast } from "@/hooks/use-toast";
@@ -57,20 +60,6 @@ interface SpecRow {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const PRESET_COLORS: { name: string; hex: string }[] = [
-  { name: "Midnight Black", hex: "#121212" },
-  { name: "Starlight White", hex: "#F5F5F0" },
-  { name: "Titanium Grey", hex: "#8E8E93" },
-  { name: "Arctic Silver", hex: "#C0C0C0" },
-  { name: "Pacific Blue", hex: "#0070BB" },
-  { name: "Deep Purple", hex: "#4E3C58" },
-  { name: "Rose Gold", hex: "#B76E79" },
-  { name: "Graphite", hex: "#41424C" },
-  { name: "Emerald Green", hex: "#046307" },
-  { name: "Sunset Orange", hex: "#FD5E28" },
-  { name: "Natural Titanium", hex: "#BEBEBE" },
-  { name: "Copper", hex: "#B87333" },
-];
 
 // Variant presets per product type
 const VARIANT_PRESETS: Record<string, string[]> = {
@@ -229,16 +218,6 @@ const parseSpecsFromFeatures = (features: string[]): SpecRow[] =>
       };
     });
 
-// Get visual hex for a color name
-const getColorHex = (name: string): string => {
-  const preset = PRESET_COLORS.find((p) => p.name === name);
-  return preset?.hex ?? name.toLowerCase();
-};
-
-const isLightColor = (name: string) =>
-  ["white", "silver", "starlight", "arctic", "cream", "beige"].some((w) =>
-    name.toLowerCase().includes(w)
-  );
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -296,6 +275,24 @@ export function ProductForm({
   // ── Custom color/variant inputs ──
   const [customColorInput, setCustomColorInput] = useState("");
   const [customVariantInput, setCustomVariantInput] = useState("");
+  const colorInputRef = useRef<HTMLInputElement>(null);
+
+  const [stagedColor, setStagedColor] = useState<string | null>(null);
+
+  const handleVisualColorSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStagedColor(e.target.value.toUpperCase());
+  };
+
+  const confirmStagedColor = () => {
+    if (stagedColor && !formData.colors.includes(stagedColor)) {
+      setFormData((p) => ({ ...p, colors: [...p.colors, stagedColor] }));
+      toast({
+        title: "Color Confirmed",
+        description: `Visual selection ${stagedColor} added.`,
+      });
+      setStagedColor(null);
+    }
+  };
 
   // ── Derived ──
   const selectedCategory = categories.find((c) => c.id === formData.categoryId);
@@ -1448,6 +1445,12 @@ export function ProductForm({
 
                   {/* Custom color */}
                   <div className="flex gap-2 pt-1">
+                    <input
+                      type="color"
+                      ref={colorInputRef}
+                      onChange={handleVisualColorSelect}
+                      className="sr-only"
+                    />
                     <div className="relative flex-1">
                       <Input
                         placeholder="Custom color (e.g. Sage Green, Coral Red)…"
@@ -1465,8 +1468,47 @@ export function ProductForm({
                     </div>
                     <Button
                       type="button"
+                      variant="outline"
+                      onClick={() => colorInputRef.current?.click()}
+                      className={cn(
+                        "h-11 w-11 p-0 rounded-2xl border-zinc-100 bg-white hover:bg-brand/5 hover:text-brand hover:border-brand/20 shadow-sm active:scale-95 transition-all flex items-center justify-center shrink-0",
+                        stagedColor && "border-brand/40 bg-brand/[0.02]"
+                      )}
+                      title="Select Color with Cursor"
+                    >
+                      <Pipette className="w-4 h-4" />
+                    </Button>
+
+                    {/* Staged Preview + Confirm */}
+                    {stagedColor && (
+                      <div className="flex items-center gap-1.5 animate-in zoom-in-95 duration-200">
+                        <div
+                          className="w-11 h-11 rounded-2xl border-2 border-white shadow-xl shadow-black/10 shrink-0"
+                          style={{ backgroundColor: stagedColor }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={confirmStagedColor}
+                          className="h-11 w-11 p-0 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center shrink-0"
+                          title="Confirm Selection"
+                        >
+                          <CheckCircle2 className="w-5 h-5" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => setStagedColor(null)}
+                          className="h-11 w-11 p-0 rounded-2xl text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-all shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+
+                    <Button
+                      type="button"
                       onClick={addCustomColor}
-                      className="h-11 px-5 rounded-2xl bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-widest shadow-lg active:scale-95 shrink-0"
+                      className="h-11 px-6 rounded-2xl bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-widest shadow-lg active:scale-95 shrink-0 ml-auto"
                     >
                       Add
                     </Button>

@@ -13,6 +13,7 @@ import {
   extractBaseSizes, 
   getAvailableColorsForSize 
 } from "@/lib/inventory";
+import { getColorHex, isLightColor } from "@/lib/colors";
 
 interface ProductSelectionProps {
   product: {
@@ -224,12 +225,12 @@ export function ProductSelection({ product }: ProductSelectionProps) {
               >
                 <span 
                   className="absolute inset-1 rounded-full shadow-inner"
-                  style={{ backgroundColor: color.toLowerCase() }}
+                  style={{ backgroundColor: getColorHex(color) }}
                 />
                 {selectedColor === color && (
                   <Check className={cn(
                     "absolute inset-0 m-auto w-4 h-4 z-10",
-                    color.toLowerCase() === 'white' || color.toLowerCase() === '#ffffff' ? "text-zinc-900" : "text-white"
+                    isLightColor(color) ? "text-zinc-900" : "text-white"
                   )} />
                 )}
               </button>
