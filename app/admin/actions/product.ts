@@ -92,6 +92,30 @@ const validateProductData = (data: any): { isValid: boolean; errors: string[] } 
   };
 };
 
+/**
+ * Ensures a product slug is unique by appending a random suffix if necessary
+ */
+async function ensureUniqueSlug(requestedSlug: string, currentProductId?: string): Promise<string> {
+  const slug = requestedSlug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  
+  // Check if this slug is already taken by ANOTHER product
+  const existingProduct = await prisma.product.findFirst({
+    where: {
+      slug: slug,
+      ...(currentProductId ? { NOT: { id: currentProductId } } : {})
+    },
+    select: { id: true }
+  });
+
+  if (!existingProduct) {
+    return slug;
+  }
+
+  // If taken, append a random 4-character suffix and try again
+  const suffix = Math.random().toString(36).substring(2, 6);
+  return ensureUniqueSlug(`${slug}-${suffix}`, currentProductId);
+}
+
 export async function createProduct(data: any) {
   try {
     const auth = await verifyAdminAction();
@@ -118,15 +142,18 @@ export async function createProduct(data: any) {
       }
     });
 
+    // Ensure slug is unique automatically
+    const uniqueSlug = await ensureUniqueSlug(data.slug);
+
     const product = await prisma.product.create({
       data: {
         name: data.name.trim(),
-        slug: data.slug.toLowerCase().trim(),
+        slug: uniqueSlug,
         subCategory: data.subCategory,
         price: parseFloat(data.price),
         originalPrice: parseFloat(data.originalPrice),
         discount: parseInt(data.discount || "0"),
-        stock: totalStock, // ✅ FIXED: Calculate from sizes array (Phase 7 fix)
+        stock: totalStock,
         sizes: data.sizes || [],
         colors: data.colors || [],
         image: data.image,
@@ -185,16 +212,19 @@ export async function updateProduct(id: string, data: any) {
       }
     });
 
+    // Ensure slug is unique automatically
+    const uniqueSlug = await ensureUniqueSlug(data.slug, id);
+
     const product = await prisma.product.update({
       where: { id },
       data: {
         name: data.name.trim(),
-        slug: data.slug.toLowerCase().trim(),
+        slug: uniqueSlug,
         subCategory: data.subCategory,
         price: parseFloat(data.price),
         originalPrice: parseFloat(data.originalPrice),
         discount: parseInt(data.discount || "0"),
-        stock: totalStock, // ✅ FIXED: Calculate from sizes array (Phase 7 fix)
+        stock: totalStock,
         sizes: data.sizes || [],
         colors: data.colors || [],
         image: data.image,

@@ -1011,6 +1011,9 @@ export function ProductForm({
                       <span className="font-mono text-zinc-600">
                         {formData.slug || "auto-generated"}
                       </span>
+                      <span className="ml-2 text-brand/60 italic lowercase">
+                        (Autofixed if duplicate)
+                      </span>
                     </p>
                   </div>
                 </div>
