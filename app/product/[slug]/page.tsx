@@ -9,11 +9,10 @@ import {
   ChevronRight,
   Package,
   BadgeCheck,
-  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
-import { ProductSelection } from "@/components/catalog/ProductSelection";
+import { PriceDisplay } from "@/components/catalog/PriceDisplay";
 
 export const revalidate = 300; // ISR: regenerate in background every 5 minutes
 
@@ -47,6 +46,7 @@ async function getProduct(slug: string) {
       isBestSeller: true,
       stock: true,
       features: true,
+      variantPricing: true,
       category: {
         select: { id: true, name: true, slug: true },
       },
@@ -89,17 +89,19 @@ export default async function ProductDetailsPage({
 
   if (!product) notFound();
 
-  const savings = product.originalPrice - product.price;
-  const discountPct =
-    product.discount > 0
-      ? Math.round((savings / product.originalPrice) * 100)
-      : 0;
 
   const sizeList = (
     Array.isArray(product.sizes) ? product.sizes : []
   ) as string[];
+
+  // Clean variant labels (removes |#| and accidental ID suffixes)
+  const cleanLabel = (str: string) => str.split("|#|")[0].split(":")[0].trim();
+
   const storageOptions =
-    sizeList.map((s) => s.split(":")[0]).join(", ") || "Standard";
+    sizeList
+      .map((s) => cleanLabel(s.split(":")[0]))
+      .filter((v, i, a) => a.indexOf(v) === i) // Remove duplicates after cleaning
+      .join(", ") || "Standard";
 
   const features = (
     Array.isArray(product.features) ? product.features : []
@@ -215,42 +217,8 @@ export default async function ProductDetailsPage({
                 )}
               </div>
 
-              {/* ── Pricing ── */}
-              <div className="bg-zinc-50 rounded-2xl p-5 space-y-3 border border-zinc-100">
-                <div className="flex items-baseline flex-wrap gap-3">
-                  <span className="text-4xl sm:text-5xl font-black tracking-tight text-zinc-900 tabular-nums">
-                    ₹{product.price.toLocaleString("en-IN")}
-                  </span>
-                  {product.discount > 0 && (
-                    <>
-                      <span className="text-xl text-zinc-400 line-through font-medium tabular-nums">
-                        ₹{product.originalPrice.toLocaleString("en-IN")}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-xs font-black text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-lg">
-                        <Zap size={11} className="text-emerald-500" />
-                        {discountPct}% OFF
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-zinc-200">
-                  {savings > 0 && (
-                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
-                      You save ₹{savings.toLocaleString("en-IN")}
-                    </span>
-                  )}
-                  <p className="text-xs text-zinc-400 font-medium">
-                    Inclusive of all taxes
-                  </p>
-                </div>
-              </div>
-
-              {/* ── Divider ── */}
-              <div className="h-px bg-zinc-100" />
-
-              {/* ── Product Selection (Client Component) ── */}
-              <ProductSelection product={product as any} />
+              {/* ── Dynamic Pricing + Selection (Client Component) ── */}
+              <PriceDisplay product={product as any} />
 
               {/* ── Delivery Strip ── */}
               <div className="flex items-start gap-3 p-4 rounded-xl border border-zinc-100 bg-zinc-50/50">

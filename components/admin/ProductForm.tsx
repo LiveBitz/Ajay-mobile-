@@ -18,9 +18,7 @@ import {
   AlertCircle,
   X,
   Plus,
-  Pipette,
 } from "lucide-react";
-import { useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -32,11 +30,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PRESET_COLORS, getColorHex, isLightColor } from "@/lib/colors";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createProduct, updateProduct } from "@/app/admin/actions/product";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { parseColor, cleanColorName } from "@/lib/inventory";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,6 +58,20 @@ interface SpecRow {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+const PRESET_COLORS: { name: string; hex: string }[] = [
+  { name: "Midnight Black", hex: "#121212" },
+  { name: "Starlight White", hex: "#F5F5F0" },
+  { name: "Titanium Grey", hex: "#8E8E93" },
+  { name: "Arctic Silver", hex: "#C0C0C0" },
+  { name: "Pacific Blue", hex: "#0070BB" },
+  { name: "Deep Purple", hex: "#4E3C58" },
+  { name: "Rose Gold", hex: "#B76E79" },
+  { name: "Graphite", hex: "#41424C" },
+  { name: "Emerald Green", hex: "#046307" },
+  { name: "Sunset Orange", hex: "#FD5E28" },
+  { name: "Natural Titanium", hex: "#BEBEBE" },
+  { name: "Copper", hex: "#B87333" },
+];
 
 // Variant presets per product type
 const VARIANT_PRESETS: Record<string, string[]> = {
@@ -166,15 +178,36 @@ const detectProductType = (categoryName: string, subCategory: string): string =>
 const slugify = (str: string) =>
   str.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
 
+const cleanLabel = (str: string) => {
+  if (!str) return "";
+  // Removes everything after |#| and everything after the first : in the label part
+  // Example: "8GB | 128GB |#| #E392FE:2:1" -> "8GB | 128GB"
+  return str.split("|#|")[0].split(":")[0].trim();
+};
+
 const parseSizeColorStock = (sizes: string[] = []): Record<string, number> => {
   const stock: Record<string, number> = {};
   sizes.forEach((entry) => {
-    // format: "128GB-Midnight Black:25"
+    // Supported formats:
+    // "8GB | 128GB-Midnight Black:25" (size-color:qty)
+    // "8GB | 128GB |#| #E392FE-Emerald Green:25" (messy-size-color:qty)
     const lastColon = entry.lastIndexOf(":");
     if (lastColon === -1) return;
-    const key = entry.slice(0, lastColon);
+    const rawKey = entry.slice(0, lastColon);
     const qty = parseInt(entry.slice(lastColon + 1)) || 0;
-    if (key.includes("-")) stock[key] = qty;
+    if (!rawKey.includes("-")) return;
+    
+    // Find the first dash that separates size from color.
+    // The size part may contain spaces, the color part may also contain spaces and dashes.
+    // Our convention: size is BEFORE the first dash, color is AFTER.
+    const firstDash = rawKey.indexOf("-");
+    const rawSize = rawKey.slice(0, firstDash);
+    const color = rawKey.slice(firstDash + 1).trim();
+    const cleanSize = cleanLabel(rawSize);
+    if (!cleanSize || !color) return;
+    const cleanKey = `${cleanSize}-${color}`;
+    // Sum quantities for duplicates that resolve to the same clean key
+    stock[cleanKey] = (stock[cleanKey] || 0) + (qty > 0 ? qty : 0);
   });
   return stock;
 };
@@ -185,13 +218,13 @@ const extractBaseSizes = (sizes: string[] = []): string[] => {
     const lastColon = entry.lastIndexOf(":");
     const key = lastColon !== -1 ? entry.slice(0, lastColon) : entry;
     if (key.includes("-")) {
-      // "128GB-Midnight Black" → "128GB"
-      s.add(key.slice(0, key.indexOf("-")));
+      // Everything before the first dash is the size
+      s.add(cleanLabel(key.slice(0, key.indexOf("-"))));
     } else {
-      s.add(key);
+      s.add(cleanLabel(key));
     }
   });
-  return Array.from(s);
+  return Array.from(s).filter(Boolean);
 };
 
 const extractColors = (sizes: string[] = []): string[] => {
@@ -201,7 +234,10 @@ const extractColors = (sizes: string[] = []): string[] => {
     if (lastColon === -1) return;
     const key = entry.slice(0, lastColon);
     const dashIdx = key.indexOf("-");
-    if (dashIdx !== -1) c.add(key.slice(dashIdx + 1));
+    if (dashIdx !== -1) {
+      const color = key.slice(dashIdx + 1).trim();
+      if (color) c.add(color);
+    }
   });
   return Array.from(c);
 };
@@ -218,6 +254,31 @@ const parseSpecsFromFeatures = (features: string[]): SpecRow[] =>
       };
     });
 
+// Get visual hex for a color name or formatted color string
+const getColorHex = (colorStr: string): string => {
+  const { name, hex } = parseColor(colorStr);
+  if (hex.startsWith("#")) return hex;
+  
+  const preset = PRESET_COLORS.find((p) => p.name === name);
+  return preset?.hex ?? name.toLowerCase();
+};
+
+const isLightColor = (colorStr: string) => {
+  const hex = getColorHex(colorStr);
+  if (!hex.startsWith("#")) {
+    const name = parseColor(colorStr).name.toLowerCase();
+    return ["white", "silver", "starlight", "arctic", "cream", "beige"].some((w) =>
+      name.includes(w)
+    );
+  }
+  
+  // Basic luminance calculation for hex colors
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.75; // Threshold for "light" background
+};
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -249,13 +310,16 @@ export function ProductForm({
     images: Array.isArray(initialData?.images) ? initialData.images : [],
     isNew: initialData?.isNew ?? true,
     isBestSeller: initialData?.isBestSeller ?? false,
-    sizes: extractBaseSizes(initialData?.sizes || []),
-    colors:
-      extractColors(initialData?.sizes || []).length > 0
-        ? extractColors(initialData?.sizes || [])
-        : Array.isArray(initialData?.colors)
-        ? initialData.colors
-        : [],
+    // Deduplicate extracted sizes on load to prevent duplicate rows
+    sizes: Array.from(new Set(extractBaseSizes(initialData?.sizes || []))).filter(Boolean),
+    colors: (() => {
+      const extracted = extractColors(initialData?.sizes || []);
+      const source = extracted.length > 0
+        ? extracted
+        : Array.isArray(initialData?.colors) ? initialData.colors : [];
+      // Deduplicate colors on load
+      return Array.from(new Set(source)).filter(Boolean);
+    })(),
     description: initialData?.description || "",
     features: Array.isArray(initialData?.features) ? initialData.features : [],
   });
@@ -272,27 +336,31 @@ export function ProductForm({
     parseSizeColorStock(initialData?.sizes || [])
   );
 
+  // ── Per-variant pricing ──
+  type VariantPriceEntry = { price: string; originalPrice: string };
+  const [variantPricing, setVariantPricing] = useState<Record<string, VariantPriceEntry>>(() => {
+    if (initialData?.variantPricing && typeof initialData.variantPricing === "object") {
+      // Normalise db numbers to strings for input fields
+      const vp: Record<string, VariantPriceEntry> = {};
+      Object.entries(initialData.variantPricing as Record<string, { price: number; originalPrice: number }>).forEach(
+        ([k, v]) => { vp[k] = { price: String(v.price), originalPrice: String(v.originalPrice) }; }
+      );
+      return vp;
+    }
+    return {};
+  });
+
+  const updateVariantPrice = (size: string, field: "price" | "originalPrice", value: string) => {
+    setVariantPricing((prev) => ({
+      ...prev,
+      [size]: { ...(prev[size] || { price: "", originalPrice: "" }), [field]: value },
+    }));
+  };
+
   // ── Custom color/variant inputs ──
   const [customColorInput, setCustomColorInput] = useState("");
+  const [customColorHex, setCustomColorHex] = useState("#000000");
   const [customVariantInput, setCustomVariantInput] = useState("");
-  const colorInputRef = useRef<HTMLInputElement>(null);
-
-  const [stagedColor, setStagedColor] = useState<string | null>(null);
-
-  const handleVisualColorSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStagedColor(e.target.value.toUpperCase());
-  };
-
-  const confirmStagedColor = () => {
-    if (stagedColor && !formData.colors.includes(stagedColor)) {
-      setFormData((p) => ({ ...p, colors: [...p.colors, stagedColor] }));
-      toast({
-        title: "Color Confirmed",
-        description: `Visual selection ${stagedColor} added.`,
-      });
-      setStagedColor(null);
-    }
-  };
 
   // ── Derived ──
   const selectedCategory = categories.find((c) => c.id === formData.categoryId);
@@ -422,25 +490,36 @@ export function ProductForm({
   const toggleSize = (size: string) => {
     const isSelected = formData.sizes.includes(size);
     if (isSelected) {
+      // Remove the size from the list
       setFormData((p) => ({ ...p, sizes: p.sizes.filter((s: string) => s !== size) }));
+      // Clean up any stock entries for this size
       setSizeColorStock((prev) => {
         const updated = { ...prev };
+        // Match both raw and clean keys
         Object.keys(updated).forEach((k) => {
-          if (k.startsWith(`${size}-`)) delete updated[k];
+          const keySize = k.split("-")[0];
+          if (keySize === size || cleanLabel(keySize) === size) delete updated[k];
         });
         return updated;
       });
     } else {
-      setFormData((p) => ({ ...p, sizes: [...p.sizes, size] }));
+      // Prevent duplicate sizes
+      if (!formData.sizes.includes(size)) {
+        setFormData((p) => ({ ...p, sizes: [...p.sizes, size] }));
+      }
     }
   };
 
   const addCustomVariant = () => {
     const val = customVariantInput.trim();
-    if (val && !formData.sizes.includes(val)) {
-      setFormData((p) => ({ ...p, sizes: [...p.sizes, val] }));
-      setCustomVariantInput("");
+    const cleanVal = cleanLabel(val);
+    // Prevent adding empty or duplicate values (compare cleaned versions)
+    if (!cleanVal) return;
+    const alreadyExists = formData.sizes.some((s: string) => cleanLabel(s) === cleanVal || s === cleanVal);
+    if (!alreadyExists) {
+      setFormData((p) => ({ ...p, sizes: [...p.sizes, cleanVal] }));
     }
+    setCustomVariantInput("");
   };
 
   // ── Color helpers ──
@@ -449,45 +528,60 @@ export function ProductForm({
     if (isSelected) {
       setFormData((p) => ({
         ...p,
-        colors: p.colors.filter((c: string) => c !== colorName),
+        colors: (p.colors as string[]).filter((c: string) => c !== colorName),
       }));
+      // Clean up stock entries for this color
       setSizeColorStock((prev) => {
         const updated = { ...prev };
         Object.keys(updated).forEach((k) => {
-          if (k.endsWith(`-${colorName}`)) delete updated[k];
+          // The color is everything after the first dash
+          const keyColor = k.slice(k.indexOf("-") + 1);
+          if (keyColor === colorName) delete updated[k];
         });
         return updated;
       });
     } else {
-      setFormData((p) => ({ ...p, colors: [...p.colors, colorName] }));
+      // Prevent duplicate colors
+      if (!formData.colors.includes(colorName)) {
+        setFormData((p) => ({ ...p, colors: [...p.colors, colorName] }));
+      }
     }
   };
 
   const addCustomColor = () => {
-    const val = customColorInput.trim();
-    if (val && !formData.colors.includes(val)) {
-      setFormData((p) => ({ ...p, colors: [...p.colors, val] }));
-      setCustomColorInput("");
+    const name = customColorInput.trim();
+    if (!name) return;
+    
+    // Create formatted color string
+    const formattedColor = `${name}|#|${customColorHex}`;
+    
+    // Prevent duplicate colors by comparing CLEANED names
+    const alreadyExists = (formData.colors as string[]).some(
+      (c: string) => cleanColorName(c).toLowerCase() === name.toLowerCase()
+    );
+    
+    if (!alreadyExists) {
+      setFormData((p) => ({ ...p, colors: [...p.colors, formattedColor] }));
     }
+    setCustomColorInput("");
   };
 
   // ── Validation ──
   const validateForm = (): string[] => {
     const errors: string[] = [];
     if (!formData.name.trim()) errors.push("Product name is required");
-    if (!formData.slug.trim()) errors.push("Slug is required");
     if (!formData.categoryId) errors.push("Please select a category");
-    if (!formData.price || isNaN(+formData.price) || +formData.price < 0)
-      errors.push("Valid selling price is required");
-    if (!formData.originalPrice || isNaN(+formData.originalPrice) || +formData.originalPrice < 0)
-      errors.push("Valid original / MRP price is required");
+    if (!formData.price || isNaN(+formData.price) || +formData.price <= 0)
+      errors.push("Valid selling price is required (must be > 0)");
+    if (!formData.originalPrice || isNaN(+formData.originalPrice) || +formData.originalPrice <= 0)
+      errors.push("Valid original / MRP price is required (must be > 0)");
     if (+formData.price > +formData.originalPrice)
       errors.push("Selling price must be ≤ original price");
     if (!formData.image) errors.push("Main product image is required");
     if (formData.sizes.length === 0) errors.push("Select at least one variant");
     if (formData.colors.length === 0) errors.push("Select at least one color");
     const hasStock = Object.values(sizeColorStock).some((q) => q > 0);
-    if (!hasStock) errors.push("Add stock for at least one variant × color combination");
+    if (!hasStock) errors.push("Enter stock quantity for at least one variant × color combination");
     return errors;
   };
 
@@ -510,10 +604,19 @@ export function ProductForm({
         .filter(([, qty]) => qty > 0)
         .map(([key, qty]) => `${key}:${qty}`);
 
+      // Build clean variantPricing payload (only include variants with at least a price)
+      const vpPayload: Record<string, { price: number; originalPrice: number }> = {};
+      Object.entries(variantPricing).forEach(([size, vp]) => {
+        const p = parseFloat(vp.price);
+        const op = parseFloat(vp.originalPrice) || p;
+        if (!isNaN(p) && p > 0) vpPayload[size] = { price: p, originalPrice: op };
+      });
+
       const payload = {
         ...formData,
         sizes: storageSizes,
         images: formData.images.filter(Boolean),
+        variantPricing: Object.keys(vpPayload).length > 0 ? vpPayload : null,
       };
 
       const result = isEdit
@@ -599,7 +702,7 @@ export function ProductForm({
           {/* Color swatches */}
           {formData.colors.length > 0 && (
             <div className="flex items-center gap-1.5 pt-1">
-              {formData.colors.slice(0, 6).map((c: string) => (
+              {(formData.colors as string[]).slice(0, 6).map((c: string) => (
                 <div
                   key={c}
                   title={c}
@@ -646,7 +749,8 @@ export function ProductForm({
         {[
           {
             label: "Variants",
-            value: formData.sizes.length || "—",
+            // Show the deduplicated count
+            value: new Set(formData.sizes.map((s: string) => cleanLabel(s))).size || "—",
           },
           {
             label: "Colors",
@@ -1376,6 +1480,166 @@ export function ProductForm({
                   )}
                 </div>
 
+                {/* ── Step 1.5: Variant Pricing ── */}
+                {formData.sizes.length > 0 && (
+                  <div className="space-y-5 pb-8 border-b border-zinc-100">
+                    {/* Section header */}
+                    <div className="flex items-center justify-between px-1">
+                      <div>
+                        <label className="text-[12px] font-bold text-zinc-700 uppercase tracking-[0.1em]">
+                          Variant Pricing
+                        </label>
+                        <p className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wide mt-0.5">
+                          Set individual price + MRP per variant — leave blank to use base price
+                        </p>
+                      </div>
+                      {Object.keys(variantPricing).filter((k) => parseFloat(variantPricing[k]?.price) > 0).length > 0 && (
+                        <span className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                          {Object.keys(variantPricing).filter((k) => parseFloat(variantPricing[k]?.price) > 0).length} / {new Set<string>(formData.sizes.map((s: string) => cleanLabel(s))).size} Priced
+                        </span>
+                      )}
+                    </div>
+
+                    {/* One card per variant */}
+                    <div className="space-y-4">
+                      {Array.from(new Set<string>(formData.sizes.map((s: string) => cleanLabel(s)))).filter(Boolean).map((size: string) => {
+                        const vp = variantPricing[size] || { price: "", originalPrice: "" };
+                        const p = parseFloat(vp.price);
+                        const op = parseFloat(vp.originalPrice);
+                        const hasPrice = !isNaN(p) && p > 0;
+                        const savings = hasPrice && !isNaN(op) && op > p ? op - p : 0;
+                        const discPct = savings > 0 && op > 0 ? Math.round((savings / op) * 100) : 0;
+                        const isOverpriced = hasPrice && !isNaN(op) && op > 0 && p > op;
+
+                        return (
+                          <div
+                            key={size}
+                            className={cn(
+                              "rounded-2xl border shadow-sm overflow-hidden transition-all duration-300",
+                              hasPrice ? "border-zinc-100" : "border-dashed border-zinc-200"
+                            )}
+                          >
+                            {/* Card header */}
+                            <div className={cn(
+                              "flex items-center justify-between px-5 py-3 border-b",
+                              hasPrice ? "bg-zinc-50 border-zinc-100" : "bg-zinc-50/40 border-zinc-100"
+                            )}>
+                              <div className="flex items-center gap-2.5">
+                                <div className={cn(
+                                  "w-2 h-2 rounded-full shrink-0",
+                                  hasPrice ? "bg-emerald-500" : "bg-zinc-300"
+                                )} />
+                                <span className="text-sm font-extrabold text-zinc-900 tracking-tight">{size}</span>
+                              </div>
+                              {hasPrice && discPct > 0 && (
+                                <span className="text-[9px] font-extrabold text-brand bg-brand/10 px-2.5 py-1 rounded-full uppercase tracking-widest border border-brand/20">
+                                  {discPct}% OFF
+                                </span>
+                              )}
+                              {!hasPrice && (
+                                <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+                                  Using base price
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Inputs */}
+                            <div className="p-5 space-y-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* Selling price */}
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+                                    Selling Price (₹)
+                                  </label>
+                                  <div className="relative">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      placeholder={formData.price || "e.g. 49999"}
+                                      value={vp.price}
+                                      onChange={(e) => updateVariantPrice(size, "price", e.target.value)}
+                                      className="rounded-2xl border-zinc-100 h-13 sm:h-14 font-bold text-lg text-zinc-900 pl-10 shadow-sm focus:ring-2 focus:ring-brand/20"
+                                    />
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">₹</span>
+                                  </div>
+                                </div>
+
+                                {/* MRP */}
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+                                    Original / MRP (₹)
+                                  </label>
+                                  <div className="relative">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      placeholder={formData.originalPrice || "e.g. 59999"}
+                                      value={vp.originalPrice}
+                                      onChange={(e) => updateVariantPrice(size, "originalPrice", e.target.value)}
+                                      className="rounded-2xl border-zinc-100 h-13 sm:h-14 font-medium text-zinc-500 pl-10 bg-zinc-50/50 shadow-sm focus:ring-2 focus:ring-brand/20"
+                                    />
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 font-bold text-sm">₹</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Discount row */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+                                    Discount (%)
+                                  </label>
+                                  <div className="relative h-13 sm:h-14 rounded-2xl border border-brand/20 bg-brand/5 flex items-center justify-center shadow-sm">
+                                    <span className="text-xl font-bold text-brand tabular-nums">
+                                      {hasPrice && discPct > 0 ? discPct : "—"}
+                                    </span>
+                                    {hasPrice && discPct > 0 && (
+                                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-brand font-bold text-sm">%</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest px-1">
+                                    Customer Saves (₹)
+                                  </label>
+                                  <div className="h-13 sm:h-14 rounded-2xl border border-emerald-200 bg-emerald-50 flex items-center justify-center shadow-sm">
+                                    <span className="text-xl font-bold text-emerald-700 tabular-nums">
+                                      {savings > 0 ? `₹${savings.toLocaleString("en-IN")}` : "₹0"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Status badge */}
+                              {hasPrice && (
+                                <div className={cn(
+                                  "flex items-center gap-2.5 px-4 py-3 rounded-2xl text-xs font-bold border",
+                                  isOverpriced
+                                    ? "bg-red-50 text-red-600 border-red-200"
+                                    : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                )}>
+                                  {isOverpriced ? (
+                                    <>
+                                      <AlertCircle className="w-4 h-4 shrink-0" />
+                                      Selling price exceeds MRP — please review pricing for {size}.
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                                      Pricing looks correct — {discPct > 0 ? `${discPct}% discount applied` : "no discount set"} for {size}.
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* ── Step 2: Colors ── */}
                 <div className="space-y-5 pb-8 border-b border-zinc-100">
                   <div className="flex items-center justify-between px-1">
@@ -1384,11 +1648,11 @@ export function ProductForm({
                         Step 2 — Select Colors
                       </label>
                       <p className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wide mt-0.5">
-                        Choose all available color options
+                        Choose presets or pick any custom color you want
                       </p>
                     </div>
                     {formData.colors.length > 0 && (
-                      <span className="text-[9px] font-bold text-brand bg-brand/10 px-2.5 py-1 rounded-full">
+                      <span className="text-[9px] font-bold text-brand bg-brand/10 px-2.5 py-1 rounded-full uppercase tracking-widest leading-none">
                         {formData.colors.length} selected
                       </span>
                     )}
@@ -1399,119 +1663,226 @@ export function ProductForm({
                     {[
                       ...PRESET_COLORS,
                       // Also show any custom colors that were added
-                      ...formData.colors
-                        .filter((c: string) => !PRESET_COLORS.find((p) => p.name === c))
-                        .map((c: string) => ({ name: c, hex: c.toLowerCase() })),
-                    ].map(({ name, hex }) => {
+                      ...(formData.colors as string[])
+                        .filter((c: string) => !PRESET_COLORS.find((p) => p.name === cleanColorName(c)))
+                        .map((c: string) => {
+                          const { name, hex } = parseColor(c);
+                          return { name: c, displayName: name, hex };
+                        }),
+                    ].map((item) => {
+                      const name = "displayName" in item ? (item as any).name : item.name;
+                      const displayName = "displayName" in item ? (item as any).displayName : item.name;
+                      const hex = item.hex;
                       const selected = formData.colors.includes(name);
                       const light = isLightColor(name);
+                      
                       return (
                         <button
                           key={name}
                           type="button"
                           onClick={() => toggleColor(name)}
                           className={cn(
-                            "flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all duration-200 active:scale-95 group",
+                            "group relative h-20 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-1.5 overflow-hidden",
                             selected
-                              ? "border-brand bg-brand/5 shadow-md"
-                              : "border-zinc-100 bg-white hover:border-zinc-200 hover:shadow-sm"
+                              ? "border-brand shadow-lg shadow-brand/10 bg-brand/[0.03]"
+                              : "border-zinc-100 bg-white hover:border-zinc-200"
                           )}
                         >
-                          <div
-                            className={cn(
-                              "w-9 h-9 rounded-full shadow-sm transition-transform duration-200 group-hover:scale-110 border-2",
-                              selected
-                                ? "scale-110 ring-2 ring-brand/30 ring-offset-2"
-                                : "",
-                              light ? "border-zinc-200" : "border-transparent"
-                            )}
+                          <div 
+                            className="w-8 h-8 rounded-full shadow-inner border border-zinc-100 flex items-center justify-center relative"
                             style={{ backgroundColor: hex }}
-                          />
-                          <span
-                            className={cn(
-                              "text-[8px] font-bold text-center leading-tight uppercase tracking-wide",
-                              selected ? "text-brand" : "text-zinc-500"
-                            )}
                           >
-                            {name}
+                            {selected && (
+                              <CheckCircle2
+                                className={cn(
+                                  "w-4 h-4 z-10",
+                                  light ? "text-zinc-900" : "text-white"
+                                )}
+                              />
+                            )}
+                          </div>
+                          <span className="text-[10px] font-bold text-zinc-600 truncate w-full px-2 text-center group-hover:text-zinc-900 transition-colors uppercase tracking-tight">
+                            {displayName}
                           </span>
-                          {selected && (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-brand -mt-1" />
-                          )}
                         </button>
                       );
                     })}
-                  </div>
 
-                  {/* Custom color */}
-                  <div className="flex gap-2 pt-1">
-                    <input
-                      type="color"
-                      ref={colorInputRef}
-                      onChange={handleVisualColorSelect}
-                      className="sr-only"
-                    />
-                    <div className="relative flex-1">
-                      <Input
-                        placeholder="Custom color (e.g. Sage Green, Coral Red)…"
-                        value={customColorInput}
-                        onChange={(e) => setCustomColorInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addCustomColor();
-                          }
-                        }}
-                        className="h-11 rounded-2xl border-zinc-100 bg-zinc-50/50 focus:bg-white text-sm font-medium pl-10 focus:ring-2 focus:ring-brand/20"
-                      />
-                      <Sparkles className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300" />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => colorInputRef.current?.click()}
-                      className={cn(
-                        "h-11 w-11 p-0 rounded-2xl border-zinc-100 bg-white hover:bg-brand/5 hover:text-brand hover:border-brand/20 shadow-sm active:scale-95 transition-all flex items-center justify-center shrink-0",
-                        stagedColor && "border-brand/40 bg-brand/[0.02]"
-                      )}
-                      title="Select Color with Cursor"
-                    >
-                      <Pipette className="w-4 h-4" />
-                    </Button>
+                    {/* NEW: Custom Color Picker Card */}
+                    <div className="col-span-full space-y-3 pt-2 border-t border-zinc-100 mt-1">
+                      <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest px-1">
+                        Add Custom Color
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+                        {/* Color wheel picker */}
+                        <div className="flex flex-col items-center gap-2">
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+                            Pick Color
+                          </label>
+                          <div className="relative group">
+                            <div
+                              className="w-14 h-14 rounded-2xl border-2 border-zinc-200 shadow-md cursor-pointer overflow-hidden transition-all group-hover:border-brand/40 group-hover:shadow-lg"
+                              style={{ backgroundColor: customColorHex }}
+                            >
+                              <input
+                                type="color"
+                                value={customColorHex}
+                                onChange={(e) => {
+                                  setCustomColorHex(e.target.value.toUpperCase());
+                                  // Auto-suggest name if field is empty or was auto-set
+                                  if (!customColorInput || customColorInput.startsWith("Color #")) {
+                                    setCustomColorInput(`Color ${e.target.value.toUpperCase()}`);
+                                  }
+                                }}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                              />
+                            </div>
+                            <div
+                              className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white shadow-md flex items-center justify-center"
+                              style={{ backgroundColor: customColorHex }}
+                            >
+                              <Sparkles className="w-2.5 h-2.5 text-white/80" />
+                            </div>
+                          </div>
+                          {/* Hex code display */}
+                          <span className="text-[9px] font-mono font-bold text-zinc-500 bg-zinc-100 px-2 py-1 rounded-lg tracking-widest">
+                            {customColorHex}
+                          </span>
+                        </div>
 
-                    {/* Staged Preview + Confirm */}
-                    {stagedColor && (
-                      <div className="flex items-center gap-1.5 animate-in zoom-in-95 duration-200">
-                        <div
-                          className="w-11 h-11 rounded-2xl border-2 border-white shadow-xl shadow-black/10 shrink-0"
-                          style={{ backgroundColor: stagedColor }}
-                        />
-                        <Button
-                          type="button"
-                          onClick={confirmStagedColor}
-                          className="h-11 w-11 p-0 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center shrink-0"
-                          title="Confirm Selection"
-                        >
-                          <CheckCircle2 className="w-5 h-5" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => setStagedColor(null)}
-                          className="h-11 w-11 p-0 rounded-2xl text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-all shrink-0"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
+                        {/* Live preview swatch */}
+                        <div className="flex flex-col items-center gap-2">
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
+                            Preview
+                          </label>
+                          <div
+                            className={cn(
+                              "w-14 h-14 rounded-2xl border-2 shadow-md flex items-center justify-center transition-all",
+                              isLightColor(customColorHex) ? "border-zinc-300" : "border-transparent"
+                            )}
+                            style={{ backgroundColor: customColorHex }}
+                          >
+                            {customColorInput && (
+                              <span
+                                className={cn(
+                                  "text-[8px] font-extrabold text-center leading-tight px-1 uppercase tracking-tight",
+                                  isLightColor(customColorHex) ? "text-zinc-800" : "text-white"
+                                )}
+                              >
+                                {customColorInput.slice(0, 8)}
+                              </span>
+                            )}
+                          </div>
+                          {/* Luminance badge */}
+                          <span
+                            className={cn(
+                              "text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
+                              isLightColor(customColorHex)
+                                ? "bg-zinc-100 text-zinc-500"
+                                : "bg-zinc-800 text-zinc-300"
+                            )}
+                          >
+                            {isLightColor(customColorHex) ? "Light" : "Dark"}
+                          </span>
+                        </div>
+
+                        {/* Name input + add button */}
+                        <div className="flex-1 w-full space-y-2">
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+                            Color Name
+                          </label>
+                          <div className="flex gap-2">
+                            <div className="relative flex-1">
+                              <Input
+                                placeholder="e.g. Midnight Blue, Coral Red…"
+                                value={customColorInput}
+                                onChange={(e) => setCustomColorInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    addCustomColor();
+                                  }
+                                }}
+                                className="h-11 rounded-2xl border-zinc-100 bg-zinc-50/50 focus:bg-white text-sm font-bold focus:ring-2 focus:ring-brand/20 pr-10"
+                              />
+                              {/* Inline color dot */}
+                              <div
+                                className={cn(
+                                  "absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border",
+                                  isLightColor(customColorHex) ? "border-zinc-300" : "border-transparent"
+                                )}
+                                style={{ backgroundColor: customColorHex }}
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              onClick={addCustomColor}
+                              disabled={!customColorInput.trim()}
+                              className="h-11 px-5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-white text-[10px] font-bold uppercase tracking-widest shadow-lg active:scale-95 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              Add
+                            </Button>
+                          </div>
+
+                          {/* Real-time name feedback */}
+                          {customColorInput.trim() && (
+                            <div className="flex items-center gap-2 px-1 pt-1">
+                              <div
+                                className={cn(
+                                  "w-3 h-3 rounded-full border shrink-0",
+                                  isLightColor(customColorHex) ? "border-zinc-300" : "border-transparent"
+                                )}
+                                style={{ backgroundColor: customColorHex }}
+                              />
+                              <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
+                                Will be saved as:{" "}
+                                <span className="text-zinc-900 font-extrabold">{customColorInput.trim()}</span>
+                                <span className="text-zinc-400 font-mono ml-1">({customColorHex})</span>
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Preset name suggestions based on hue */}
+                          <div className="flex flex-wrap gap-1.5 px-1">
+                            {PRESET_COLORS
+                              .filter((p) => {
+                                // Suggest presets whose hex is "close" to current pick
+                                const toRgb = (hex: string) => ({
+                                  r: parseInt(hex.slice(1, 3), 16),
+                                  g: parseInt(hex.slice(3, 5), 16),
+                                  b: parseInt(hex.slice(5, 7), 16),
+                                });
+                                const a = toRgb(customColorHex);
+                                const b = toRgb(p.hex);
+                                const dist = Math.sqrt(
+                                  Math.pow(a.r - b.r, 2) +
+                                  Math.pow(a.g - b.g, 2) +
+                                  Math.pow(a.b - b.b, 2)
+                                );
+                                return dist < 120;
+                              })
+                              .slice(0, 4)
+                              .map((preset) => (
+                                <button
+                                  key={preset.name}
+                                  type="button"
+                                  onClick={() => {
+                                    setCustomColorInput(preset.name);
+                                    setCustomColorHex(preset.hex);
+                                  }}
+                                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-brand/10 hover:text-brand border border-zinc-200 hover:border-brand/30 text-[9px] font-bold uppercase tracking-widest text-zinc-500 transition-all active:scale-95"
+                                >
+                                  <div
+                                    className="w-2.5 h-2.5 rounded-full border border-zinc-300 shrink-0"
+                                    style={{ backgroundColor: preset.hex }}
+                                  />
+                                  {preset.name}
+                                </button>
+                              ))}
+                          </div>
+                        </div>
                       </div>
-                    )}
-
-                    <Button
-                      type="button"
-                      onClick={addCustomColor}
-                      className="h-11 px-6 rounded-2xl bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-widest shadow-lg active:scale-95 shrink-0 ml-auto"
-                    >
-                      Add
-                    </Button>
+                    </div>
                   </div>
                 </div>
 
@@ -1543,7 +1914,7 @@ export function ProductForm({
                                 Variant
                               </span>
                             </th>
-                            {formData.colors.map((color: string) => (
+                            {(formData.colors as string[]).map((color: string) => (
                               <th
                                 key={color}
                                 className="border-b border-zinc-100 px-4 py-3 text-center min-w-[110px]"
@@ -1565,7 +1936,8 @@ export function ProductForm({
                           </tr>
                         </thead>
                         <tbody>
-                          {formData.sizes.map((size: string, sIdx: number) => (
+                          {/* Deduplicate sizes before rendering to prevent duplicate rows */}
+                          {Array.from(new Set<string>(formData.sizes.map((s: string) => cleanLabel(s)))).filter(Boolean).map((size: string, sIdx: number) => (
                             <tr
                               key={size}
                               className={sIdx % 2 === 0 ? "bg-white" : "bg-zinc-50/40"}
@@ -1573,7 +1945,7 @@ export function ProductForm({
                               <td className="sticky left-0 z-[5] bg-inherit border-r border-zinc-100 px-4 py-3 font-bold text-zinc-800 text-sm">
                                 {size}
                               </td>
-                              {formData.colors.map((color: string) => {
+                              {(formData.colors as string[]).map((color: string) => {
                                 const key = `${size}-${color}`;
                                 const qty = sizeColorStock[key] ?? 0;
                                 return (

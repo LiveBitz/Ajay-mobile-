@@ -34,6 +34,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { getSiteSetting, updateSiteSetting } from "@/lib/actions/settings-actions";
+import { EyeOff } from "lucide-react";
 
 export default function FeaturedGroupsAdminPage() {
   const [groups, setGroups] = useState<any[]>([]);
@@ -43,6 +45,8 @@ export default function FeaturedGroupsAdminPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showSection, setShowSection] = useState(true);
+  const [isToggling, setIsToggling] = useState(false);
   const { toast } = useToast();
 
   // Create Form State
@@ -56,13 +60,15 @@ export default function FeaturedGroupsAdminPage() {
 
   const fetchData = async () => {
     setLoading(true);
-    const [groupsRes, catsRes] = await Promise.all([
+    const [groupsRes, catsRes, visibilityRes] = await Promise.all([
       getFeaturedGroups(),
-      getCategories()
+      getCategories(),
+      getSiteSetting("show_featured_categories", "true")
     ]);
     
     if (groupsRes.success) setGroups(groupsRes.groups || []);
     setAllCategories(catsRes || []);
+    setShowSection(visibilityRes === "true");
     setLoading(false);
   };
 
@@ -117,6 +123,29 @@ export default function FeaturedGroupsAdminPage() {
       );
     }
     setUpdatingId(null);
+  };
+
+  const handleToggleVisibility = async () => {
+    setIsToggling(true);
+    const newValue = !showSection;
+    const result = await updateSiteSetting("show_featured_categories", String(newValue));
+    
+    if (result.success) {
+      setShowSection(newValue);
+      toast({
+        title: newValue ? "Section Visible" : "Section Hidden",
+        description: newValue 
+          ? "Featured Categories bar will now appear on the home page." 
+          : "Featured Categories bar has been hidden from the home page.",
+      });
+    } else {
+      toast({
+        title: "Update Failed",
+        description: result.message,
+        variant: "destructive"
+      });
+    }
+    setIsToggling(false);
   };
 
   if (loading) {
@@ -180,6 +209,58 @@ export default function FeaturedGroupsAdminPage() {
               <Plus className="w-3.5 h-3.5" />
               New Showcase
             </button>
+        </div>
+      </div>
+
+      {/* NEW: Global Visibility Control */}
+      <div className="bg-white rounded-[32px] border border-zinc-100 p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+        <div className="flex items-center gap-5">
+           <div className={cn(
+             "w-14 h-14 rounded-2xl flex items-center justify-center transition-all",
+             showSection ? "bg-emerald-50 text-emerald-500" : "bg-zinc-50 text-zinc-400"
+           )}>
+             {showSection ? <Eye className="w-6 h-6" /> : <EyeOff className="w-6 h-6" />}
+           </div>
+           <div>
+              <h2 className="text-lg font-black text-zinc-900 tracking-tight">Home Page Visibility</h2>
+              <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">
+                Toggle the visibility of the Featured Categories bar
+              </p>
+           </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+           <div className="hidden sm:flex flex-col items-end gap-0.5">
+              <span className={cn(
+                "text-[9px] font-black uppercase tracking-widest",
+                showSection ? "text-emerald-500" : "text-zinc-600"
+              )}>
+                {showSection ? "Currently Visible" : "Currently Hidden"}
+              </span>
+              <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-tight">
+                Affects the home page section instantly
+              </p>
+           </div>
+
+           <Button
+             onClick={handleToggleVisibility}
+             disabled={isToggling}
+             className={cn(
+               "h-14 px-8 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl active:scale-95 flex items-center gap-3",
+               showSection 
+                ? "bg-zinc-900 text-white hover:bg-zinc-800 shadow-zinc-200" 
+                : "bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-200"
+             )}
+           >
+             {isToggling ? (
+               <Loader2 className="w-4 h-4 animate-spin" />
+             ) : showSection ? (
+               <EyeOff className="w-4 h-4" />
+             ) : (
+               <Eye className="w-4 h-4" />
+             )}
+             {isToggling ? "Architecting..." : showSection ? "Hide Section" : "Show Section"}
+           </Button>
         </div>
       </div>
 

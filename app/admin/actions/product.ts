@@ -160,6 +160,7 @@ export async function createProduct(data: any) {
         images: (data.images || []).filter(Boolean),
         description: data.description || "",
         features: data.features || [],
+        variantPricing: data.variantPricing || undefined,
         isNew: Boolean(data.isNew),
         isBestSeller: Boolean(data.isBestSeller),
         category: {
@@ -231,6 +232,7 @@ export async function updateProduct(id: string, data: any) {
         images: (data.images || []).filter(Boolean),
         description: data.description || "",
         features: data.features || [],
+        variantPricing: data.variantPricing || undefined,
         isNew: Boolean(data.isNew),
         isBestSeller: Boolean(data.isBestSeller),
         categoryId: data.categoryId,

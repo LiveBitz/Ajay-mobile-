@@ -83,6 +83,7 @@ model Product {
   images        String[] 
   description   String   @default("")
   features      String[] @default([])
+  variantPricing Json?    // Per-variant pricing: {"8GB | 128GB": {"price": 49999, "originalPrice": 59999}}
   isNew         Boolean  @default(false)
   isBestSeller  Boolean  @default(false)
   wishlists     Wishlist[]
@@ -200,4 +201,13 @@ model OrderItem {
   @@index([orderId])
   @@index([productId])
   @@index([productId, orderId])  // ✅ PHASE 6: Composite for grouping top products
+}
+
+// ✅ NEW: SiteSetting model for global configurations
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique // e.g., 'show_featured_categories'
+  value     String   // Dynamic value stored as string
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

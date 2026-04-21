@@ -29,14 +29,23 @@ export const hasStock = (sizes: string[] = []): boolean => {
 };
 
 /**
+ * Cleans a label by removing internal metadata suffixes like |#| or accidental ID colons.
+ * Example: "8GB | 128GB |#| #E392FE:2:1" -> "8GB | 128GB"
+ */
+export const cleanLabel = (str: string): string => {
+  if (!str) return "";
+  return str.split("|#|")[0].split(":")[0].trim();
+};
+
+/**
  * Extracts base size from inventory entry
  * "S-Purple:5" → "S"
- * "S:10" → "S"
  */
 export const extractBaseSize = (entry: string): string => {
   if (!entry.includes(":")) return entry;
   const key = entry.split(":")[0];
-  return key.includes("-") ? key.split("-")[0] : key;
+  const label = key.includes("-") ? key.split("-")[0] : key;
+  return cleanLabel(label);
 };
 
 /**
@@ -149,4 +158,33 @@ export const validateInventoryMatrix = (
     isValid: errors.length === 0,
     errors
   };
+};
+/**
+ * Parses a color string that may contain internal hex metadata.
+ * Format: "Color Name|#|#HexCode"
+ * Fallback: If no hex metadata exists, returns the string as both name and hex.
+ */
+export const parseColor = (colorStr: string): { name: string; hex: string } => {
+  if (!colorStr) return { name: "", hex: "#000000" };
+  
+  if (colorStr.includes("|#|")) {
+    const [name, hex] = colorStr.split("|#|");
+    return { 
+      name: name.trim(), 
+      hex: hex.trim() 
+    };
+  }
+  
+  // Legacy or standard color name
+  return { 
+    name: colorStr, 
+    hex: colorStr // CSS can handle some names, others will fallback in UI
+  };
+};
+
+/**
+ * Returns the name of the color for display
+ */
+export const cleanColorName = (colorStr: string): string => {
+  return parseColor(colorStr).name;
 };

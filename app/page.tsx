@@ -10,6 +10,7 @@ import { BestSellersSection } from "@/components/home/BestSellersSection";
 import { FeaturedCategoriesSection } from "@/components/home/FeaturedCategoriesSection";
 import { getBanners } from "@/lib/actions/banner-actions";
 import { getCategories } from "@/lib/actions/category-actions";
+import { getSiteSetting } from "@/lib/actions/settings-actions";
 
 export const revalidate = 300;
 
@@ -60,15 +61,21 @@ export default async function Home() {
   // ✅ Pick only the first active newsletter banner
   const activeNewsletter = newsletterBanners[0] ?? null;
 
+  // ✅ Check visibility of featured section
+  const showFeatured = (await getSiteSetting("show_featured_categories", "true")) === "true";
+
   return (
-    <main className="flex flex-col w-full overflow-x-hidden" style={{ backgroundColor: "#0a0a0a" }}>
+    <main className="flex flex-col w-full overflow-x-hidden pt-8 md:pt-0" style={{ backgroundColor: "#0a0a0a" }}>
 
       {/* ── 1. Featured Categories ── dark */}
-      <Section className="mt-5 md:mt-7">
-        <FeaturedCategoriesSection />
-      </Section>
-
-      <Divider dark />
+      {showFeatured && (
+        <>
+          <Section className="mt-2 md:mt-7">
+            <FeaturedCategoriesSection />
+          </Section>
+          <Divider dark />
+        </>
+      )}
 
       {/* ── 2. Hero Banner ── dark */}
       <Section>
@@ -143,12 +150,6 @@ export default async function Home() {
         </>
       )}
 
-      <Divider />
-
-      {/* ── 8. Features Strip ── light: white */}
-      <Section delay={300}>
-        <FeaturesStrip />
-      </Section>
 
       {/* ── 9. Newsletter ── dark: bookends the page */}
       {activeNewsletter && (

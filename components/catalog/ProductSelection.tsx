@@ -11,9 +11,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   getTotalStock, 
   extractBaseSizes, 
-  getAvailableColorsForSize 
+  getAvailableColorsForSize,
+  parseColor
 } from "@/lib/inventory";
-import { getColorHex, isLightColor } from "@/lib/colors";
 
 interface ProductSelectionProps {
   product: {
@@ -23,10 +23,13 @@ interface ProductSelectionProps {
     image: string;
     sizes: string[];
     colors: string[];
+    variantPricing?: Record<string, { price: number; originalPrice: number }> | null;
+    originalPrice?: number;
   };
+  onPriceChange?: (price: number, originalPrice: number) => void;
 }
 
-export function ProductSelection({ product }: ProductSelectionProps) {
+export function ProductSelection({ product, onPriceChange }: ProductSelectionProps) {
   const { addItem } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { toast } = useToast();
@@ -42,22 +45,32 @@ export function ProductSelection({ product }: ProductSelectionProps) {
   // Get available colors: if size selected, filter by size; otherwise show all
   const availableColors = useMemo(() => {
     if (!selectedSize) {
-      // No size selected: show all colors from product.colors
       return product.colors;
     }
-    
-    // Size selected: get colors for that specific size
     const colorsForSize = getAvailableColorsForSize(product.sizes, selectedSize);
-    
-    // If no colors found for this size (old format data), fall back to all colors
     if (colorsForSize.length === 0) {
       return product.colors;
     }
-    
     return colorsForSize;
   }, [selectedSize, product.sizes, product.colors]);
 
   const hasColors = availableColors.length > 0;
+
+  // When a size is selected, look up variant price and notify parent
+  const handleSizeSelect = (size: string) => {
+    setSelectedSize(size);
+    setSelectedColor(null);
+    setShowError(false);
+    if (onPriceChange && product.variantPricing) {
+      const vp = product.variantPricing[size];
+      if (vp) {
+        onPriceChange(vp.price, vp.originalPrice);
+      } else if (product.price && product.originalPrice) {
+        // Fall back to base price if no specific variant price set
+        onPriceChange(product.price, product.originalPrice ?? product.price);
+      }
+    }
+  };
 
   const handleAddToCart = () => {
     const isSizeMissing = hasSizes && !selectedSize;
@@ -170,13 +183,9 @@ export function ProductSelection({ product }: ProductSelectionProps) {
                 <button
                   key={size}
                   disabled={!hasInventory}
-                  onClick={() => {
-                    setSelectedSize(size);
-                    setSelectedColor(null); // Reset color when size changes
-                    setShowError(false);
-                  }}
+                  onClick={() => handleSizeSelect(size)}
                   className={cn(
-                    "relative group h-12 rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-300 overflow-hidden",
+                    "relative group rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-300 overflow-hidden px-3 py-2",
                     !hasInventory
                       ? "bg-zinc-50 border-zinc-100 text-zinc-200 cursor-not-allowed"
                       : isSelected
@@ -187,6 +196,15 @@ export function ProductSelection({ product }: ProductSelectionProps) {
                   <span className="text-sm font-bold tracking-tight z-10">
                     {size}
                   </span>
+                  {/* Show variant price hint if pricing is set */}
+                  {product.variantPricing?.[size] && (
+                    <span className={cn(
+                      "text-[9px] font-bold tracking-tight z-10 mt-0.5",
+                      isSelected ? "text-zinc-300" : "text-brand"
+                    )}>
+                      ₹{product.variantPricing[size].price.toLocaleString("en-IN")}
+                    </span>
+                  )}
                   {!hasInventory && (
                     <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <span className="block w-[140%] h-0.5 bg-zinc-200/50 rotate-[35deg]" />
@@ -209,32 +227,54 @@ export function ProductSelection({ product }: ProductSelectionProps) {
             Select Color {selectedSize && `• Available for ${selectedSize}`}
           </p>
           <div className="flex flex-wrap gap-4">
-            {availableColors.map((color: string) => (
-              <button
-                key={color}
-                onClick={() => {
-                  setSelectedColor(color);
-                  setShowError(false);
-                }}
-                className={cn(
-                  "group relative w-11 h-11 rounded-full border-2 transition-all duration-300 active:scale-90",
-                  selectedColor === color 
-                    ? "border-zinc-900 ring-4 ring-zinc-100" 
-                    : "border-transparent ring-1 ring-zinc-200 hover:ring-zinc-400"
-                )}
-              >
-                <span 
-                  className="absolute inset-1 rounded-full shadow-inner"
-                  style={{ backgroundColor: getColorHex(color) }}
-                />
-                {selectedColor === color && (
-                  <Check className={cn(
-                    "absolute inset-0 m-auto w-4 h-4 z-10",
-                    isLightColor(color) ? "text-zinc-900" : "text-white"
-                  )} />
-                )}
-              </button>
-            ))}
+            {availableColors.map((colorStr: string) => {
+              const { name, hex } = parseColor(colorStr);
+              
+              // Contrast check for checkmark
+              const isLight = (() => {
+                if (!hex.startsWith("#")) {
+                  return ["white", "silver", "starlight", "arctic", "cream", "beige"].some(w => name.toLowerCase().includes(w));
+                }
+                const r = parseInt(hex.slice(1, 3), 16);
+                const g = parseInt(hex.slice(3, 5), 16);
+                const b = parseInt(hex.slice(5, 7), 16);
+                const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                return luminance > 0.75;
+              })();
+
+              return (
+                <button
+                  key={colorStr}
+                  onClick={() => {
+                    setSelectedColor(colorStr);
+                    setShowError(false);
+                  }}
+                  title={name}
+                  className={cn(
+                    "group relative w-11 h-11 rounded-full border-2 transition-all duration-300 active:scale-90",
+                    selectedColor === colorStr 
+                      ? "border-zinc-900 ring-4 ring-zinc-100" 
+                      : "border-transparent ring-1 ring-zinc-200 hover:ring-zinc-400"
+                  )}
+                >
+                  <span 
+                    className="absolute inset-1 rounded-full shadow-inner border border-zinc-50"
+                    style={{ backgroundColor: hex }}
+                  />
+                  {selectedColor === colorStr && (
+                    <Check className={cn(
+                      "absolute inset-0 m-auto w-4 h-4 z-10",
+                      isLight ? "text-zinc-900" : "text-white"
+                    )} />
+                  )}
+                  
+                  {/* Color name tooltip on hover */}
+                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-20">
+                    {name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

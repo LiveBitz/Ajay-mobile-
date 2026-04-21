@@ -114,16 +114,7 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // Next.js static files - long cache
-      {
-        source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
+      // Next.js handles /_next/static/ headers automatically with immutable caching
       // Images - moderate cache
       {
         source: "/images/:path*",
