@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, DM_Sans } from "next/font/google";
 import { ConditionalNavbar } from "@/components/layout/ConditionalNavbar";
 import { Footer } from "@/components/layout/Footer";
+import prisma from "@/lib/prisma";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -158,11 +159,18 @@ const jsonLd = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const categories = await prisma.category.findMany({
+    select: { name: true },
+    take: 10
+  });
+
+  const categoryNames = categories.map(c => c.name);
+
   return (
     <html
       lang="en"
@@ -177,7 +185,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-white text-zinc-900">
         <CartProvider>
           <WishlistProvider>
-            <ConditionalNavbar />
+            <ConditionalNavbar categoryNames={categoryNames} />
             <main>
               {children}
             </main>

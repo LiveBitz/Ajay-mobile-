@@ -83,6 +83,9 @@ model Product {
   images        String[] 
   description   String   @default("")
   features      String[] @default([])
+  inTheBox      String[] @default([])
+  warranty      String   @default("1 Year Manufacturer")
+  returnPolicy  String   @default("7-Day Returns")
   variantPricing Json?    // Per-variant pricing: {"8GB | 128GB": {"price": 49999, "originalPrice": 59999}}
   isNew         Boolean  @default(false)
   isBestSeller  Boolean  @default(false)

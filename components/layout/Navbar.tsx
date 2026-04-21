@@ -22,7 +22,7 @@ import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { signOut } from "@/lib/actions/auth-actions";
 
-export function Navbar() {
+export function Navbar({ categoryNames = [] }: { categoryNames?: string[] }) {
   const router = useRouter();
   const navRef = React.useRef<HTMLElement>(null);
   const [mounted,         setMounted]         = useState(false);
@@ -43,6 +43,22 @@ export function Navbar() {
   const supabase = createClient();
   // Ref to the search pill container — used to detect outside touches on iOS
   const searchPillRef = React.useRef<HTMLDivElement>(null);
+
+  const [placeholder, setPlaceholder] = useState("Smartphones");
+
+  useEffect(() => {
+    if (categoryNames.length > 0) {
+      setPlaceholder(categoryNames[0]);
+      const interval = setInterval(() => {
+        setPlaceholder(prev => {
+          const currentIndex = categoryNames.indexOf(prev);
+          const nextIndex = (currentIndex + 1) % categoryNames.length;
+          return categoryNames[nextIndex];
+        });
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [categoryNames]);
 
   const goToSearchResults = React.useCallback((rawQuery: string) => {
     const query = rawQuery.trim();
@@ -471,13 +487,7 @@ export function Navbar() {
                   </button>
                 </SheetHeader>
                 <DrawerMenu />
-                <div className="p-5 border-t bg-zinc-50 space-y-1.5 shrink-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-400">Language</span>
-                    <span className="text-xs font-bold text-zinc-800">English (IN)</span>
-                  </div>
                   <p className="text-[10px] text-zinc-400">© 2026 Priya Mobile Park. All Rights Reserved.</p>
-                </div>
               </SheetContent>
             </Sheet>
           </div>
@@ -580,13 +590,6 @@ export function Navbar() {
                     <X className="w-4 h-4 text-zinc-400" />
                   </button>
                 )}
-                <button
-                  onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
-                  className="p-1 hover:bg-zinc-100 rounded-full shrink-0"
-                  type="button"
-                >
-                  <ChevronRight className="w-4 h-4 text-zinc-400 rotate-180" />
-                </button>
               </form>
             )}
 
@@ -735,7 +738,7 @@ export function Navbar() {
               <Search className="w-5 h-5 text-zinc-400 group-focus-within:text-brand transition-colors shrink-0" />
               <input
                 type="text"
-                placeholder="Search smartphones, laptops…"
+                placeholder={`Search for "${placeholder}"...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={onSearchKeyDown}

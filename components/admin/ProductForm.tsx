@@ -18,6 +18,7 @@ import {
   AlertCircle,
   X,
   Plus,
+  Package,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
@@ -322,6 +323,9 @@ export function ProductForm({
     })(),
     description: initialData?.description || "",
     features: Array.isArray(initialData?.features) ? initialData.features : [],
+    inTheBox: Array.isArray(initialData?.inTheBox) ? initialData.inTheBox : [],
+    warranty: initialData?.warranty || "1 Year Manufacturer",
+    returnPolicy: initialData?.returnPolicy || "7-Day Returns",
   });
 
   // ── Specs: free-form key-value rows ──
@@ -361,6 +365,15 @@ export function ProductForm({
   const [customColorInput, setCustomColorInput] = useState("");
   const [customColorHex, setCustomColorHex] = useState("#000000");
   const [customVariantInput, setCustomVariantInput] = useState("");
+  const [customInTheBoxInput, setCustomInTheBoxInput] = useState("");
+
+  const addInTheBoxItem = () => {
+    const val = customInTheBoxInput.trim();
+    if (val && !formData.inTheBox.includes(val)) {
+      setFormData(p => ({ ...p, inTheBox: [...p.inTheBox, val] }));
+      setCustomInTheBoxInput("");
+    }
+  };
 
   // ── Derived ──
   const selectedCategory = categories.find((c) => c.id === formData.categoryId);
@@ -1984,7 +1997,100 @@ export function ProductForm({
               </div>
             </section>
 
-            {/* ── 5. Pricing ── */}
+            {/* ── 5. Shipping & Support ── */}
+            <section className="bg-white p-5 sm:p-8 rounded-3xl border border-zinc-100 shadow-sm space-y-6 transition-all hover:shadow-md">
+              <div className="flex items-center gap-3 border-b border-zinc-50 pb-5">
+                <div className="w-9 h-9 rounded-xl bg-zinc-50 flex items-center justify-center shrink-0">
+                  <Package className="w-4 h-4 text-brand" />
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-zinc-900 tracking-tight">
+                    Shipping & Support
+                  </h2>
+                  <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">
+                    Logistics & Warranty
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Warranty */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+                      Warranty Period
+                    </label>
+                    <Input
+                      placeholder="e.g. 1 Year Manufacturer"
+                      value={formData.warranty}
+                      onChange={(e) => setFormData(p => ({ ...p, warranty: e.target.value }))}
+                      className="rounded-2xl border-zinc-100 h-13 sm:h-14 font-bold text-sm text-zinc-900 shadow-sm focus:ring-2 focus:ring-brand/20"
+                    />
+                  </div>
+
+                  {/* Return Policy */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+                      Return Policy
+                    </label>
+                    <Input
+                      placeholder="e.g. 7-Day Returns"
+                      value={formData.returnPolicy}
+                      onChange={(e) => setFormData(p => ({ ...p, returnPolicy: e.target.value }))}
+                      className="rounded-2xl border-zinc-100 h-13 sm:h-14 font-bold text-sm text-zinc-900 shadow-sm focus:ring-2 focus:ring-brand/20"
+                    />
+                  </div>
+                </div>
+
+                {/* In the Box */}
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+                    What's In the Box?
+                  </label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {formData.inTheBox.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-2 bg-zinc-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest group">
+                        {item}
+                        <button
+                          type="button"
+                          onClick={() => setFormData(p => ({ ...p, inTheBox: p.inTheBox.filter((_, i) => i !== idx) }))}
+                          className="hover:text-red-400 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {formData.inTheBox.length === 0 && (
+                      <p className="text-[10px] text-zinc-400 font-bold italic py-2">No items added yet</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="e.g. Power Adapter, USB-C Cable"
+                      value={customInTheBoxInput}
+                      onChange={(e) => setCustomInTheBoxInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addInTheBoxItem();
+                        }
+                      }}
+                      className="h-11 rounded-2xl border-zinc-100 bg-zinc-50/50 focus:bg-white text-sm font-bold focus:ring-2 focus:ring-brand/20"
+                    />
+                    <Button
+                      type="button"
+                      onClick={addInTheBoxItem}
+                      className="h-11 px-6 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-white text-[10px] font-bold uppercase tracking-widest active:scale-95"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ── 6. Pricing ── */}
             <section className="bg-white p-5 sm:p-8 rounded-3xl border border-zinc-100 shadow-sm space-y-6 transition-all hover:shadow-md">
               <div className="flex items-center gap-3 border-b border-zinc-50 pb-5">
                 <div className="w-9 h-9 rounded-xl bg-zinc-50 flex items-center justify-center shrink-0">

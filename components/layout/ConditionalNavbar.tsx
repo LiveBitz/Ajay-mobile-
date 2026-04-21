@@ -5,12 +5,12 @@ import { Navbar } from "@/components/layout/Navbar";
 
 const HIDDEN_NAVBAR_ROUTES = new Set(["/login", "/signup"]);
 
-export function ConditionalNavbar() {
+export function ConditionalNavbar({ categoryNames }: { categoryNames: string[] }) {
   const pathname = usePathname();
 
   if (pathname && HIDDEN_NAVBAR_ROUTES.has(pathname)) {
     return null;
   }
 
-  return <Navbar />;
+  return <Navbar categoryNames={categoryNames} />;
 }

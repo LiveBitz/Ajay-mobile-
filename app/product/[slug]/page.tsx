@@ -124,8 +124,8 @@ export default async function ProductDetailsPage({
       label: "Model ID",
       value: product.slug.toUpperCase().replace(/-/g, ""),
     },
-    { label: "Return Policy", value: "7-Day Returns" },
-    { label: "Warranty", value: "1 Year Manufacturer" },
+    { label: "Return Policy", value: product.returnPolicy },
+    { label: "Warranty", value: product.warranty },
     ...specFeatures.map((f) => {
       const idx = f.indexOf(":");
       return {
@@ -236,8 +236,7 @@ export default async function ProductDetailsPage({
                   </h2>
                 </div>
                 <p className="text-sm text-zinc-500 leading-relaxed whitespace-pre-wrap">
-                  {product.description ||
-                    "A premium device built with exceptional craftsmanship, combining performance with elegant design. This product represents the pinnacle of modern engineering."}
+                  {product.description || "Detailed description coming soon."}
                 </p>
               </div>
 
@@ -271,20 +270,18 @@ export default async function ProductDetailsPage({
                   In the Box
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {[
-                    "Device",
-                    "Charger",
-                    "USB Cable",
-                    "User Manual",
-                    "Warranty Card",
-                  ].map((item) => (
-                    <span
-                      key={item}
-                      className="text-xs font-medium text-zinc-600 bg-white border border-zinc-200 px-2.5 py-1 rounded-lg"
-                    >
-                      {item}
-                    </span>
-                  ))}
+                  {(product as any).inTheBox && (product as any).inTheBox.length > 0 ? (
+                    (product as any).inTheBox.map((item: string) => (
+                      <span
+                        key={item}
+                        className="text-xs font-medium text-zinc-600 bg-white border border-zinc-200 px-2.5 py-1 rounded-lg"
+                      >
+                        {item}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-zinc-400 font-medium italic">Standard retail box items included</span>
+                  )}
                 </div>
               </div>
             </div>
