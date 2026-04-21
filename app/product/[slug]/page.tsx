@@ -7,7 +7,6 @@ import {
   Truck,
   RotateCcw,
   ChevronRight,
-  Package,
   BadgeCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -109,11 +108,6 @@ export default async function ProductDetailsPage({
   const specFeatures = features.filter((f) => f.includes(":"));
   const bulletFeatures = features.filter((f) => !f.includes(":"));
 
-  const trustBadges = [
-    { icon: ShieldCheck, label: "100% Genuine", sub: "Verified Product" },
-    { icon: Truck, label: "Fast Delivery", sub: "2–4 Business Days" },
-    { icon: RotateCcw, label: "Easy Returns", sub: "7-Day Policy" },
-  ];
 
   const specRows = [
     { label: "Brand", value: product.category.name },
@@ -220,39 +214,8 @@ export default async function ProductDetailsPage({
               {/* ── Dynamic Pricing + Selection (Client Component) ── */}
               <PriceDisplay product={product as any} />
 
-              {/* ── Delivery Strip ── */}
-              <div className="flex items-start gap-3 p-4 rounded-xl border border-zinc-100 bg-zinc-50/50">
-                <Package className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-zinc-500 leading-relaxed">
-                  Order within{" "}
-                  <span className="text-zinc-800 font-bold">4 hrs 23 mins</span>{" "}
-                  to get it by{" "}
-                  <span className="text-zinc-800 font-bold">Tomorrow, 10 AM</span>{" "}
-                  · Free shipping above ₹499
-                </p>
-              </div>
-
-              {/* ── Trust Badges ── */}
-              <div className="grid grid-cols-3 gap-2.5">
-                {trustBadges.map(({ icon: Icon, label, sub }) => (
-                  <div
-                    key={label}
-                    className="flex flex-col items-center text-center gap-2.5 p-3.5 rounded-xl bg-white border border-zinc-100 shadow-sm hover:shadow-md hover:border-zinc-200 transition-all duration-200"
-                  >
-                    <div className="w-9 h-9 rounded-full bg-zinc-50 border border-zinc-100 flex items-center justify-center shrink-0">
-                      <Icon className="w-4 h-4 text-zinc-400" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-zinc-600 leading-snug">
-                        {label}
-                      </p>
-                      <p className="text-xs text-zinc-400 font-medium mt-0.5 leading-snug">
-                        {sub}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {/* ── Action Area (Buttons, etc.) ── */}
+              {/* Product selection and Add to Cart are handled within PriceDisplay/ProductSelection */}
             </div>
           </div>
         </div>

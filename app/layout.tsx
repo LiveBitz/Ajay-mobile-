@@ -66,6 +66,11 @@ export const metadata: Metadata = {
       },
     ],
   },
+  icons: {
+    icon: "/images/cropped_circle_image.png",
+    shortcut: "/images/cropped_circle_image.png",
+    apple: "/images/cropped_circle_image.png",
+  },
   twitter: {
     card: "summary_large_image",
     title: "Priya Mobile Park | Best Smartphones in Jaipur",
@@ -104,7 +109,7 @@ const jsonLd = {
       },
       contactPoint: {
         "@type": "ContactPoint",
-        telephone: "+91-98765-43210",
+        telephone: "+91-83360-84672",
         contactType: "customer service",
         areaServed: "IN",
         availableLanguage: ["English", "Hindi"],
@@ -134,12 +139,12 @@ const jsonLd = {
       name: "Priya Mobile Park",
       image: `${siteUrl}/images/cropped_circle_image.png`,
       url: siteUrl,
-      telephone: "+91-98765-43210",
+      telephone: "+91-83360-84672",
       address: {
         "@type": "PostalAddress",
         addressLocality: "Jaipur",
         addressRegion: "Rajasthan",
-        postalCode: "302001",
+        postalCode: "303007",
         addressCountry: "IN",
       },
       priceRange: "₹₹",

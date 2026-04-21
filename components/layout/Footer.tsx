@@ -12,30 +12,31 @@ import {
   LockKeyhole,
   Headset,
 } from "lucide-react";
+import prisma from "@/lib/prisma";
 
-export function Footer() {
+export async function Footer() {
   const currentYear = new Date().getFullYear();
 
+  // Fetch real categories for the shop links
+  const categories = await prisma.category.findMany({
+    take: 6,
+    orderBy: {
+      name: 'asc'
+    }
+  });
+
   const contactInfo = [
-    { icon: Mail, label: "support@nexus.store", href: "mailto:support@nexus.store" },
-    { icon: Phone, label: "+91 98765 43210", href: "tel:+919876543210" },
-    { icon: MapPin, label: "Mumbai, Maharashtra, India", href: null },
+    { icon: Mail, label: "priyamobilepark3@gmail.com", href: "mailto:priyamobilepark3@gmail.com" },
+    { icon: Phone, label: "+91 83360-84672", href: "tel:+918336084672" },
+    { icon: MapPin, label: "Dahmi Kalan, Jaipur, Rajasthan", href: "https://www.google.com/maps/search/Dahmi+Kalan+Jaipur" },
   ];
 
   const shopLinks = [
     { label: "Home", href: "/" },
-    { label: "Smartphones", href: "/category/smartphones" },
-    { label: "Apple", href: "/category/apple" },
-    { label: "Samsung", href: "/category/samsung" },
-    { label: "Accessories", href: "/category/accessories" },
-  ];
-
-  const policies = [
-    "Privacy Policy",
-    "Terms of Service",
-    "Return Policy",
-    "Shipping Info",
-    "Track Order",
+    ...categories.map(cat => ({
+      label: cat.name,
+      href: `/category/${cat.slug}`
+    }))
   ];
 
   const promises = [
@@ -66,7 +67,7 @@ export function Footer() {
 
       {/* ── Main Grid ── */}
       <div className="relative z-10 container mx-auto px-4 md:px-6 lg:px-8 pt-12 md:pt-16 pb-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-12">
 
           {/* ── Col 1: Brand ── */}
           <div className="sm:col-span-2 lg:col-span-1 flex flex-col gap-5">
@@ -125,26 +126,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* ── Col 3: Policies ── */}
-          <div className="flex flex-col gap-5">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-3 h-0.5 bg-red-600 rounded-full" />
-              </div>
-              <p className="text-sm font-black text-zinc-100 tracking-tight">Quick Info</p>
-            </div>
-
-            <ul className="flex flex-col gap-2.5">
-              {policies.map((item) => (
-                <li key={item}>
-                  <Link href="#" className="group flex items-center gap-1.5 text-sm text-zinc-400 hover:text-red-400 transition-colors duration-200 w-fit">
-                    <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-red-500 shrink-0" />
-                    {item}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
 
           {/* ── Col 4: Our Promise ── */}
           <div className="flex flex-col gap-5">
