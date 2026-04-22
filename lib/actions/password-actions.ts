@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 
 export async function sendPasswordReset(formData: FormData) {
   const email = formData.get("email") as string;
@@ -47,6 +48,10 @@ export async function updatePassword(formData: FormData) {
   if (error) {
     return { error: error.message };
   }
+
+  // Success: Clear the security cookie
+  const cookieStore = await cookies();
+  cookieStore.delete("reset_password_allowed");
 
   return { success: true };
 }

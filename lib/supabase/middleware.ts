@@ -37,8 +37,8 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const isAdminPath = pathname.startsWith('/admin') && !pathname.startsWith('/api/admin')
   const isEntryPath = pathname === '/admin/entry'
-  const isAuthPath = pathname.startsWith('/login') || pathname.startsWith('/signup')
-  const isResetPath = pathname.startsWith('/forgot-password') || pathname.startsWith('/reset-password')
+  const isAuthPath = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/forgot-password')
+  const isResetPath = pathname.startsWith('/reset-password')
   const isSeedApi = pathname === '/api/seed-banners'
   const isDebugApi = pathname === '/api/debug-banners'
   const isApiRoute = pathname.startsWith('/api/')
@@ -46,7 +46,6 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath =
     pathname === '/' ||
     isAuthPath ||
-    isResetPath ||
     isEntryPath ||
     pathname.startsWith('/auth') ||
     pathname.startsWith('/category') ||
@@ -56,14 +55,26 @@ export async function updateSession(request: NextRequest) {
     isDebugApi ||
     isApiRoute // All API routes handle their own auth
 
-  // Redirect authenticated users away from login/signup pages
+  // Redirect authenticated users away from gate-keeping pages (login, signup, forgot-password)
+  // EXCEPT when they are on the reset-password page (which requires a session)
   if (user && isAuthPath) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)
   }
 
-  // Require authentication for non-public paths
+  // Strict check for /reset-password: Must have the specific verification cookie
+  if (pathname === '/reset-password') {
+    const resetAllowed = request.cookies.get('reset_password_allowed')?.value === 'true'
+    if (!resetAllowed) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('error', 'unauthorized_reset')
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // Require authentication for non-public paths (this now includes /reset-password)
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
