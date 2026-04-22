@@ -38,6 +38,7 @@ export async function updateSession(request: NextRequest) {
   const isAdminPath = pathname.startsWith('/admin') && !pathname.startsWith('/api/admin')
   const isEntryPath = pathname === '/admin/entry'
   const isAuthPath = pathname.startsWith('/login') || pathname.startsWith('/signup')
+  const isResetPath = pathname.startsWith('/forgot-password') || pathname.startsWith('/reset-password')
   const isSeedApi = pathname === '/api/seed-banners'
   const isDebugApi = pathname === '/api/debug-banners'
   const isApiRoute = pathname.startsWith('/api/')
@@ -45,8 +46,12 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath =
     pathname === '/' ||
     isAuthPath ||
+    isResetPath ||
     isEntryPath ||
     pathname.startsWith('/auth') ||
+    pathname.startsWith('/category') ||
+    pathname.startsWith('/product') ||
+    pathname.startsWith('/search') ||
     isSeedApi ||
     isDebugApi ||
     isApiRoute // All API routes handle their own auth

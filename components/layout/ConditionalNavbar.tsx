@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 
-const HIDDEN_NAVBAR_ROUTES = new Set(["/login", "/signup"]);
+const HIDDEN_NAVBAR_ROUTES = new Set(["/login", "/signup", "/forgot-password", "/reset-password"]);
 
 export function ConditionalNavbar({ categoryNames }: { categoryNames: string[] }) {
   const pathname = usePathname();
