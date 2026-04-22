@@ -7,8 +7,6 @@ import {
   MapPin,
   ArrowUpRight,
   ShieldCheck,
-  Truck,
-  RotateCcw,
   LockKeyhole,
   Headset,
 } from "lucide-react";
@@ -41,8 +39,6 @@ export async function Footer() {
 
   const promises = [
     { icon: ShieldCheck, label: "100% Genuine Products" },
-    { icon: Truck, label: "Fast 2-4 Day Delivery" },
-    { icon: RotateCcw, label: "7-Day Easy Returns" },
     { icon: LockKeyhole, label: "Secure Payments" },
     { icon: Headset, label: "24/7 Customer Support" },
   ];

@@ -2048,12 +2048,12 @@ export function ProductForm({
                     What's In the Box?
                   </label>
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {formData.inTheBox.map((item, idx) => (
+                    {formData.inTheBox.map((item: string, idx: number) => (
                       <div key={idx} className="flex items-center gap-2 bg-zinc-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest group">
                         {item}
                         <button
                           type="button"
-                          onClick={() => setFormData(p => ({ ...p, inTheBox: p.inTheBox.filter((_, i) => i !== idx) }))}
+                          onClick={() => setFormData(p => ({ ...p, inTheBox: p.inTheBox.filter((item: string, i: number) => i !== idx) }))}
                           className="hover:text-red-400 transition-colors"
                         >
                           <X className="w-3 h-3" />

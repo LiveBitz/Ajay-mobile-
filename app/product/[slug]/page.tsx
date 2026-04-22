@@ -45,6 +45,9 @@ async function getProduct(slug: string) {
       isBestSeller: true,
       stock: true,
       features: true,
+      inTheBox: true,
+      warranty: true,
+      returnPolicy: true,
       variantPricing: true,
       category: {
         select: { id: true, name: true, slug: true },
