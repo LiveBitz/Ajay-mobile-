@@ -174,7 +174,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${dmSans.variable} h-full antialiased font-body selection:bg-brand/20 text-[15px]`}
+      className={`${spaceGrotesk.variable} ${dmSans.variable} antialiased font-body selection:bg-brand/20 text-[15px]`}
     >
       <head>
         <script
@@ -182,7 +182,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-white text-zinc-900">
+      <body className="flex flex-col bg-white text-zinc-900 overflow-x-hidden">
         <CartProvider>
           <WishlistProvider>
             <ConditionalNavbar categoryNames={categoryNames} />

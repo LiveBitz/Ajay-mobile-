@@ -388,7 +388,7 @@ export function Navbar({ categoryNames = [] }: { categoryNames?: string[] }) {
       ref={navRef}
       suppressHydrationWarning
       style={{ borderBottomLeftRadius: "24px", borderBottomRightRadius: "24px" }}
-      className="relative w-full z-50 bg-white border border-black shadow-sm"
+      className="relative w-full z-50 bg-white shadow-sm"
     >
 
       {/* ══════════════════════════════════════════

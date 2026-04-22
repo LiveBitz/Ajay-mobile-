@@ -4,7 +4,6 @@ import Image from "next/image";
 import {
   Mail,
   Phone,
-  MapPin,
   ArrowUpRight,
   ShieldCheck,
   LockKeyhole,
@@ -26,7 +25,6 @@ export async function Footer() {
   const contactInfo = [
     { icon: Mail, label: "priyamobilepark3@gmail.com", href: "mailto:priyamobilepark3@gmail.com" },
     { icon: Phone, label: "+91 83360-84672", href: "tel:+918336084672" },
-    { icon: MapPin, label: "Dahmi Kalan, Jaipur, Rajasthan", href: "https://www.google.com/maps/search/Dahmi+Kalan+Jaipur" },
   ];
 
   const shopLinks = [

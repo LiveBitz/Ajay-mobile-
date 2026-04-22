@@ -65,7 +65,10 @@ export default async function Home() {
   const showFeatured = (await getSiteSetting("show_featured_categories", "true")) === "true";
 
   return (
-    <main className="flex flex-col w-full overflow-x-hidden pt-8 md:pt-0" style={{ backgroundColor: "#0a0a0a" }}>
+    <main
+      className="flex flex-col w-full pt-10 md:pt-4"
+      style={{ backgroundColor: "#0a0a0a" }}
+    >
 
       {/* ── 1. Featured Categories ── dark */}
       {showFeatured && (
