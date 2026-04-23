@@ -90,6 +90,7 @@ export async function Footer() {
               <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Business Info</p>
               <div className="space-y-0.5">
                 <p className="text-xs font-bold text-zinc-200">GST Name: <span className="font-normal text-zinc-400">PRIYA MOBILE PARK</span></p>
+                <p className="text-xs font-bold text-zinc-200">GSTIN: <span className="font-normal text-zinc-400">19CDXPK8119E1ZZ</span></p>
                 <p className="text-xs font-bold text-zinc-200">GST Address: <span className="font-normal text-zinc-400 leading-relaxed">No. 7, Station Road, Belgharia, Kolkata - 700056</span></p>
               </div>
             </div>
