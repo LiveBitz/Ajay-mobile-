@@ -32,6 +32,8 @@
   --color-foreground: var(--foreground);
   --color-brand: var(--brand);
   --color-success: var(--success);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
   --color-muted: var(--muted);

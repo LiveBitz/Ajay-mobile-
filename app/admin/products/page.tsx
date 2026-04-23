@@ -17,13 +17,28 @@ import { Button } from "@/components/ui/button";
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
 import { AddProductButton } from "@/components/admin/AddProductButton";
 import { ProductQuickToggle } from "@/components/admin/ProductQuickToggle";
+import { AdminProductFilters } from "@/components/admin/AdminProductFilters";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 15;
 
-async function getProducts(page: number) {
+async function getProducts(page: number, search?: string, categoryId?: string) {
   const skip = (page - 1) * PAGE_SIZE;
+  const where: any = {};
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  if (categoryId && categoryId !== "all") {
+    where.categoryId = categoryId;
+  }
+
   return await prisma.product.findMany({
+    where,
     skip,
     take: PAGE_SIZE,
     select: {
@@ -48,8 +63,21 @@ async function getProducts(page: number) {
   });
 }
 
-async function getTotalProducts() {
-  return await prisma.product.count();
+async function getTotalProducts(search?: string, categoryId?: string) {
+  const where: any = {};
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  if (categoryId && categoryId !== "all") {
+    where.categoryId = categoryId;
+  }
+
+  return await prisma.product.count({ where });
 }
 
 async function getCategories() {
@@ -108,15 +136,17 @@ interface PageProps {
 export default async function ProductsAdminPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const currentPage = Number(params.page) || 1;
+  const search = typeof params.search === "string" ? params.search : undefined;
+  const categoryId = typeof params.category === "string" ? params.category : undefined;
 
   const [products, totalCount, categories] = await Promise.all([
-    getProducts(currentPage),
-    getTotalProducts(),
+    getProducts(currentPage, search, categoryId),
+    getTotalProducts(search, categoryId),
     getCategories(),
   ]);
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
-  const startItem = (currentPage - 1) * PAGE_SIZE + 1;
+  const startItem = totalCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const endItem = Math.min(currentPage * PAGE_SIZE, totalCount);
 
   // ✅ Summary stats
@@ -190,23 +220,11 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
       </div>
 
       {/* ── Search & Filter ── */}
-      <div className="bg-white p-3 rounded-2xl border border-zinc-100 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        <div className="relative flex-1 group">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-red-500 transition-colors" />
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="w-full pl-10 pr-4 py-2.5 bg-zinc-50 border border-zinc-100 rounded-xl text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-200 transition-all"
-          />
-        </div>
-        <Button
-          variant="outline"
-          className="flex items-center justify-center gap-2 rounded-xl h-10 border-zinc-200 hover:bg-zinc-50 font-semibold px-5 text-zinc-600 text-sm"
-        >
-          <Filter className="w-4 h-4 text-zinc-400" />
-          Filter
-        </Button>
-      </div>
+      <AdminProductFilters 
+        categories={categories} 
+        initialSearch={search} 
+        initialCategoryId={categoryId} 
+      />
 
       {/* ── Desktop Table ── */}
       <div className="hidden xl:block bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden">
@@ -530,7 +548,7 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
             <Link
               href={
                 currentPage > 1
-                  ? `/admin/products?page=${currentPage - 1}`
+                  ? `/admin/products?${new URLSearchParams({ ...params, page: (currentPage - 1).toString() }).toString()}`
                   : "#"
               }
             >
@@ -551,7 +569,7 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
             <Link
               href={
                 currentPage < totalPages
-                  ? `/admin/products?page=${currentPage + 1}`
+                  ? `/admin/products?${new URLSearchParams({ ...params, page: (currentPage + 1).toString() }).toString()}`
                   : "#"
               }
             >
