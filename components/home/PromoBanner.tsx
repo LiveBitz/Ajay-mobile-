@@ -87,8 +87,8 @@ export function PromoBanner({ banners = [] }: PromoBannerProps) {
 
         {/* Carousel Container */}
         <div
-          onMouseEnter={() => pluginRef.current?.stop()}
-          onMouseLeave={() => pluginRef.current?.play()}
+          onMouseEnter={() => banners.length > 1 && pluginRef.current?.stop?.()}
+          onMouseLeave={() => banners.length > 1 && pluginRef.current?.reset?.()}
           className="promo-shell rounded-3xl border border-zinc-800/90 bg-zinc-950/60 p-2 md:p-3 backdrop-blur-sm"
         >
           <Carousel

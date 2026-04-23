@@ -35,6 +35,12 @@ export async function Footer() {
     }))
   ];
 
+  const policyLinks = [
+    { label: "Terms & Conditions", href: "/terms" },
+    { label: "Privacy Policy", href: "/privacy" },
+    { label: "Return & Refund Policy", href: "/refund-policy" },
+  ];
+
   const promises = [
     { icon: ShieldCheck, label: "100% Genuine Products" },
     { icon: LockKeyhole, label: "Secure Payments" },
@@ -61,7 +67,7 @@ export async function Footer() {
 
       {/* ── Main Grid ── */}
       <div className="relative z-10 container mx-auto px-4 md:px-6 lg:px-8 pt-12 md:pt-16 pb-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
 
           {/* ── Col 1: Brand ── */}
           <div className="sm:col-span-2 lg:col-span-1 flex flex-col gap-5">
@@ -80,7 +86,13 @@ export async function Footer() {
               and the latest mobile technology.
             </p>
 
-            <div className="w-8 h-0.5 bg-red-600 rounded-full" />
+            <div className="flex flex-col gap-1.5 border-l-2 border-red-600/30 pl-4 py-1">
+              <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Business Info</p>
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-zinc-200">GST Name: <span className="font-normal text-zinc-400">PRIYA MOBILE PARK</span></p>
+                <p className="text-xs font-bold text-zinc-200">GST Address: <span className="font-normal text-zinc-400 leading-relaxed">No. 7, Station Road, Belgharia, Kolkata - 700056</span></p>
+              </div>
+            </div>
 
             {/* Contact */}
             <div className="flex flex-col gap-3">
@@ -120,6 +132,26 @@ export async function Footer() {
             </ul>
           </div>
 
+          {/* ── Col 3: Policies ── */}
+          <div className="flex flex-col gap-5">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-3 h-0.5 bg-red-600 rounded-full" />
+              </div>
+              <p className="text-sm font-black text-zinc-100 tracking-tight">Customer Care</p>
+            </div>
+
+            <ul className="flex flex-col gap-2.5">
+              {policyLinks.map(({ label, href }) => (
+                <li key={label}>
+                  <Link href={href} className="group flex items-center gap-1.5 text-sm text-zinc-400 hover:text-red-400 transition-colors duration-200 w-fit">
+                    <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-red-500 shrink-0" />
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {/* ── Col 4: Our Promise ── */}
           <div className="flex flex-col gap-5">
