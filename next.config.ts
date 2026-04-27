@@ -5,45 +5,25 @@ const nextConfig: NextConfig = {
   // IMAGE OPTIMIZATION - Bandwidth Reduction
   // ============================================
   images: {
-    formats: ["image/avif", "image/webp"],  // Modern formats (60% smaller)
+    // On Vercel free plan, image optimization has a 1000/month quota.
+    // Exceeding it returns 402. Set unoptimized=true in production to
+    // serve images directly and avoid quota errors entirely.
+    unoptimized: process.env.NODE_ENV === "production",
+
+    formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     qualities: [75, 85, 88, 90],
-    
+
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "picsum.photos",
-      },
-      {
-        protocol: "https",
-        hostname: "i.pinimg.com",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "i.imgur.com",
-      },
-      {
-        protocol: "https",
-        hostname: "zjhxlwanzqdigsvqxzau.supabase.co",
-      },
-      // ✅ Added - current Supabase project
-      {
-        protocol: "https",
-        hostname: "zmsbmnxqhmxaaemnswzc.supabase.co",
-      },
-      {
-        protocol: "https",
-        hostname: "api.dicebear.com",
-      },
-      {
-        protocol: "https",
-        hostname: "placehold.co",
-      },
+      { protocol: "https", hostname: "picsum.photos" },
+      { protocol: "https", hostname: "i.pinimg.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "i.imgur.com" },
+      // Wildcard covers all Supabase projects
+      { protocol: "https", hostname: "*.supabase.co" },
+      { protocol: "https", hostname: "api.dicebear.com" },
+      { protocol: "https", hostname: "placehold.co" },
     ],
   },
 
