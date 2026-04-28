@@ -51,6 +51,9 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/category') ||
     pathname.startsWith('/product') ||
     pathname.startsWith('/search') ||
+    pathname === '/terms' ||
+    pathname === '/privacy' ||
+    pathname === '/refund-policy' ||
     isSeedApi ||
     isDebugApi ||
     isApiRoute // All API routes handle their own auth

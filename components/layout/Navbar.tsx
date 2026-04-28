@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Search, Heart, ShoppingBag, User, Menu, X,
   ChevronRight, ChevronDown, LogIn, HelpCircle,
@@ -24,6 +24,8 @@ import { signOut } from "@/lib/actions/auth-actions";
 
 export function Navbar({ categoryNames = [] }: { categoryNames?: string[] }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isStaticPage = ["/terms", "/privacy", "/refund-policy"].includes(pathname ?? "");
   const navRef = React.useRef<HTMLElement>(null);
   const [mounted,         setMounted]         = useState(false);
   const [isOpen,          setIsOpen]          = useState(false);
@@ -394,7 +396,7 @@ export function Navbar({ categoryNames = [] }: { categoryNames?: string[] }) {
       {/* ══════════════════════════════════════════
           MOBILE LAYOUT  (md:hidden)
 ══════════════════════════════════════════ */}
-      <div className="md:hidden relative" suppressHydrationWarning style={{ paddingBottom: "40px" }}>
+      <div className="md:hidden relative" suppressHydrationWarning style={{ paddingBottom: isStaticPage ? "8px" : "40px" }}>
 
         {/* ── Row 1: Logo · Icons · Menu ── */}
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
@@ -542,7 +544,7 @@ export function Navbar({ categoryNames = [] }: { categoryNames?: string[] }) {
         {/* ── Row 3: Search bar ──
             Positioned at the bottom center of the navbar border.
         ── */}
-        {mounted && (
+        {mounted && !isStaticPage && (
           <div className="absolute left-1/2 -translate-x-1/2 w-full flex justify-center px-4 z-50 pointer-events-none" style={{ bottom: "-25px" }}>
             <div ref={searchPillRef} className={`w-full max-w-sm relative group ${searchOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
             {/* Search trigger button */}
