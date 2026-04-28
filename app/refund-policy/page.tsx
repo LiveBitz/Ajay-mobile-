@@ -55,35 +55,18 @@ export default function RefundPolicy() {
             </h2>
             <p className="text-zinc-700 leading-relaxed text-sm sm:text-base mb-3">
               All sales at Priya Mobile Park are <strong>final</strong>. We do not accept returns
-              or issue refunds except in the specific circumstances outlined in Sections 2 and 3.
+              or issue refunds except in the specific circumstances outlined in Section 2.
               We strongly advise every customer to:
             </p>
             <ul className="list-disc pl-5 space-y-2 text-zinc-700 text-sm sm:text-base">
-              <li>Inspect the product thoroughly at the time of delivery under our Open Box Delivery policy.</li>
-              <li>Verify the model, colour, storage variant, and box contents before accepting.</li>
+              <li>Verify the model, colour, storage variant, and box contents upon receiving the product.</li>
               <li>Retain all original packaging, invoice, and accessories.</li>
             </ul>
           </section>
 
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              2. Open Box Delivery
-            </h2>
-            <p className="text-zinc-700 leading-relaxed text-sm sm:text-base mb-3">
-              Our delivery executive will open the box in your presence so you can verify the
-              physical condition, correct model/colour/storage, all in-box accessories, and the
-              IMEI number matching the box label.
-            </p>
-            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
-              <strong>Important:</strong> Once you accept and sign for the delivery, the product is
-              considered inspected and accepted. Physical damage or wrong product claims will not
-              be entertained after the delivery executive has left.
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              3. Exceptions — When We Accept Returns / Issue Refunds
+              2. Exceptions — When We Accept Returns / Issue Refunds
             </h2>
             <p className="text-zinc-700 text-sm sm:text-base mb-6">
               Notwithstanding our general no-return policy, the following exceptions apply in
@@ -94,7 +77,7 @@ export default function RefundPolicy() {
 
               <div className="border border-zinc-200 rounded-xl p-4 sm:p-6">
                 <h3 className="text-sm sm:text-base font-black uppercase tracking-tight mb-3 text-red-700">
-                  3A — Wrong Product Delivered
+                  2A — Wrong Product Delivered
                 </h3>
                 <p className="text-zinc-700 text-sm leading-relaxed mb-2">
                   If you receive a product materially different from what you ordered (wrong model,
@@ -118,7 +101,7 @@ export default function RefundPolicy() {
 
               <div className="border border-zinc-200 rounded-xl p-4 sm:p-6">
                 <h3 className="text-sm sm:text-base font-black uppercase tracking-tight mb-3 text-red-700">
-                  3B — Dead on Arrival (DOA)
+                  2B — Dead on Arrival (DOA)
                 </h3>
                 <p className="text-zinc-700 text-sm leading-relaxed mb-2">
                   If the device does not power on or is non-functional upon first use, report it{" "}
@@ -137,7 +120,7 @@ export default function RefundPolicy() {
 
               <div className="border border-zinc-200 rounded-xl p-4 sm:p-6">
                 <h3 className="text-sm sm:text-base font-black uppercase tracking-tight mb-3 text-red-700">
-                  3C — Manufacturing Defect (Post-Use)
+                  2C — Manufacturing Defect (Post-Use)
                 </h3>
                 <p className="text-zinc-700 text-sm leading-relaxed">
                   Manufacturing defects discovered after the device has been used are covered by
@@ -152,10 +135,10 @@ export default function RefundPolicy() {
 
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              4. Refund Timeline
+              3. Refund Timeline
             </h2>
             <p className="text-zinc-700 text-sm sm:text-base mb-4">
-              Refunds are only issued in the circumstances described in Section 3. Once approved:
+              Refunds are only issued in the circumstances described in Section 2. Once approved:
             </p>
             <div className="overflow-x-auto rounded-lg border border-zinc-200">
               <table className="w-full text-sm border-collapse">
@@ -184,7 +167,7 @@ export default function RefundPolicy() {
 
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              5. Non-Returnable Conditions
+              4. Non-Returnable Conditions
             </h2>
             <p className="text-zinc-700 text-sm sm:text-base mb-3">
               Returns and refunds will <strong>not</strong> be accepted under these circumstances:
@@ -192,17 +175,16 @@ export default function RefundPolicy() {
             <ul className="list-disc pl-5 space-y-2 text-zinc-700 text-sm sm:text-base">
               <li>Product shows physical damage caused by the customer.</li>
               <li>Original packaging, invoice, or accessories are missing.</li>
-              <li>Damage reported after the delivery executive has left.</li>
               <li>Customer changed their mind after purchase.</li>
               <li>Software issues, app compatibility, or personal preference.</li>
               <li>Device has been tampered with or repaired by an unauthorised service centre.</li>
-              <li>Report made beyond the timelines specified in Section 3.</li>
+              <li>Report made beyond the timelines specified in Section 2.</li>
             </ul>
           </section>
 
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              6. Order Cancellation
+              5. Order Cancellation
             </h2>
             <p className="text-zinc-700 text-sm sm:text-base mb-2">
               Orders may be cancelled <strong>before dispatch</strong> by contacting us on{" "}
@@ -220,7 +202,7 @@ export default function RefundPolicy() {
           {/* Contact box */}
           <section className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 sm:p-6">
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight mb-4">
-              7. Contact Us
+              6. Contact Us
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-zinc-700">
               <p><span className="font-bold">Email:</span>{" "}

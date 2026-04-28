@@ -114,26 +114,7 @@ export default function TermsAndConditions() {
 
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              6. Open Box Delivery
-            </h2>
-            <p className="text-zinc-700 leading-relaxed text-sm sm:text-base mb-3">
-              We provide <strong>Open Box Delivery</strong> for all orders. Our delivery executive
-              will open the sealed box in your presence so you can inspect the physical condition,
-              correct model/colour/variant, all accessories, and the IMEI number.
-            </p>
-            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
-              <strong>Note:</strong> Once you accept the delivery, the product is considered
-              inspected and accepted. See our{" "}
-              <Link href="/refund-policy" className="underline font-semibold">
-                Return &amp; Refund Policy
-              </Link>{" "}
-              for exception cases.
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              7. Shipping &amp; Delivery
+              6. Shipping &amp; Delivery
             </h2>
             <ul className="list-disc pl-5 space-y-2 text-zinc-700 text-sm sm:text-base">
               <li>Estimated delivery: <strong>2–4 business days</strong> from order confirmation.</li>
@@ -145,7 +126,7 @@ export default function TermsAndConditions() {
 
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              8. Warranty &amp; Service
+              7. Warranty &amp; Service
             </h2>
             <ul className="list-disc pl-5 space-y-2 text-zinc-700 text-sm sm:text-base">
               <li>All products carry the <strong>manufacturer's standard warranty</strong>.</li>
@@ -156,7 +137,7 @@ export default function TermsAndConditions() {
 
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              9. Returns &amp; Refunds
+              8. Returns &amp; Refunds
             </h2>
             <p className="text-zinc-700 leading-relaxed text-sm sm:text-base">
               Our return and refund terms are governed by our{" "}
@@ -169,7 +150,7 @@ export default function TermsAndConditions() {
 
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              10. Limitation of Liability
+              9. Limitation of Liability
             </h2>
             <ul className="list-disc pl-5 space-y-2 text-zinc-700 text-sm sm:text-base">
               <li>Priya Mobile Park shall not be liable for indirect, incidental, or consequential damages arising from use of our products or services.</li>
@@ -180,7 +161,7 @@ export default function TermsAndConditions() {
 
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              11. Governing Law &amp; Disputes
+              10. Governing Law &amp; Disputes
             </h2>
             <p className="text-zinc-700 leading-relaxed text-sm sm:text-base">
               These terms are governed by the laws of India. Disputes shall be subject to the
@@ -195,7 +176,7 @@ export default function TermsAndConditions() {
 
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              12. Amendments
+              11. Amendments
             </h2>
             <p className="text-zinc-700 leading-relaxed text-sm sm:text-base">
               We reserve the right to update these Terms at any time. Changes are effective
@@ -207,7 +188,7 @@ export default function TermsAndConditions() {
           {/* Contact box */}
           <section className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 sm:p-6">
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight mb-4">
-              13. Contact Us
+              12. Contact Us
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-zinc-700">
               <p><span className="font-bold">Business:</span> Priya Mobile Park</p>
