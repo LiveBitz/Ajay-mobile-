@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default function TermsAndConditions() {
-  const lastUpdated = "April 28, 2026";
+  const lastUpdated = "April 29, 2026";
 
   return (
     <div className="min-h-screen bg-white text-black antialiased">
@@ -121,6 +121,17 @@ export default function TermsAndConditions() {
               <li>Shipping charges, if any, are displayed at checkout before payment.</li>
               <li>We are not responsible for delays caused by logistics partners, natural disasters, or force majeure events.</li>
               <li>Risk of loss passes to the customer upon delivery.</li>
+              <li>
+                <strong>Mandatory Unboxing Video:</strong> Customers must record a clear, continuous,
+                and uninterrupted unboxing video starting from the sealed package before opening it.
+                This video is required as proof for any claim related to wrong product delivery,
+                dead-on-arrival, or visible physical damage. Claims made without a valid unboxing
+                video will not be processed. Full requirements are set out in our{" "}
+                <Link href="/refund-policy" className="underline font-semibold">
+                  Return &amp; Refund Policy
+                </Link>
+                .
+              </li>
             </ul>
           </section>
 

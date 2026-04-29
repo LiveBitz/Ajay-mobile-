@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default function RefundPolicy() {
-  const lastUpdated = "April 28, 2026";
+  const lastUpdated = "April 29, 2026";
 
   return (
     <div className="min-h-screen bg-white text-black antialiased">
@@ -49,13 +49,14 @@ export default function RefundPolicy() {
 
         <div className="space-y-10">
 
+          {/* 1. General Policy */}
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
               1. General Policy
             </h2>
             <p className="text-zinc-700 leading-relaxed text-sm sm:text-base mb-3">
               All sales at Priya Mobile Park are <strong>final</strong>. We do not accept returns
-              or issue refunds except in the specific circumstances outlined in Section 2.
+              or issue refunds except in the specific circumstances outlined in Section 3.
               We strongly advise every customer to:
             </p>
             <ul className="list-disc pl-5 space-y-2 text-zinc-700 text-sm sm:text-base">
@@ -64,20 +65,53 @@ export default function RefundPolicy() {
             </ul>
           </section>
 
+          {/* 2. Mandatory Unboxing Video */}
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              2. Exceptions — When We Accept Returns / Issue Refunds
+              2. Mandatory Unboxing Video
+            </h2>
+            <p className="text-zinc-700 leading-relaxed text-sm sm:text-base mb-4">
+              Since we do not offer open-box delivery, customers are required to record a
+              clear, continuous, and uninterrupted unboxing video at the time of receiving
+              the package. This video is <strong>mandatory evidence</strong> for any claim
+              under Section 3 (wrong product, dead on arrival, or physical damage visible
+              upon unboxing).
+            </p>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-4 text-sm text-blue-900 mb-4">
+              <p className="font-bold mb-2 uppercase tracking-wide text-xs">Your unboxing video must:</p>
+              <ul className="list-disc pl-4 space-y-1.5">
+                <li>Begin <strong>before</strong> opening the outer package — show the sealed box and the delivery label clearly.</li>
+                <li>Record the <strong>entire unboxing process</strong> without any cuts, pauses, or interruptions.</li>
+                <li>Clearly show the <strong>product, IMEI/serial number, all in-box accessories</strong>, and any defect or discrepancy.</li>
+                <li>Be recorded in <strong>good lighting</strong> so all details are clearly visible.</li>
+              </ul>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+              <strong>Important:</strong> Claims submitted without a valid unboxing video will
+              not be entertained, regardless of the nature of the issue. Please ensure you record
+              the video before opening every order.
+            </div>
+          </section>
+
+          {/* 3. Exceptions */}
+          <section>
+            <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
+              3. Exceptions — When We Accept Returns / Issue Refunds
             </h2>
             <p className="text-zinc-700 text-sm sm:text-base mb-6">
               Notwithstanding our general no-return policy, the following exceptions apply in
-              accordance with the <strong>Consumer Protection Act, 2019</strong>:
+              accordance with the <strong>Consumer Protection Act, 2019</strong>. A valid
+              unboxing video (as described in Section 2) is required for all claims under
+              Sections 3A and 3B.
             </p>
 
             <div className="space-y-5">
 
               <div className="border border-zinc-200 rounded-xl p-4 sm:p-6">
                 <h3 className="text-sm sm:text-base font-black uppercase tracking-tight mb-3 text-red-700">
-                  2A — Wrong Product Delivered
+                  3A — Wrong Product Delivered
                 </h3>
                 <p className="text-zinc-700 text-sm leading-relaxed mb-2">
                   If you receive a product materially different from what you ordered (wrong model,
@@ -95,36 +129,37 @@ export default function RefundPolicy() {
                   </a>{" "}
                   or call{" "}
                   <a href="tel:+918336084672" className="underline">+91 83360-84672</a>{" "}
-                  with your order number and photos.
+                  with your order number, photos of the product received, and your unboxing video.
                 </p>
               </div>
 
               <div className="border border-zinc-200 rounded-xl p-4 sm:p-6">
                 <h3 className="text-sm sm:text-base font-black uppercase tracking-tight mb-3 text-red-700">
-                  2B — Dead on Arrival (DOA)
+                  3B — Dead on Arrival (DOA)
                 </h3>
                 <p className="text-zinc-700 text-sm leading-relaxed mb-2">
                   If the device does not power on or is non-functional upon first use, report it{" "}
                   <strong>within 48 hours</strong> of delivery.
                 </p>
                 <p className="text-zinc-700 text-sm leading-relaxed mb-2">
-                  <strong>Resolution:</strong> We coordinate with the brand's authorised service
+                  <strong>Resolution:</strong> We coordinate with the brand&apos;s authorised service
                   centre for a DOA certificate. A replacement or full refund is processed within{" "}
                   <strong>7–10 business days</strong>.
                 </p>
                 <p className="text-xs text-zinc-500">
-                  <strong>How to report:</strong> Contact us immediately with a video of the issue.
-                  Do not attempt third-party repair — it voids the DOA claim.
+                  <strong>How to report:</strong> Contact us immediately with your unboxing video
+                  and a separate video demonstrating the issue. Do not attempt third-party repair —
+                  it voids the DOA claim.
                 </p>
               </div>
 
               <div className="border border-zinc-200 rounded-xl p-4 sm:p-6">
                 <h3 className="text-sm sm:text-base font-black uppercase tracking-tight mb-3 text-red-700">
-                  2C — Manufacturing Defect (Post-Use)
+                  3C — Manufacturing Defect (Post-Use)
                 </h3>
                 <p className="text-zinc-700 text-sm leading-relaxed">
                   Manufacturing defects discovered after the device has been used are covered by
-                  the <strong>manufacturer's warranty</strong>. Visit the nearest authorised brand
+                  the <strong>manufacturer&apos;s warranty</strong>. Visit the nearest authorised brand
                   service centre with your original invoice. We will help locate the nearest
                   service centre on request.
                 </p>
@@ -133,12 +168,13 @@ export default function RefundPolicy() {
             </div>
           </section>
 
+          {/* 4. Refund Timeline */}
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              3. Refund Timeline
+              4. Refund Timeline
             </h2>
             <p className="text-zinc-700 text-sm sm:text-base mb-4">
-              Refunds are only issued in the circumstances described in Section 2. Once approved:
+              Refunds are only issued in the circumstances described in Section 3. Once approved:
             </p>
             <div className="overflow-x-auto rounded-lg border border-zinc-200">
               <table className="w-full text-sm border-collapse">
@@ -165,26 +201,29 @@ export default function RefundPolicy() {
             </div>
           </section>
 
+          {/* 5. Non-Returnable Conditions */}
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              4. Non-Returnable Conditions
+              5. Non-Returnable Conditions
             </h2>
             <p className="text-zinc-700 text-sm sm:text-base mb-3">
               Returns and refunds will <strong>not</strong> be accepted under these circumstances:
             </p>
             <ul className="list-disc pl-5 space-y-2 text-zinc-700 text-sm sm:text-base">
+              <li>No valid unboxing video is provided at the time of raising a claim.</li>
               <li>Product shows physical damage caused by the customer.</li>
               <li>Original packaging, invoice, or accessories are missing.</li>
               <li>Customer changed their mind after purchase.</li>
               <li>Software issues, app compatibility, or personal preference.</li>
               <li>Device has been tampered with or repaired by an unauthorised service centre.</li>
-              <li>Report made beyond the timelines specified in Section 2.</li>
+              <li>Report made beyond the timelines specified in Section 3.</li>
             </ul>
           </section>
 
+          {/* 6. Order Cancellation */}
           <section>
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight border-b border-zinc-200 pb-2 mb-4">
-              5. Order Cancellation
+              6. Order Cancellation
             </h2>
             <p className="text-zinc-700 text-sm sm:text-base mb-2">
               Orders may be cancelled <strong>before dispatch</strong> by contacting us on{" "}
@@ -199,10 +238,10 @@ export default function RefundPolicy() {
             </p>
           </section>
 
-          {/* Contact box */}
+          {/* 7. Contact Us */}
           <section className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 sm:p-6">
             <h2 className="text-base sm:text-lg font-black uppercase tracking-tight mb-4">
-              6. Contact Us
+              7. Contact Us
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-zinc-700">
               <p><span className="font-bold">Email:</span>{" "}
