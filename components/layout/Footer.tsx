@@ -89,6 +89,7 @@ export async function Footer() {
             <div className="flex flex-col gap-1.5 border-l-2 border-red-600/30 pl-4 py-1">
               <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">Business Info</p>
               <div className="space-y-0.5">
+                <p className="text-xs font-bold text-zinc-200">Proprietor: <span className="font-normal text-zinc-400">Ajoy Kundu</span></p>
                 <p className="text-xs font-bold text-zinc-200">GST Name: <span className="font-normal text-zinc-400">PRIYA MOBILE PARK</span></p>
                 <p className="text-xs font-bold text-zinc-200">GSTIN: <span className="font-normal text-zinc-400">19CDXPK8119E1ZZ</span></p>
                 <p className="text-xs font-bold text-zinc-200">GST Address: <span className="font-normal text-zinc-400 leading-relaxed">No. 7, Station Road, Belgharia, Kolkata - 700056</span></p>
@@ -183,10 +184,16 @@ export async function Footer() {
       {/* ── Bottom Bar ── */}
       <div className="relative z-10 border-t border-zinc-800/80 bg-black/25 backdrop-blur-sm">
         <div className="container mx-auto px-4 md:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-zinc-500 text-center sm:text-left">
-            © {currentYear}{" "}
-            <span className="text-zinc-200 font-bold">Priya Mobile Park</span>. All rights reserved.
-          </p>
+          <div className="flex flex-col items-center sm:items-start gap-0.5">
+            <p className="text-xs text-zinc-500 text-center sm:text-left">
+              © {currentYear}{" "}
+              <span className="text-zinc-200 font-bold">Priya Mobile Park</span>. All rights reserved.
+            </p>
+            <p className="text-xs text-zinc-500 text-center sm:text-left">
+              Proprietor:{" "}
+              <span className="text-zinc-300 font-semibold">Ajoy Kundu</span>
+            </p>
+          </div>
           <p className="text-xs text-zinc-500 text-center sm:text-right">
             Built by{" "}
             <span className="text-zinc-300 font-semibold">Himanshu Meena</span>{" "}
