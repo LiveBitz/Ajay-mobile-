@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   Plus, Pencil, Trash2, ToggleLeft, ToggleRight,
   Tag, CreditCard, Smartphone, Building2, Wallet,
-  CheckCircle2, XCircle, ChevronDown, ChevronUp, X,
+  ChevronDown, ChevronUp, X,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -166,18 +166,19 @@ export default function OffersPage() {
   const inactiveCount = offers.length - activeCount;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Bank Offers</h1>
-          <p className="text-sm text-zinc-400 mt-1">
+          <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">Bank Offers</h1>
+          <p className="text-xs sm:text-sm text-zinc-400 mt-0.5 sm:mt-1">
             Manage Pine Labs bank offers shown on every product page
           </p>
         </div>
         <button
           onClick={openAdd}
-          className="inline-flex items-center gap-2 bg-brand text-white font-bold px-5 py-3 rounded-2xl hover:bg-brand/90 transition-all shadow-sm shadow-brand/20 text-sm"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand text-white font-bold px-5 py-3 rounded-2xl hover:bg-brand/90 active:scale-[0.98] transition-all shadow-sm shadow-brand/20 text-sm"
         >
           <Plus className="w-4 h-4" />
           Add Bank Offer
@@ -185,22 +186,22 @@ export default function OffersPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
-          { label: "Total Offers", value: offers.length, color: "text-zinc-900" },
+          { label: "Total", value: offers.length, color: "text-zinc-900" },
           { label: "Active", value: activeCount, color: "text-emerald-600" },
           { label: "Inactive", value: inactiveCount, color: "text-zinc-400" },
         ].map((s) => (
-          <div key={s.label} className="bg-white border border-zinc-100 rounded-2xl px-5 py-4 shadow-sm">
-            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1">{s.label}</p>
-            <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+          <div key={s.label} className="bg-white border border-zinc-100 rounded-2xl px-3 sm:px-5 py-3 sm:py-4 shadow-sm text-center sm:text-left">
+            <p className="text-[10px] sm:text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1">{s.label}</p>
+            <p className={`text-xl sm:text-2xl font-black ${s.color}`}>{s.value}</p>
           </div>
         ))}
       </div>
 
       {/* Offers Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="bg-white border border-zinc-100 rounded-2xl p-5 h-36 animate-pulse" />
           ))}
@@ -212,16 +213,16 @@ export default function OffersPage() {
           <p className="text-xs text-zinc-300 mt-1">Add your first offer to show it on product pages</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
           {offers.map((offer) => (
             <div
               key={offer.id}
-              className={`bg-white border rounded-2xl p-5 shadow-sm transition-all ${
+              className={`bg-white border rounded-2xl p-4 sm:p-5 shadow-sm transition-all ${
                 offer.isActive ? "border-zinc-100" : "border-zinc-100 opacity-60"
               }`}
             >
               {/* Top row */}
-              <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="flex items-start justify-between gap-3 mb-3 sm:mb-4">
                 <div className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0"
@@ -238,7 +239,7 @@ export default function OffersPage() {
                   </div>
                 </div>
                 <span
-                  className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
+                  className={`text-xs font-bold px-2.5 py-1 rounded-lg shrink-0 ${
                     offer.isActive
                       ? "bg-emerald-50 text-emerald-600"
                       : "bg-zinc-100 text-zinc-400"
@@ -249,7 +250,7 @@ export default function OffersPage() {
               </div>
 
               {/* Discount */}
-              <p className="text-xl font-black text-zinc-900 mb-1">{formatDiscount(offer)}</p>
+              <p className="text-lg sm:text-xl font-black text-zinc-900 mb-1">{formatDiscount(offer)}</p>
               {offer.minOrderAmount > 0 && (
                 <p className="text-xs text-zinc-400">
                   Min order: ₹{offer.minOrderAmount.toLocaleString("en-IN")}
@@ -259,30 +260,30 @@ export default function OffersPage() {
                 <p className="text-xs text-zinc-500 mt-1 line-clamp-1">{offer.description}</p>
               )}
 
-              {/* Actions */}
-              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-zinc-100">
+              {/* Actions — bigger touch targets on mobile */}
+              <div className="flex items-center gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-zinc-100">
                 <button
                   onClick={() => handleToggle(offer)}
-                  className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 active:scale-95 transition-all min-h-[40px] px-1"
                 >
                   {offer.isActive
-                    ? <ToggleRight className="w-4 h-4 text-emerald-500" />
-                    : <ToggleLeft className="w-4 h-4" />}
+                    ? <ToggleRight className="w-5 h-5 text-emerald-500" />
+                    : <ToggleLeft className="w-5 h-5" />}
                   {offer.isActive ? "Disable" : "Enable"}
                 </button>
                 <div className="ml-auto flex items-center gap-2">
                   <button
                     onClick={() => openEdit(offer)}
-                    className="w-8 h-8 rounded-xl border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-zinc-900 hover:border-zinc-300 transition-all"
+                    className="w-10 h-10 sm:w-8 sm:h-8 rounded-xl border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-zinc-900 hover:border-zinc-300 active:scale-95 transition-all"
                   >
-                    <Pencil className="w-3.5 h-3.5" />
+                    <Pencil className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                   </button>
                   <button
                     onClick={() => handleDelete(offer.id)}
                     disabled={deletingId === offer.id}
-                    className="w-8 h-8 rounded-xl border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-red-500 hover:border-red-200 transition-all"
+                    className="w-10 h-10 sm:w-8 sm:h-8 rounded-xl border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-red-500 hover:border-red-200 active:scale-95 transition-all"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                   </button>
                 </div>
               </div>
@@ -291,16 +292,24 @@ export default function OffersPage() {
         </div>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Modal — bottom sheet on mobile, centered on desktop */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl max-h-[92vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}
+        >
+          <div className="bg-white w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl max-h-[92vh] overflow-y-auto">
 
-            {/* Coloured header strip */}
-            <div className="relative bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-t-3xl px-6 py-5">
+            {/* Drag handle — mobile only */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-10 h-1 rounded-full bg-zinc-300" />
+            </div>
+
+            {/* Header strip */}
+            <div className="relative bg-gradient-to-r from-zinc-900 to-zinc-800 sm:rounded-t-3xl px-5 sm:px-6 py-4 sm:py-5">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center">
-                  <Tag className="w-4.5 h-4.5 text-white" />
+                <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
+                  <Tag className="w-4 h-4 text-white" />
                 </div>
                 <div>
                   <h2 className="text-base font-black text-white leading-tight">
@@ -313,16 +322,16 @@ export default function OffersPage() {
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all"
+                className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="px-6 py-6 space-y-5">
+            <div className="px-5 sm:px-6 py-5 sm:py-6 space-y-4 sm:space-y-5">
 
-              {/* Bank + Card Type */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Bank + Card Type — stacked on mobile */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
                     Bank Name
@@ -330,7 +339,7 @@ export default function OffersPage() {
                   <select
                     value={form.bankName}
                     onChange={(e) => setForm({ ...form, bankName: e.target.value })}
-                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all appearance-none cursor-pointer"
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 sm:py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all appearance-none cursor-pointer"
                   >
                     {BANKS.map((b) => <option key={b}>{b}</option>)}
                   </select>
@@ -342,15 +351,15 @@ export default function OffersPage() {
                   <select
                     value={form.cardType}
                     onChange={(e) => setForm({ ...form, cardType: e.target.value })}
-                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all appearance-none cursor-pointer"
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 sm:py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all appearance-none cursor-pointer"
                   >
                     {CARD_TYPES.map((c) => <option key={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
 
-              {/* Discount Type + Value */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Discount Type + Value — stacked on mobile */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
                     Discount Type
@@ -358,7 +367,7 @@ export default function OffersPage() {
                   <select
                     value={form.discountType}
                     onChange={(e) => setForm({ ...form, discountType: e.target.value as "flat" | "percentage" })}
-                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all appearance-none cursor-pointer"
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 sm:py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all appearance-none cursor-pointer"
                   >
                     <option value="flat">Flat (₹ off)</option>
                     <option value="percentage">Percentage (% off)</option>
@@ -374,10 +383,11 @@ export default function OffersPage() {
                     </span>
                     <input
                       type="number"
+                      inputMode="numeric"
                       placeholder={form.discountType === "flat" ? "646" : "10"}
                       value={form.discountValue}
                       onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
-                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-7 pr-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-7 pr-3 py-3 sm:py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
                     />
                   </div>
                 </div>
@@ -393,7 +403,7 @@ export default function OffersPage() {
                   placeholder="e.g. Cashback credited within 7 days"
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 placeholder:font-normal placeholder:text-zinc-400 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
+                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-3 sm:py-2.5 text-sm font-semibold text-zinc-900 placeholder:font-normal placeholder:text-zinc-400 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
                 />
               </div>
 
@@ -402,29 +412,30 @@ export default function OffersPage() {
                 <button
                   type="button"
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-zinc-700 transition-colors group"
+                  className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-zinc-700 transition-colors group min-h-[36px]"
                 >
-                  <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${showAdvanced ? "border-red-300 bg-red-50" : "border-zinc-200 bg-zinc-50 group-hover:border-zinc-300"}`}>
+                  <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${showAdvanced ? "border-red-300 bg-red-50" : "border-zinc-200 bg-zinc-50 group-hover:border-zinc-300"}`}>
                     {showAdvanced
-                      ? <ChevronUp className="w-2.5 h-2.5 text-red-500" />
-                      : <ChevronDown className="w-2.5 h-2.5 text-zinc-400" />}
+                      ? <ChevronUp className="w-3 h-3 text-red-500" />
+                      : <ChevronDown className="w-3 h-3 text-zinc-400" />}
                   </div>
                   Advanced Options
                 </button>
 
                 {showAdvanced && (
                   <div className="mt-3 space-y-3 p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
                           Min Order (₹)
                         </label>
                         <input
                           type="number"
+                          inputMode="numeric"
                           placeholder="0"
                           value={form.minOrderAmount}
                           onChange={(e) => setForm({ ...form, minOrderAmount: e.target.value })}
-                          className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
+                          className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-3 sm:py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
                         />
                       </div>
                       {form.discountType === "percentage" && (
@@ -434,15 +445,16 @@ export default function OffersPage() {
                           </label>
                           <input
                             type="number"
+                            inputMode="numeric"
                             placeholder="1000"
                             value={form.maxDiscount}
                             onChange={(e) => setForm({ ...form, maxDiscount: e.target.value })}
-                            className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
+                            className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-3 sm:py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
                           />
                         </div>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
                           Valid From
@@ -451,7 +463,7 @@ export default function OffersPage() {
                           type="date"
                           value={form.validFrom}
                           onChange={(e) => setForm({ ...form, validFrom: e.target.value })}
-                          className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
+                          className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-3 sm:py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -462,7 +474,7 @@ export default function OffersPage() {
                           type="date"
                           value={form.validUntil}
                           onChange={(e) => setForm({ ...form, validUntil: e.target.value })}
-                          className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
+                          className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-3 sm:py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
                         />
                       </div>
                     </div>
@@ -474,7 +486,7 @@ export default function OffersPage() {
               <div className="flex items-center justify-between bg-zinc-50 border border-zinc-100 rounded-2xl px-4 py-3.5">
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-all shrink-0"
                     style={{ backgroundColor: form.isActive ? "#dc262615" : "#f4f4f5" }}
                   >
                     <div
@@ -493,23 +505,23 @@ export default function OffersPage() {
                   id="offer-active"
                   checked={form.isActive}
                   onCheckedChange={(checked) => setForm({ ...form, isActive: checked })}
-                  className="data-[state=checked]:bg-red-600"
+                  className="data-[state=checked]:bg-red-600 shrink-0"
                 />
               </div>
             </div>
 
-            {/* Footer buttons */}
-            <div className="flex items-center gap-3 px-6 pb-6">
+            {/* Footer buttons — safe area padding for mobile home bar */}
+            <div className="flex items-center gap-3 px-5 sm:px-6 pb-6 sm:pb-6 pb-safe">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 py-3 rounded-2xl border-2 border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300 transition-all"
+                className="flex-1 py-3.5 sm:py-3 rounded-2xl border-2 border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300 active:scale-[0.98] transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !form.discountValue}
-                className="flex-1 py-3 rounded-2xl text-sm font-bold text-white transition-all shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                className="flex-1 py-3.5 sm:py-3 rounded-2xl text-sm font-bold text-white transition-all shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none active:scale-[0.98]"
                 style={{ backgroundColor: "#dc2626", boxShadow: form.discountValue ? "0 4px 14px rgba(220,38,38,0.35)" : "none" }}
               >
                 {saving ? "Saving..." : editOffer ? "Save Changes" : "Add Offer"}
