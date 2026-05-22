@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { PriceDisplay } from "@/components/catalog/PriceDisplay";
+import { BankOffersSection } from "@/components/product/BankOffersSection";
 
 export const revalidate = 300; // ISR: regenerate in background every 5 minutes
 
@@ -23,6 +24,22 @@ export async function generateStaticParams() {
     select: { slug: true },
   });
   return products.map((p) => ({ slug: p.slug }));
+}
+
+async function getActiveOffers() {
+  const now = new Date();
+  return prisma.bankOffer.findMany({
+    where: {
+      isActive: true,
+      OR: [{ validFrom: null }, { validFrom: { lte: now } }],
+      AND: [{ OR: [{ validUntil: null }, { validUntil: { gte: now } }] }],
+    },
+    orderBy: { discountValue: "desc" },
+    select: {
+      id: true, bankName: true, cardType: true, discountType: true,
+      discountValue: true, minOrderAmount: true, maxDiscount: true, description: true,
+    },
+  });
 }
 
 async function getProduct(slug: string) {
@@ -87,7 +104,7 @@ export default async function ProductDetailsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await getProduct(slug);
+  const [product, offers] = await Promise.all([getProduct(slug), getActiveOffers()]);
 
   if (!product) notFound();
 
@@ -217,8 +234,10 @@ export default async function ProductDetailsPage({
               {/* ── Dynamic Pricing + Selection (Client Component) ── */}
               <PriceDisplay product={product as any} />
 
-              {/* ── Action Area (Buttons, etc.) ── */}
-              {/* Product selection and Add to Cart are handled within PriceDisplay/ProductSelection */}
+              {/* ── Bank Offers (Pine Labs) ── */}
+              {offers.length > 0 && (
+                <BankOffersSection offers={offers as any} productPrice={product.price} />
+              )}
             </div>
           </div>
         </div>

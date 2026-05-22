@@ -214,3 +214,23 @@ model SiteSetting {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ✅ Bank Offers — managed via admin, shown on product pages, applied at Pine Labs checkout
+model BankOffer {
+  id             String    @id @default(cuid())
+  bankName       String    // "HDFC Bank", "SBI", "ICICI Bank", etc.
+  cardType       String    // "Credit Card", "Debit Card", "UPI", "Net Banking", "Wallet"
+  discountType   String    // "flat" | "percentage"
+  discountValue  Float     // 646 (flat ₹) or 10 (percentage %)
+  minOrderAmount Float     @default(0)   // Minimum cart value to qualify
+  maxDiscount    Float?    // Cap for percentage discounts
+  description    String    @default("")  // Extra info shown to user
+  isActive       Boolean   @default(true)
+  validFrom      DateTime?
+  validUntil     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([isActive])
+  @@index([discountValue])
+}

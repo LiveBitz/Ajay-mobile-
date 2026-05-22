@@ -3,17 +3,18 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Package, 
-  Layers, 
-  ShoppingBag, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Package,
+  Layers,
+  ShoppingBag,
+  Settings,
   LogOut,
   ChevronRight,
   Store,
   Users,
-  Star
+  Star,
+  Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ const navItems = [
   { label: "Categories", href: "/admin/categories", icon: Layers },
   { label: "Featured Categories", href: "/admin/featured-categories", icon: Star },
   { label: "Banners", href: "/admin/banners", icon: Store },
+  { label: "Bank Offers", href: "/admin/offers", icon: Tag },
   { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
   { label: "Users", href: "/admin/users", icon: Users },
 ];
