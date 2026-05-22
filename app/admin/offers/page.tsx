@@ -6,6 +6,8 @@ import {
   Tag, CreditCard, Smartphone, Building2, Wallet,
   CheckCircle2, XCircle, ChevronDown, ChevronUp, X,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface BankOffer {
   id: string;
@@ -468,11 +470,8 @@ export default function OffersPage() {
                 )}
               </div>
 
-              {/* Active toggle — redesigned */}
-              <div
-                onClick={() => setForm({ ...form, isActive: !form.isActive })}
-                className="flex items-center justify-between bg-zinc-50 border border-zinc-100 rounded-2xl px-4 py-3.5 cursor-pointer hover:bg-zinc-100/70 transition-all select-none"
-              >
+              {/* Active toggle — shadcn Switch */}
+              <div className="flex items-center justify-between bg-zinc-50 border border-zinc-100 rounded-2xl px-4 py-3.5">
                 <div className="flex items-center gap-3">
                   <div
                     className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
@@ -483,24 +482,19 @@ export default function OffersPage() {
                       style={{ backgroundColor: form.isActive ? "#dc2626" : "#a1a1aa" }}
                     />
                   </div>
-                  <div>
+                  <Label htmlFor="offer-active" className="cursor-pointer">
                     <p className="text-sm font-bold text-zinc-900 leading-tight">Show on product pages</p>
-                    <p className="text-xs text-zinc-400 mt-0.5">
+                    <p className="text-xs text-zinc-400 mt-0.5 font-normal">
                       {form.isActive ? "Offer is visible to customers" : "Offer is hidden from customers"}
                     </p>
-                  </div>
+                  </Label>
                 </div>
-
-                {/* Toggle pill */}
-                <div
-                  className="relative flex-shrink-0 w-12 h-6 rounded-full transition-all duration-300 ease-in-out"
-                  style={{ backgroundColor: form.isActive ? "#dc2626" : "#d4d4d8" }}
-                >
-                  <div
-                    className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ease-in-out"
-                    style={{ left: form.isActive ? "26px" : "2px" }}
-                  />
-                </div>
+                <Switch
+                  id="offer-active"
+                  checked={form.isActive}
+                  onCheckedChange={(checked) => setForm({ ...form, isActive: checked })}
+                  className="data-[state=checked]:bg-red-600"
+                />
               </div>
             </div>
 
