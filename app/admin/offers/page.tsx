@@ -77,10 +77,17 @@ export default function OffersPage() {
 
   const fetchOffers = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/admin/offers");
-    const data = await res.json();
-    setOffers(data);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/admin/offers");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setOffers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch offers:", err);
+      setOffers([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchOffers(); }, [fetchOffers]);
@@ -112,21 +119,29 @@ export default function OffersPage() {
 
   async function handleSave() {
     setSaving(true);
-    const payload = { ...form };
-    if (editOffer) {
-      await fetch(`/api/admin/offers/${editOffer.id}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } else {
-      await fetch("/api/admin/offers", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    try {
+      const payload = { ...form };
+      const res = editOffer
+        ? await fetch(`/api/admin/offers/${editOffer.id}`, {
+            method: "PUT", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+        : await fetch("/api/admin/offers", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Unknown error" }));
+        alert(err.error ?? "Failed to save offer");
+        return;
+      }
+      setShowModal(false);
+      fetchOffers();
+    } catch (err) {
+      console.error("Save failed:", err);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setShowModal(false);
-    fetchOffers();
   }
 
   async function handleToggle(offer: BankOffer) {
@@ -276,44 +291,56 @@ export default function OffersPage() {
 
       {/* Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
-            {/* Modal header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100">
-              <h2 className="text-lg font-black text-zinc-900">
-                {editOffer ? "Edit Bank Offer" : "Add Bank Offer"}
-              </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl max-h-[92vh] overflow-y-auto">
+
+            {/* Coloured header strip */}
+            <div className="relative bg-gradient-to-r from-zinc-900 to-zinc-800 rounded-t-3xl px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center">
+                  <Tag className="w-4.5 h-4.5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-white leading-tight">
+                    {editOffer ? "Edit Bank Offer" : "Add Bank Offer"}
+                  </h2>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    Offer will appear on every product page
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowModal(false)}
-                className="w-9 h-9 rounded-xl border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-zinc-900 transition-colors"
+                className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="px-6 py-5 space-y-4">
+            <div className="px-6 py-6 space-y-5">
+
               {/* Bank + Card Type */}
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
                     Bank Name
                   </label>
                   <select
                     value={form.bankName}
                     onChange={(e) => setForm({ ...form, bankName: e.target.value })}
-                    className="w-full border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all appearance-none cursor-pointer"
                   >
                     {BANKS.map((b) => <option key={b}>{b}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
                     Card Type
                   </label>
                   <select
                     value={form.cardType}
                     onChange={(e) => setForm({ ...form, cardType: e.target.value })}
-                    className="w-full border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all appearance-none cursor-pointer"
                   >
                     {CARD_TYPES.map((c) => <option key={c}>{c}</option>)}
                   </select>
@@ -322,152 +349,179 @@ export default function OffersPage() {
 
               {/* Discount Type + Value */}
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
                     Discount Type
                   </label>
                   <select
                     value={form.discountType}
                     onChange={(e) => setForm({ ...form, discountType: e.target.value as "flat" | "percentage" })}
-                    className="w-full border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all appearance-none cursor-pointer"
                   >
                     <option value="flat">Flat (₹ off)</option>
                     <option value="percentage">Percentage (% off)</option>
                   </select>
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
                     {form.discountType === "flat" ? "Amount (₹)" : "Percentage (%)"}
                   </label>
-                  <input
-                    type="number"
-                    placeholder={form.discountType === "flat" ? "e.g. 646" : "e.g. 10"}
-                    value={form.discountValue}
-                    onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
-                    className="w-full border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-400">
+                      {form.discountType === "flat" ? "₹" : "%"}
+                    </span>
+                    <input
+                      type="number"
+                      placeholder={form.discountType === "flat" ? "646" : "10"}
+                      value={form.discountValue}
+                      onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
+                      className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-7 pr-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Description */}
-              <div>
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block">
-                  Description (optional)
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
+                  Description <span className="normal-case font-medium text-zinc-300">(optional)</span>
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. Cashback credited within 7 days"
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 placeholder:font-normal placeholder:text-zinc-400 focus:outline-none focus:bg-white focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
                 />
               </div>
 
-              {/* Advanced Options Toggle */}
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-zinc-700 transition-colors"
-              >
-                {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                Advanced Options
-              </button>
+              {/* Advanced Options */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-zinc-700 transition-colors group"
+                >
+                  <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${showAdvanced ? "border-red-300 bg-red-50" : "border-zinc-200 bg-zinc-50 group-hover:border-zinc-300"}`}>
+                    {showAdvanced
+                      ? <ChevronUp className="w-2.5 h-2.5 text-red-500" />
+                      : <ChevronDown className="w-2.5 h-2.5 text-zinc-400" />}
+                  </div>
+                  Advanced Options
+                </button>
 
-              {showAdvanced && (
-                <div className="space-y-3 pt-1">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block">
-                        Min Order (₹)
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="0"
-                        value={form.minOrderAmount}
-                        onChange={(e) => setForm({ ...form, minOrderAmount: e.target.value })}
-                        className="w-full border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
-                      />
-                    </div>
-                    {form.discountType === "percentage" && (
-                      <div>
-                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block">
-                          Max Discount (₹)
+                {showAdvanced && (
+                  <div className="mt-3 space-y-3 p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
+                          Min Order (₹)
                         </label>
                         <input
                           type="number"
-                          placeholder="e.g. 1000"
-                          value={form.maxDiscount}
-                          onChange={(e) => setForm({ ...form, maxDiscount: e.target.value })}
-                          className="w-full border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
+                          placeholder="0"
+                          value={form.minOrderAmount}
+                          onChange={(e) => setForm({ ...form, minOrderAmount: e.target.value })}
+                          className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
                         />
                       </div>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block">
-                        Valid From
-                      </label>
-                      <input
-                        type="date"
-                        value={form.validFrom}
-                        onChange={(e) => setForm({ ...form, validFrom: e.target.value })}
-                        className="w-full border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
-                      />
+                      {form.discountType === "percentage" && (
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
+                            Max Discount (₹)
+                          </label>
+                          <input
+                            type="number"
+                            placeholder="1000"
+                            value={form.maxDiscount}
+                            onChange={(e) => setForm({ ...form, maxDiscount: e.target.value })}
+                            className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
+                          />
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block">
-                        Valid Until
-                      </label>
-                      <input
-                        type="date"
-                        value={form.validUntil}
-                        onChange={(e) => setForm({ ...form, validUntil: e.target.value })}
-                        className="w-full border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
+                          Valid From
+                        </label>
+                        <input
+                          type="date"
+                          value={form.validFrom}
+                          onChange={(e) => setForm({ ...form, validFrom: e.target.value })}
+                          className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-widest block">
+                          Valid Until
+                        </label>
+                        <input
+                          type="date"
+                          value={form.validUntil}
+                          onChange={(e) => setForm({ ...form, validUntil: e.target.value })}
+                          className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
-              {/* Active toggle */}
-              <div className="flex items-center justify-between bg-zinc-50 rounded-2xl px-4 py-3">
-                <div>
-                  <p className="text-sm font-bold text-zinc-900">Active</p>
-                  <p className="text-xs text-zinc-400">Show this offer on product pages</p>
+              {/* Active toggle — redesigned */}
+              <div
+                onClick={() => setForm({ ...form, isActive: !form.isActive })}
+                className="flex items-center justify-between bg-zinc-50 border border-zinc-100 rounded-2xl px-4 py-3.5 cursor-pointer hover:bg-zinc-100/70 transition-all select-none"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                    style={{ backgroundColor: form.isActive ? "#dc262615" : "#f4f4f5" }}
+                  >
+                    <div
+                      className="w-2.5 h-2.5 rounded-full transition-all"
+                      style={{ backgroundColor: form.isActive ? "#dc2626" : "#a1a1aa" }}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-zinc-900 leading-tight">Show on product pages</p>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      {form.isActive ? "Offer is visible to customers" : "Offer is hidden from customers"}
+                    </p>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, isActive: !form.isActive })}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    form.isActive ? "bg-brand" : "bg-zinc-300"
-                  }`}
+
+                {/* Toggle pill */}
+                <div
+                  className="relative flex-shrink-0 w-12 h-6 rounded-full transition-all duration-300 ease-in-out"
+                  style={{ backgroundColor: form.isActive ? "#dc2626" : "#d4d4d8" }}
                 >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                      form.isActive ? "translate-x-6" : "translate-x-1"
-                    }`}
+                  <div
+                    className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ease-in-out"
+                    style={{ left: form.isActive ? "26px" : "2px" }}
                   />
-                </button>
+                </div>
               </div>
             </div>
 
-            {/* Modal footer */}
-            <div className="flex items-center gap-3 px-6 py-5 border-t border-zinc-100">
+            {/* Footer buttons */}
+            <div className="flex items-center gap-3 px-6 pb-6">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 py-3 rounded-2xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-colors"
+                className="flex-1 py-3 rounded-2xl border-2 border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300 transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !form.discountValue}
-                className="flex-1 py-3 rounded-2xl bg-brand text-white text-sm font-bold hover:bg-brand/90 transition-colors disabled:opacity-50"
+                className="flex-1 py-3 rounded-2xl text-sm font-bold text-white transition-all shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                style={{ backgroundColor: "#dc2626", boxShadow: form.discountValue ? "0 4px 14px rgba(220,38,38,0.35)" : "none" }}
               >
                 {saving ? "Saving..." : editOffer ? "Save Changes" : "Add Offer"}
               </button>
             </div>
+
           </div>
         </div>
       )}

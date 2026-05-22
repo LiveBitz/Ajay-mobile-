@@ -10,33 +10,47 @@ async function isAdmin() {
 }
 
 export async function GET() {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    if (!(await isAdmin())) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const offers = await prisma.bankOffer.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json(offers);
+  } catch (err) {
+    console.error("[GET /api/admin/offers]", err);
+    return NextResponse.json({ error: "Failed to fetch offers" }, { status: 500 });
   }
-  const offers = await prisma.bankOffer.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-  return NextResponse.json(offers);
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    if (!(await isAdmin())) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const body = await req.json();
+    const discountValue = parseFloat(body.discountValue);
+    if (isNaN(discountValue) || discountValue <= 0) {
+      return NextResponse.json({ error: "Invalid discount value" }, { status: 400 });
+    }
+    const offer = await prisma.bankOffer.create({
+      data: {
+        bankName: body.bankName,
+        cardType: body.cardType,
+        discountType: body.discountType,
+        discountValue,
+        minOrderAmount: parseFloat(body.minOrderAmount ?? 0) || 0,
+        maxDiscount: body.maxDiscount ? parseFloat(body.maxDiscount) : null,
+        description: body.description ?? "",
+        isActive: body.isActive ?? true,
+        validFrom: body.validFrom ? new Date(body.validFrom) : null,
+        validUntil: body.validUntil ? new Date(body.validUntil) : null,
+      },
+    });
+    return NextResponse.json(offer, { status: 201 });
+  } catch (err) {
+    console.error("[POST /api/admin/offers]", err);
+    return NextResponse.json({ error: "Failed to create offer" }, { status: 500 });
   }
-  const body = await req.json();
-  const offer = await prisma.bankOffer.create({
-    data: {
-      bankName: body.bankName,
-      cardType: body.cardType,
-      discountType: body.discountType,
-      discountValue: parseFloat(body.discountValue),
-      minOrderAmount: parseFloat(body.minOrderAmount ?? 0),
-      maxDiscount: body.maxDiscount ? parseFloat(body.maxDiscount) : null,
-      description: body.description ?? "",
-      isActive: body.isActive ?? true,
-      validFrom: body.validFrom ? new Date(body.validFrom) : null,
-      validUntil: body.validUntil ? new Date(body.validUntil) : null,
-    },
-  });
-  return NextResponse.json(offer, { status: 201 });
 }
