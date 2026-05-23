@@ -478,7 +478,7 @@ export function Navbar({ categoryNames = [] }: { categoryNames?: string[] }) {
                   <Menu className="w-5 h-5 text-zinc-800" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[80vw] max-w-[300px] p-0 flex flex-col bg-white border-r [&>button]:hidden">
+              <SheetContent side="left" showCloseButton={false} className="w-[80vw] max-w-[300px] p-0 flex flex-col bg-white border-r">
                 <SheetHeader className="p-5 border-b flex flex-row items-center justify-between space-y-0">
                   <SheetTitle className="text-xl font-black tracking-tighter text-zinc-950">MENU</SheetTitle>
                   <button
