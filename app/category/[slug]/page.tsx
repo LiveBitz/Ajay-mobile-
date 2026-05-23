@@ -1,8 +1,12 @@
 import React from "react";
+import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { CategoryCatalog } from "@/components/catalog/CategoryCatalog";
+import type { Product as CatalogProduct } from "@/hooks/useProductFilter";
 import { notFound } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { getTotalStock } from "@/lib/inventory";
 import type { Metadata } from "next";
 
 export const revalidate = 300; // 5 minutes - real-time updates
@@ -127,7 +131,7 @@ export default async function CategoryPage({
   }
 
   // ✅ Clean where clause
-  const whereClause: any =
+  const whereClause: Prisma.ProductWhereInput =
     slug === "sale"
       ? { discount: { gt: 0 } }
       : slug === "new-arrivals"
@@ -167,7 +171,7 @@ export default async function CategoryPage({
     category: { select: { name: true, slug: true } },
   } as const;
 
-  const [products, totalCount, facetProducts] = await Promise.all([
+  const [products, facetProducts] = await Promise.all([
     // First 24 products for immediate render
     prisma.product.findMany({
       where: whereClause,
@@ -175,8 +179,6 @@ export default async function CategoryPage({
       orderBy: { createdAt: "desc" },
       take: 24,
     }),
-    // Total matching products (for "Load More" logic)
-    prisma.product.count({ where: whereClause }),
     // Lightweight: only the fields needed to compute filter sidebar counts
     prisma.product.findMany({
       where: whereClause,
@@ -190,6 +192,16 @@ export default async function CategoryPage({
       },
     }),
   ]);
+
+  const availableProducts = products.filter((product) => {
+    const sizeEntries = Array.isArray(product.sizes) ? product.sizes : [];
+    return getTotalStock(sizeEntries) > 0 || product.stock > 0;
+  });
+  const availableFacetProducts = facetProducts.filter((product) => {
+    const sizeEntries = Array.isArray(product.sizes) ? product.sizes : [];
+    return getTotalStock(sizeEntries) > 0 || product.stock > 0;
+  });
+  const totalCount = availableFacetProducts.length;
 
   // ✅ Human-readable label
   const categoryLabel =
@@ -225,12 +237,12 @@ export default async function CategoryPage({
 
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-xs text-zinc-400 mb-4">
-            <a
+            <Link
               href="/"
               className="hover:text-zinc-600 transition-colors duration-150"
             >
               Home
-            </a>
+            </Link>
             <span>/</span>
             <span className="text-zinc-600 font-medium">{categoryLabel}</span>
           </nav>
@@ -298,7 +310,7 @@ export default async function CategoryPage({
             </div>
 
             {/* CTA — using cn() to avoid Turbopack > parsing issue */}
-            <a
+            <Link
               href="/"
               className={cn(
                 "mt-2 inline-flex items-center gap-2",
@@ -308,16 +320,16 @@ export default async function CategoryPage({
               )}
             >
               Back to Home
-            </a>
+            </Link>
           </div>
         </div>
       ) : (
-        <CategoryCatalog
-          initialProducts={products as any}
-          facetProducts={facetProducts as any}
-          totalCount={totalCount}
-          slug={slug}
-        />
+      <CategoryCatalog
+        initialProducts={availableProducts as unknown as CatalogProduct[]}
+        facetProducts={availableFacetProducts as unknown as CatalogProduct[]}
+        totalCount={totalCount}
+        slug={slug}
+      />
       )}
     </div>
   );

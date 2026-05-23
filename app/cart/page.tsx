@@ -8,29 +8,24 @@ import {
   ShoppingBag,
   Truck,
   ShieldCheck,
-  CreditCard,
-  PackageOpen,
   Check,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useCartAvailability } from "@/hooks/useCartAvailability";
 import { CartPageItem } from "@/components/cart/CartPageItem";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-export default function CartPage() {
-  const { items, totalPrice, totalItems } = useCart();
-
-  const stepper = [
-    { id: "bag", label: "My Bag", status: "complete" },
-    { id: "review", label: "Order Review", status: "current" },
-    { id: "checkout", label: "Checkout", status: "pending" },
-  ];
-
-  /* ── Reusable sub-components ── */
-
-  const OrderSummaryCard = ({ className = "", isMobile = false }: { className?: string; isMobile?: boolean }) => (
+function OrderSummaryCard({
+  className = "",
+  totalPrice,
+  itemsLength,
+}: {
+  className?: string;
+  totalPrice: number;
+  itemsLength: number;
+}) {
+  return (
     <div
       className={cn(
         "bg-white rounded-2xl p-6 border border-zinc-100 shadow-sm space-y-5",
@@ -45,7 +40,6 @@ export default function CartPage() {
       </div>
 
       <div className="space-y-3">
-        {/* Breakdown rows */}
         <div className="flex justify-between items-center pb-3 border-b border-zinc-100">
           <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
             Subtotal
@@ -83,11 +77,10 @@ export default function CartPage() {
         </div>
       </div>
 
-      {/* CTA Button */}
       <Link href="/checkout" className="block w-full">
         <button
-          disabled={items.length === 0}
-          style={{ backgroundColor: items.length === 0 ? undefined : '#dc2626' }}
+          disabled={itemsLength === 0}
+          style={{ backgroundColor: itemsLength === 0 ? undefined : "#dc2626" }}
           className="w-full h-12 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-zinc-300 hover:opacity-90"
         >
           Proceed to Checkout
@@ -95,7 +88,6 @@ export default function CartPage() {
         </button>
       </Link>
 
-      {/* Trust indicators */}
       <div className="flex items-center justify-center gap-3 pt-1">
         <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
           <ShieldCheck className="w-3.5 h-3.5 text-zinc-400" />
@@ -109,8 +101,17 @@ export default function CartPage() {
       </div>
     </div>
   );
+}
 
+export default function CartPage() {
+  const { items, totalPrice, totalItems } = useCart();
+  const { availability, isCheckingStock } = useCartAvailability(items);
 
+  const stepper = [
+    { id: "bag", label: "My Bag", status: "complete" },
+    { id: "review", label: "Order Review", status: "current" },
+    { id: "checkout", label: "Checkout", status: "pending" },
+  ];
 
   /* ── Empty State ── */
   if (items.length === 0) {
@@ -150,7 +151,7 @@ export default function CartPage() {
               Your cart is empty
             </h1>
             <p className="text-sm text-zinc-500 leading-relaxed">
-              Looks like you haven't added anything yet. Explore our collection and find something you love.
+              Looks like you haven&apos;t added anything yet. Explore our collection and find something you love.
             </p>
 
             <div className="pt-5">
@@ -257,13 +258,18 @@ export default function CartPage() {
             {/* Cart items with enhanced spacing */}
             <div className="space-y-4 sm:space-y-5">
               {items.map((item) => (
-                <CartPageItem key={item.id} item={item} />
+                <CartPageItem
+                  key={item.id}
+                  item={item}
+                  availableQuantity={availability[item.id]?.availableQuantity}
+                  isCheckingStock={isCheckingStock}
+                />
               ))}
             </div>
 
             {/* Mobile inline summary (shows between items & continue link) */}
             <div className="lg:hidden space-y-4 pt-6 border-t border-zinc-200">
-              <OrderSummaryCard isMobile={true} />
+              <OrderSummaryCard totalPrice={totalPrice} itemsLength={items.length} />
             </div>
 
             {/* Continue browsing link with enhanced styling */}
@@ -281,7 +287,7 @@ export default function CartPage() {
           {/* ─── Right · Sticky summary (4 cols, desktop only) ─── */}
           <div className="hidden lg:block lg:col-span-4">
             <div className="sticky top-32 space-y-6">
-              <OrderSummaryCard />
+              <OrderSummaryCard totalPrice={totalPrice} itemsLength={items.length} />
             </div>
           </div>
         </div>

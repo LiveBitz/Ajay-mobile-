@@ -2,14 +2,25 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Heart, ShoppingCart } from "lucide-react";
+import { ChevronRight, Heart, ShoppingCart } from "lucide-react";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/context/CartContext";
 import { cn } from "@/lib/utils";
+import { getTotalStock, requiresVariantSelection } from "@/lib/inventory";
 
 interface HurryUpProductCardProps {
-  product: any;
+  product: {
+    id: string | number;
+    name: string;
+    slug: string;
+    price: number;
+    originalPrice: number;
+    discount?: number | null;
+    image: string;
+    stock?: number | null;
+    sizes?: string[];
+  };
 }
 
 export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
@@ -25,7 +36,9 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
       ((product.originalPrice - product.price) / product.originalPrice) * 100
     );
 
-  const isOutOfStock = (product.stock ?? 0) <= 0;
+  const hasVariantOptions = requiresVariantSelection(product.sizes);
+  const totalStock = product.sizes?.length ? getTotalStock(product.sizes) : product.stock ?? 0;
+  const isOutOfStock = totalStock <= 0;
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -41,8 +54,8 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
           : `${product.name} has been removed from your wishlist`,
         duration: 2000,
       });
-    } catch (error: any) {
-      const msg = error.message || "";
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "";
       toast({
         title: msg.includes("login") ? "Login Required" : "Error",
         description: msg.includes("login")
@@ -59,11 +72,11 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isOutOfStock) return;
+    if (isOutOfStock || hasVariantOptions) return;
     setIsAddingToCart(true);
     try {
       addItem({
-        productId: product.id,
+        productId: String(product.id),
         name: product.name,
         price: product.price,
         image: product.image,
@@ -174,25 +187,36 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
             </div>
           </Link>
 
-          {/* Add to Cart — outside Link */}
-          <button
-            onClick={handleAddToCart}
-            disabled={isOutOfStock || isAddingToCart}
-            className={cn(
-              "mt-auto w-full h-8 sm:h-9 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200",
-              isOutOfStock
-                ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                : "bg-brand text-white hover:bg-red-700 active:scale-95"
-            )}
-          >
-            <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            <span className="hidden sm:inline">
-              {isAddingToCart ? "Adding…" : isOutOfStock ? "Sold Out" : "Add to Cart"}
-            </span>
-            <span className="sm:hidden">
-              {isAddingToCart ? "Adding" : isOutOfStock ? "Sold Out" : "Add"}
-            </span>
-          </button>
+          {/* Add to Cart / Variant Selection — outside image Link */}
+          {hasVariantOptions && !isOutOfStock ? (
+            <Link
+              href={`/product/${product.slug}`}
+              className="mt-auto w-full h-8 sm:h-9 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200 bg-brand text-white hover:bg-red-700 active:scale-95"
+            >
+              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">View Options</span>
+              <span className="sm:hidden">Options</span>
+            </Link>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              disabled={isOutOfStock || isAddingToCart}
+              className={cn(
+                "mt-auto w-full h-8 sm:h-9 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200",
+                isOutOfStock
+                  ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                  : "bg-brand text-white hover:bg-red-700 active:scale-95"
+              )}
+            >
+              <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">
+                {isAddingToCart ? "Adding…" : isOutOfStock ? "Sold Out" : "Add to Cart"}
+              </span>
+              <span className="sm:hidden">
+                {isAddingToCart ? "Adding" : isOutOfStock ? "Sold Out" : "Add"}
+              </span>
+            </button>
+          )}
         </div>
       </div>
     </div>

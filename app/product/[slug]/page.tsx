@@ -1,11 +1,9 @@
 import React from "react";
+import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
-  ShieldCheck,
-  Truck,
-  RotateCcw,
   ChevronRight,
   BadgeCheck,
 } from "lucide-react";
@@ -13,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { PriceDisplay } from "@/components/catalog/PriceDisplay";
 import { BankOffersSection } from "@/components/product/BankOffersSection";
+import { extractAvailableBaseSizes, extractColors, getTotalStock } from "@/lib/inventory";
 
 export const revalidate = 300; // ISR: regenerate in background every 5 minutes
 
@@ -113,18 +112,20 @@ export default async function ProductDetailsPage({
     Array.isArray(product.sizes) ? product.sizes : []
   ) as string[];
 
-  // Clean variant labels (removes |#| and accidental ID suffixes)
-  const cleanLabel = (str: string) => str.split("|#|")[0].split(":")[0].trim();
-
+  const totalStock = getTotalStock(sizeList);
   const storageOptions =
-    sizeList
-      .map((s) => cleanLabel(s.split(":")[0]))
-      .filter((v, i, a) => a.indexOf(v) === i) // Remove duplicates after cleaning
-      .join(", ") || "Standard";
+    totalStock > 0 ? extractAvailableBaseSizes(sizeList).join(", ") || "Standard" : "Out of Stock";
+  const availableColorOptions = extractColors(sizeList);
+  const availableColorCount =
+    availableColorOptions.length > 0 ? availableColorOptions.length : product.colors.length;
 
   const features = (
     Array.isArray(product.features) ? product.features : []
   ) as string[];
+  const supplementalImages = Array.isArray(product.images) ? product.images : [];
+  const inTheBox = Array.isArray(product.inTheBox)
+    ? product.inTheBox.filter((item): item is string => typeof item === "string")
+    : [];
   const specFeatures = features.filter((f) => f.includes(":"));
   const bulletFeatures = features.filter((f) => !f.includes(":"));
 
@@ -136,8 +137,10 @@ export default async function ProductDetailsPage({
     {
       label: "Colors",
       value:
-        product.colors.length > 0
-          ? `${product.colors.length} Variant${product.colors.length > 1 ? "s" : ""}`
+        totalStock <= 0
+          ? "Out of Stock"
+          : product.colors.length > 0
+          ? `${availableColorCount} Variant${availableColorCount > 1 ? "s" : ""}`
           : "Standard",
     },
     {
@@ -162,19 +165,19 @@ export default async function ProductDetailsPage({
       <div className="border-b border-zinc-100 relative md:sticky md:top-0 md:z-20 z-10 backdrop-blur-sm bg-white/90">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           <nav className="flex items-center gap-1.5 py-3.5 text-xs text-zinc-400 overflow-x-auto whitespace-nowrap scrollbar-none">
-            <a
+            <Link
               href="/"
               className="hover:text-zinc-600 transition-colors shrink-0"
             >
               Home
-            </a>
+            </Link>
             <ChevronRight className="w-3 h-3 shrink-0 text-zinc-300" />
-            <a
+            <Link
               href={`/category/${product.category.slug}`}
               className="hover:text-zinc-600 transition-colors shrink-0"
             >
               {product.category.name}
-            </a>
+            </Link>
             <ChevronRight className="w-3 h-3 shrink-0 text-zinc-300" />
             <span className="text-zinc-600 font-medium truncate max-w-[200px] sm:max-w-sm">
               {product.name}
@@ -191,7 +194,7 @@ export default async function ProductDetailsPage({
           <div className="lg:col-span-7">
             <ProductGallery
               mainImage={product.image}
-              supplementalImages={(product as any).images || []}
+              supplementalImages={supplementalImages}
               productName={product.name}
               isNew={product.isNew}
               isBestSeller={product.isBestSeller}
@@ -232,11 +235,14 @@ export default async function ProductDetailsPage({
               </div>
 
               {/* ── Dynamic Pricing + Selection (Client Component) ── */}
-              <PriceDisplay product={product as any} />
+              <PriceDisplay product={product as React.ComponentProps<typeof PriceDisplay>["product"]} />
 
               {/* ── Bank Offers (Pine Labs) ── */}
               {offers.length > 0 && (
-                <BankOffersSection offers={offers as any} productPrice={product.price} />
+                <BankOffersSection
+                  offers={offers as React.ComponentProps<typeof BankOffersSection>["offers"]}
+                  productPrice={product.price}
+                />
               )}
             </div>
           </div>
@@ -292,8 +298,8 @@ export default async function ProductDetailsPage({
                   In the Box
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {(product as any).inTheBox && (product as any).inTheBox.length > 0 ? (
-                    (product as any).inTheBox.map((item: string) => (
+                  {inTheBox.length > 0 ? (
+                    inTheBox.map((item) => (
                       <span
                         key={item}
                         className="text-xs font-medium text-zinc-600 bg-white border border-zinc-200 px-2.5 py-1 rounded-lg"

@@ -3,19 +3,19 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingBag, Zap } from "lucide-react";
+import { ChevronRight, Heart, ShoppingBag, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/context/CartContext";
-import { getTotalStock } from "@/lib/inventory";
+import { getTotalStock, requiresVariantSelection } from "@/lib/inventory";
 
 interface ProductCardProps {
   product: {
     id: number | string;
     name: string;
     slug: string;
-    category?: any;
+    category?: { name?: string; slug?: string } | null;
     price: number;
     originalPrice: number;
     discount: number;
@@ -36,7 +36,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const { toast } = useToast();
   const { addItem } = useCart();
 
-  const totalStock = getTotalStock(product.sizes);
+  const hasVariantOptions = requiresVariantSelection(product.sizes);
+  const totalStock = product.sizes?.length ? getTotalStock(product.sizes) : product.stock ?? 0;
   const isOutOfStock = totalStock === 0;
   const wishlisted = isWishlisted(String(product.id));
   const savings = product.originalPrice - product.price;
@@ -54,8 +55,8 @@ export function ProductCard({ product }: ProductCardProps) {
           : `${product.name} added to your wishlist`,
         duration: 2000,
       });
-    } catch (error: any) {
-      const msg = error?.message || "Failed to update wishlist";
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to update wishlist";
       toast({
         title: msg.includes("login") ? "Login Required" : "Error",
         description: msg.includes("login")
@@ -72,7 +73,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isOutOfStock) return;
+    if (isOutOfStock || hasVariantOptions) return;
     setIsAddingToCart(true);
     try {
       addItem({
@@ -205,32 +206,47 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </Link>
 
-        {/* ── Add to Cart Button ── */}
-        <button
-          onClick={handleAddToCart}
-          disabled={isOutOfStock || isAddingToCart}
-          className={cn(
-            "w-full h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider",
-            "flex items-center justify-center gap-1.5 border",
-            "transition-all duration-200",
-            isOutOfStock
-              ? "border-zinc-100 bg-zinc-50 text-zinc-400 cursor-not-allowed"
-              : isAddingToCart
-              ? "border-red-600 bg-red-600 text-white scale-[0.98]"
-              : "border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white hover:shadow-md"
-          )}
-        >
-          <ShoppingBag
-            className={cn("w-3.5 h-3.5", isAddingToCart && "animate-bounce")}
-          />
-          <span>
-            {isOutOfStock
-              ? "Out of Stock"
-              : isAddingToCart
-              ? "Adding..."
-              : "Add to Cart"}
-          </span>
-        </button>
+        {/* ── Add to Cart / Variant Selection ── */}
+        {hasVariantOptions && !isOutOfStock ? (
+          <Link
+            href={`/product/${product.slug}`}
+            className={cn(
+              "w-full h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider",
+              "flex items-center justify-center gap-1.5 border",
+              "border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white hover:shadow-md",
+              "transition-all duration-200 active:scale-95"
+            )}
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+            <span>View Options</span>
+          </Link>
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            disabled={isOutOfStock || isAddingToCart}
+            className={cn(
+              "w-full h-9 rounded-xl text-[11px] font-bold uppercase tracking-wider",
+              "flex items-center justify-center gap-1.5 border",
+              "transition-all duration-200",
+              isOutOfStock
+                ? "border-zinc-100 bg-zinc-50 text-zinc-400 cursor-not-allowed"
+                : isAddingToCart
+                ? "border-red-600 bg-red-600 text-white scale-[0.98]"
+                : "border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-900 hover:border-zinc-900 hover:text-white hover:shadow-md"
+            )}
+          >
+            <ShoppingBag
+              className={cn("w-3.5 h-3.5", isAddingToCart && "animate-bounce")}
+            />
+            <span>
+              {isOutOfStock
+                ? "Out of Stock"
+                : isAddingToCart
+                ? "Adding..."
+                : "Add to Cart"}
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );

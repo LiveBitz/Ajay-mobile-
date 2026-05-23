@@ -39,6 +39,7 @@ export async function updateSession(request: NextRequest) {
   const isEntryPath = pathname === '/admin/entry'
   const isAuthPath = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/forgot-password')
   const isResetPath = pathname.startsWith('/reset-password')
+  const isPaymentReturnPath = pathname === '/payment/return'
   const isSeedApi = pathname === '/api/seed-banners'
   const isDebugApi = pathname === '/api/debug-banners'
   const isApiRoute = pathname.startsWith('/api/')
@@ -51,6 +52,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/category') ||
     pathname.startsWith('/product') ||
     pathname.startsWith('/search') ||
+    isPaymentReturnPath ||
     pathname === '/terms' ||
     pathname === '/privacy' ||
     pathname === '/refund-policy' ||

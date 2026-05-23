@@ -1,4 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
+import {
+  extractAvailableBaseSizes,
+  extractColors,
+  getTotalStock,
+  hasAvailableVariant,
+} from "@/lib/inventory";
 
 export type Product = {
   id: string;
@@ -28,7 +34,7 @@ export type Filters = {
   subCategories: string[];
 };
 
-const normalizeArray = (val: any): string[] => {
+const normalizeArray = (val: unknown): string[] => {
   if (Array.isArray(val)) return val;
   if (!val) return [];
   if (typeof val === "string") {
@@ -42,16 +48,41 @@ const normalizeArray = (val: any): string[] => {
   return [];
 };
 
-// Calculate total stock from size variants (format: "S:10", "S-White:5", etc.)
-const getTotalStock = (sizes: string[]): number => {
-  if (!Array.isArray(sizes)) return 0;
-  return sizes.reduce((total, sizeStr) => {
-    if (typeof sizeStr === "string" && sizeStr.includes(":")) {
-      const [_, quantity] = sizeStr.split(":");
-      return total + (parseInt(quantity) || 0);
-    }
-    return total;
-  }, 0);
+const hasProductStock = (product: Product): boolean => {
+  const sizes = normalizeArray(product.sizes);
+  const totalStock = getTotalStock(sizes);
+  return totalStock > 0 || product.stock > 0;
+};
+
+const matchesAvailableVariantFilters = (product: Product, filters: Filters): boolean => {
+  const sizes = normalizeArray(product.sizes);
+
+  if (filters.sizes.length === 0 && filters.colors.length === 0) {
+    return true;
+  }
+
+  const availableSizes = extractAvailableBaseSizes(sizes);
+  const availableColors = extractColors(sizes);
+
+  const selectedSizes = filters.sizes.length > 0 ? filters.sizes : availableSizes;
+  const selectedColors = filters.colors.length > 0 ? filters.colors : availableColors;
+
+  if (filters.sizes.length > 0 && availableSizes.length === 0) return false;
+  if (filters.colors.length > 0 && availableColors.length === 0) return false;
+
+  if (filters.sizes.length > 0 && filters.colors.length > 0) {
+    return selectedSizes.some((size) =>
+      selectedColors.some((color) => hasAvailableVariant(sizes, size, color))
+    );
+  }
+
+  if (filters.sizes.length > 0) {
+    return selectedSizes.some((size) => hasAvailableVariant(sizes, size));
+  }
+
+  return selectedColors.some((color) =>
+    availableSizes.some((size) => hasAvailableVariant(sizes, size, color))
+  );
 };
 
 export function useProductFilter(
@@ -78,21 +109,13 @@ export function useProductFilter(
   // otherwise fall back to the current page of products.
   const countSource = useMemo(() => {
     const source = facetProducts && facetProducts.length > 0 ? facetProducts : products;
-    return source.filter((p) => {
-      const totalStock = getTotalStock(normalizeArray(p.sizes));
-      const legacyStock = (p as any).stock || 0;
-      return totalStock > 0 || legacyStock > 0;
-    });
+    return source.filter(hasProductStock);
   }, [facetProducts, products]);
 
   // For product grid: only the products passed in (one page from the API).
   const baseProducts = useMemo(() => {
     if (!products) return [];
-    return products.filter((p) => {
-      const totalStock = getTotalStock(normalizeArray(p.sizes));
-      const legacyStock = (p as any).stock || 0;
-      return totalStock > 0 || legacyStock > 0;
-    });
+    return products.filter(hasProductStock);
   }, [products]);
 
   // Compute counts based on data in this category
@@ -112,29 +135,14 @@ export function useProductFilter(
     }
 
     countSource.forEach((p) => {
-      // Count products per size (not inventory units) — show how many products have each size in stock
-      const seenSizes = new Set<string>();
-      normalizeArray(p.sizes).forEach((s) => {
-        const parts = s.split(":");
-        const fullSize = parts[0];
-        const size = fullSize.includes("-") ? fullSize.split("-")[0] : fullSize;
-
-        // Check if this size has available stock
-        let hasStock = false;
-        if (parts.length > 1) {
-          hasStock = (parseInt(parts[1]) || 0) > 0;
-        } else {
-          hasStock = ((p as any).stock || 0) > 0;
-        }
-
-        // Count each size once per product (not per unit)
-        if (hasStock && !seenSizes.has(size)) {
-          seenSizes.add(size);
-          sCounts[size] = (sCounts[size] || 0) + 1;
-        }
+      extractAvailableBaseSizes(normalizeArray(p.sizes)).forEach((size) => {
+        sCounts[size] = (sCounts[size] || 0) + 1;
       });
-      
-      normalizeArray(p.colors).forEach((c) => (cCounts[c] = (cCounts[c] || 0) + 1));
+
+      extractColors(normalizeArray(p.sizes)).forEach((color) => {
+        cCounts[color] = (cCounts[color] || 0) + 1;
+      });
+
       subCounts[p.subCategory] = (subCounts[p.subCategory] || 0) + 1;
     });
 
@@ -151,25 +159,18 @@ export function useProductFilter(
   // Update price range when category maxPrice changes
   useEffect(() => {
     if (counts.maxPrice > 0) {
-      setFilters(prev => ({ 
-        ...prev, 
-        priceRange: [0, counts.maxPrice] 
-      }));
+      queueMicrotask(() => {
+        setFilters(prev => ({ 
+          ...prev, 
+          priceRange: [0, counts.maxPrice] 
+        }));
+      });
     }
   }, [counts.maxPrice]);
 
   const filteredProducts = useMemo(() => {
     return baseProducts
-      .filter(
-        (p) =>
-          filters.sizes.length === 0 ||
-          normalizeArray(p.sizes).some((s) => filters.sizes.includes(s.split(":")[0]))
-      )
-      .filter(
-        (p) =>
-          filters.colors.length === 0 ||
-          normalizeArray(p.colors).some((c) => filters.colors.includes(c))
-      )
+      .filter((p) => matchesAvailableVariantFilters(p, filters))
       .filter(
         (p) =>
           p.price >= filters.priceRange[0] && p.price <= filters.priceRange[1]

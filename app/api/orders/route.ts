@@ -4,6 +4,14 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit";
 import { z } from "zod";
+import { deductStock } from "@/lib/deduct-stock";
+import { calculateBankOfferDiscount, formatBankOfferLabel } from "@/lib/bank-offers";
+import { assertStockAvailable } from "@/lib/stock-validation";
+
+type PrismaErrorLike = {
+  code?: string;
+  message?: string;
+};
 
 // ── Zod schema for POST /api/orders ─────────────────────────────────────────
 
@@ -33,7 +41,8 @@ const createOrderSchema = z.object({
   items:         z.array(orderItemSchema).min(1).max(50),
   address:       addressSchema,
   contactInfo:   contactInfoSchema,
-  paymentMethod: z.enum(["whatsapp", "cod", "online"]).default("whatsapp"),
+  paymentMethod: z.enum(["whatsapp", "cod", "online", "pinelabs"]).default("whatsapp"),
+  bankOfferId:   z.string().min(1).optional().nullable(),
 });
 
 export async function GET(request: NextRequest) {
@@ -132,7 +141,7 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(orders);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching orders:", error);
     return NextResponse.json(
       { error: "Failed to fetch orders" },
@@ -194,20 +203,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
 
-    const { items, address, contactInfo, paymentMethod } = body;
+    const { items, address, contactInfo, paymentMethod, bankOfferId } = body;
 
     // Calculate totals and validate products
     // Phase 7: Batch fetch all products instead of N+1 loop
-    const productIds = (items as any[]).map((item: any) => item.productId);
+    const productIds = items.map((item) => item.productId);
     const productsMap = new Map(
       (await prisma.product.findMany({
         where: { id: { in: productIds } },
-        select: { id: true, price: true, sizes: true, stock: true }
+        select: { id: true, name: true, price: true, sizes: true, stock: true }
       })).map(p => [p.id, p])
     );
 
     let subtotal = 0;
-    const orderItems: any[] = [];
+    const orderItems: Array<{
+      productId: string;
+      quantity: number;
+      price: number;
+      size: string | null;
+      color: string | null;
+    }> = [];
 
     for (const item of items) {
       if (!item.productId || !item.quantity) {
@@ -226,6 +241,15 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      try {
+        assertStockAvailable(product, item);
+      } catch (stockErr) {
+        return NextResponse.json(
+          { error: (stockErr as Error).message },
+          { status: 422 }
+        );
+      }
+
       const itemTotal = product.price * item.quantity;
       subtotal += itemTotal;
 
@@ -237,6 +261,43 @@ export async function POST(request: NextRequest) {
         color: item.color || null,
       });
     }
+
+    let discount = 0;
+    let appliedOfferLabel: string | null = null;
+
+    if (paymentMethod === "pinelabs" && bankOfferId) {
+      const now = new Date();
+      const offer = await prisma.bankOffer.findFirst({
+        where: {
+          id: bankOfferId,
+          isActive: true,
+          OR: [{ validFrom: null }, { validFrom: { lte: now } }],
+          AND: [
+            {
+              OR: [{ validUntil: null }, { validUntil: { gte: now } }],
+            },
+          ],
+        },
+      });
+
+      if (!offer) {
+        return NextResponse.json(
+          { error: "Selected bank offer is no longer available." },
+          { status: 400 }
+        );
+      }
+
+      discount = calculateBankOfferDiscount(offer, subtotal);
+      if (discount <= 0) {
+        return NextResponse.json(
+          { error: "Selected bank offer is not applicable to this order." },
+          { status: 400 }
+        );
+      }
+      appliedOfferLabel = formatBankOfferLabel(offer);
+    }
+
+    const payableTotal = Math.max(0, subtotal - discount);
 
     // Generate unique order number
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
@@ -279,7 +340,7 @@ export async function POST(request: NextRequest) {
           subtotal,
           tax: 0,
           shipping: 0,
-          total: subtotal,
+          total: payableTotal,
           paymentMethod: paymentMethod,
           paymentStatus: "pending",
           status: "pending",
@@ -296,68 +357,20 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // ✅ DEDUCT STOCK ATOMICALLY (within transaction)
-      for (const orderItem of createdOrder.items) {
-        const product = orderItem.product;
-        
-        if (orderItem.size && Array.isArray(product.sizes)) {
-          // Handle both size-only and size-color variants: "S:10" or "S-White:5"
-          const updatedSizes = product.sizes.map((sizeStr: string) => {
-            if (typeof sizeStr === "string" && sizeStr.includes(":")) {
-              const [key, quantity] = sizeStr.split(":");
-              
-              // Check if this is a size-color variant (S-White:5) or just size (S:10)
-              const isColorVariant = key.includes("-");
-              
-              if (isColorVariant) {
-                // For "S-White:5" format
-                const [size, color] = key.split("-");
-                
-                // Match if size matches AND color matches (if color exists in orderItem)
-                if (size === orderItem.size && (!orderItem.color || color === orderItem.color)) {
-                  const currentQty = parseInt(quantity) || 0;
-                  if (currentQty < orderItem.quantity) throw new Error(`Insufficient stock for ${product.name} (${key})`);
-                  const newQty = currentQty - orderItem.quantity;
-                  return `${key}:${newQty}`;
-                }
-              } else {
-                // For old "S:10" format - backwards compatibility
-                if (key === orderItem.size && !key.includes("-")) {
-                  const currentQty = parseInt(quantity) || 0;
-                  if (currentQty < orderItem.quantity) throw new Error(`Insufficient stock for ${product.name} (${key})`);
-                  const newQty = currentQty - orderItem.quantity;
-                  return `${key}:${newQty}`;
-                }
-              }
-            }
-            return sizeStr;
-          });
-
-          // Update product in database
-          await tx.product.update({
-            where: { id: product.id },
-            data: { sizes: updatedSizes },
-          });
-        } else {
-          // Legacy: deduct from total stock field
-          const currentStock = product.stock || 0;
-          if (currentStock < orderItem.quantity) {
-            throw new Error(`Insufficient stock for ${product.name}`);
-          }
-          const newStock = currentStock - orderItem.quantity;
-          await tx.product.update({
-            where: { id: product.id },
-            data: { stock: newStock },
-          });
-        }
+      // For Pine Labs orders, stock is deducted on payment confirmation (webhook/status).
+      // For WhatsApp/COD orders, deduct immediately since there's no async payment step.
+      if (paymentMethod !== "pinelabs") {
+        await deductStock(tx, createdOrder.items);
       }
 
       return createdOrder;
     }, {
-      isolationLevel: "Serializable", // ✅ Highest isolation level to prevent race conditions
+      isolationLevel: "Serializable",
     });
 
-    console.log(`✅ Order ${orderNumber} created and stock deducted atomically`);
+    console.log(
+      `✅ Order ${orderNumber} created${paymentMethod === "pinelabs" ? " (stock held for payment confirmation)" : " and stock deducted atomically"}${appliedOfferLabel ? ` with offer: ${appliedOfferLabel}` : ""}`
+    );
 
     // ✅ REVALIDATE AFFECTED PATHS FOR REAL-TIME UI UPDATE
     try {
@@ -382,18 +395,18 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating order:", error);
+    const prismaError = error as PrismaErrorLike;
 
-    if (error.code === "P2002") {
+    if (prismaError.code === "P2002") {
       return NextResponse.json({ error: "Order already exists." }, { status: 409 });
     }
-    if (error.code === "P2025") {
+    if (prismaError.code === "P2025") {
       return NextResponse.json({ error: "Product not found." }, { status: 404 });
     }
-    // For stock errors thrown inside the transaction, surface the message
-    if (error.message?.startsWith("Insufficient stock")) {
-      return NextResponse.json({ error: error.message }, { status: 409 });
+    if (prismaError.message?.startsWith("Insufficient stock")) {
+      return NextResponse.json({ error: prismaError.message }, { status: 422 });
     }
 
     // All other errors: log internally, return generic message to client

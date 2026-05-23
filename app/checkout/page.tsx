@@ -6,7 +6,7 @@ import { useCart } from "@/context/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Truck, Lock, Check, MapPin,
-  MessageCircle, ShieldCheck, Package, ChevronRight
+  MessageCircle, ShieldCheck, Package, ChevronRight, CreditCard, Tag,
 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -25,6 +25,35 @@ interface Address {
   isDefault?: boolean;
 }
 
+interface BankOffer {
+  id: string;
+  bankName: string;
+  cardType: string;
+  discountType: "flat" | "percentage";
+  discountValue: number;
+  minOrderAmount: number;
+  maxDiscount: number | null;
+  description: string;
+}
+
+function calculateOfferDiscount(offer: BankOffer, subtotal: number) {
+  if (subtotal < offer.minOrderAmount) return 0;
+  const rawDiscount =
+    offer.discountType === "percentage"
+      ? (subtotal * offer.discountValue) / 100
+      : offer.discountValue;
+  const cappedDiscount =
+    offer.discountType === "percentage" && offer.maxDiscount
+      ? Math.min(rawDiscount, offer.maxDiscount)
+      : rawDiscount;
+  return Math.max(0, Math.min(subtotal, Math.round(cappedDiscount)));
+}
+
+function formatOfferValue(offer: BankOffer) {
+  if (offer.discountType === "flat") return `₹${offer.discountValue.toLocaleString("en-IN")} off`;
+  return `${offer.discountValue}% off${offer.maxDiscount ? ` up to ₹${offer.maxDiscount.toLocaleString("en-IN")}` : ""}`;
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalPrice, clearCart } = useCart();
@@ -33,6 +62,9 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"whatsapp" | "pinelabs">("pinelabs");
+  const [offers, setOffers] = useState<BankOffer[]>([]);
+  const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showManualEntry, setShowManualEntry] = useState(false);
@@ -61,6 +93,20 @@ export default function CheckoutPage() {
   }, [router]);
 
   useEffect(() => {
+    const fetchOffers = async () => {
+      try {
+        const response = await fetch("/api/offers", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (Array.isArray(data)) setOffers(data);
+      } catch (err) {
+        console.error("Failed to fetch bank offers:", err);
+      }
+    };
+    fetchOffers();
+  }, []);
+
+  useEffect(() => {
     if (items.length === 0 && isAuthenticated) router.push("/cart");
   }, [items, isAuthenticated, router]);
 
@@ -68,49 +114,108 @@ export default function CheckoutPage() {
     setAddress({ ...address, [field]: value });
   };
 
-  const handlePlaceOrderViaWhatsApp = async () => {
-    if (!address.name || !address.phone || !address.street || !address.city || !address.state || !address.zipCode) {
-      toast({ title: "Missing Information", description: "Please fill in all address fields", variant: "destructive" });
-      return;
+  const eligibleOffers = offers
+    .map((offer) => ({
+      ...offer,
+      discountAmount: calculateOfferDiscount(offer, totalPrice),
+    }))
+    .filter((offer) => offer.discountAmount > 0)
+    .sort((a, b) => b.discountAmount - a.discountAmount);
+
+  const selectedOffer =
+    eligibleOffers.find((offer) => offer.id === selectedOfferId) ?? null;
+  const discountAmount =
+    paymentMethod === "pinelabs" && selectedOffer ? selectedOffer.discountAmount : 0;
+  const payableTotal = Math.max(0, totalPrice - discountAmount);
+
+  async function createOrder() {
+    const orderItems = items.map((item) => ({
+      productId: item.productId, quantity: item.quantity, size: item.size, color: item.color,
+    }));
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: orderItems, address,
+        contactInfo: { name: address.name, email: userEmail, phone: address.phone },
+        paymentMethod,
+        bankOfferId: paymentMethod === "pinelabs" ? selectedOffer?.id ?? null : null,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Failed to create order");
     }
+    const data = await res.json();
+    return data.order;
+  }
+
+  function validateAddress() {
+    const { name, phone, street, city, state, zipCode } = address;
+    if (!name || !phone || !street || !city || !state || !zipCode) {
+      toast({ title: "Missing Information", description: "Please fill in all address fields", variant: "destructive" });
+      return false;
+    }
+    return true;
+  }
+
+  const handlePlaceOrderViaWhatsApp = async () => {
+    if (!validateAddress()) return;
     setIsLoading(true);
     try {
-      const orderItems = items.map((item) => ({
-        productId: item.productId, quantity: item.quantity, size: item.size, color: item.color,
-      }));
-      const orderResponse = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: orderItems, address,
-          contactInfo: { name: address.name, email: userEmail, phone: address.phone },
-        }),
-      });
-      if (!orderResponse.ok) {
-        const errorData = await orderResponse.json();
-        throw new Error(errorData.error || "Failed to create order");
-      }
-      const orderData = await orderResponse.json();
-      const createdOrder = orderData.order;
-      // Only pass order number + items — no customer PII in the WhatsApp message
+      const createdOrder = await createOrder();
       const orderMessageData = {
         orderNumber: createdOrder.orderNumber,
         items: items.map((item) => ({ name: item.name, quantity: item.quantity, price: item.price })),
-        total: totalPrice,
+        total: createdOrder.total ?? payableTotal,
       };
       const adminPhone = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP_PHONE;
       if (!adminPhone) {
-        toast({ title: "Configuration Error", description: "WhatsApp number is not configured", variant: "destructive" });
+        toast({ title: "Configuration Error", description: "WhatsApp number not configured", variant: "destructive" });
         setIsLoading(false);
         return;
       }
       clearCart();
       redirectToWhatsApp(adminPhone, orderMessageData);
       setTimeout(() => { router.push(`/order-confirmation/${createdOrder.id}`); }, 300);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setIsLoading(false);
-      toast({ title: "Error", description: error.message || "Failed to place order", variant: "destructive" });
+      const message = error instanceof Error ? error.message : "Failed to place order";
+      toast({ title: "Error", description: message, variant: "destructive" });
     }
+  };
+
+  const handlePayOnline = async () => {
+    if (!validateAddress()) return;
+    setIsLoading(true);
+    try {
+      const createdOrder = await createOrder();
+      const payRes = await fetch("/api/payment/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: createdOrder.id }),
+      });
+      if (!payRes.ok) {
+        const err = await payRes.json();
+        throw new Error(err.error || "Payment initiation failed");
+      }
+      const { checkoutUrl } = await payRes.json();
+      window.location.href = checkoutUrl; // redirect to Pine Labs checkout
+    } catch (error: unknown) {
+      setIsLoading(false);
+      const msg = error instanceof Error ? error.message : "Could not start payment";
+      const isStockError = msg.toLowerCase().includes("stock");
+      toast({
+        title: isStockError ? "Out of Stock" : "Payment Error",
+        description: msg,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePlaceOrder = () => {
+    if (paymentMethod === "pinelabs") return handlePayOnline();
+    return handlePlaceOrderViaWhatsApp();
   };
 
   if (!isAuthenticated) {
@@ -148,7 +253,7 @@ export default function CheckoutPage() {
           </Link>
           <div>
             <h1 className="ck-header-title">Checkout</h1>
-            <p className="ck-header-sub">{items.length} {items.length === 1 ? "item" : "items"} · ₹{totalPrice.toLocaleString()}</p>
+            <p className="ck-header-sub">{items.length} {items.length === 1 ? "item" : "items"} · ₹{payableTotal.toLocaleString()}</p>
           </div>
           <div className="ck-header-secure">
             <ShieldCheck className="w-3.5 h-3.5" />
@@ -265,19 +370,96 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="ck-payment-option">
-                <div className="ck-payment-icon">
-                  <MessageCircle className="w-4 h-4 text-white" />
-                </div>
-                <div className="ck-payment-info">
-                  <p className="ck-payment-title">Order via WhatsApp</p>
-                  <p className="ck-payment-sub">Confirm & arrange payment directly with our team</p>
-                </div>
-                <div className="ck-payment-radio">
-                  <div className="ck-payment-radio-dot" />
-                </div>
+              <div className="ck-payment-list">
+                {/* Pay Online — Pine Labs */}
+                <button
+                  onClick={() => setPaymentMethod("pinelabs")}
+                  className={cn("ck-payment-option", paymentMethod === "pinelabs" && "ck-payment-option-active")}
+                >
+                  <div className="ck-payment-icon ck-payment-icon-pl">
+                    <CreditCard className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="ck-payment-info">
+                    <p className="ck-payment-title">Pay Online</p>
+                    <p className="ck-payment-sub">Cards · UPI · Net Banking · EMI via Pine Labs</p>
+                  </div>
+                  <div className={cn("ck-payment-radio", paymentMethod === "pinelabs" && "ck-payment-radio-active")}>
+                    {paymentMethod === "pinelabs" && <div className="ck-payment-radio-dot" />}
+                  </div>
+                </button>
+
+                {/* WhatsApp COD */}
+                <button
+                  onClick={() => setPaymentMethod("whatsapp")}
+                  className={cn("ck-payment-option", paymentMethod === "whatsapp" && "ck-payment-option-active")}
+                >
+                  <div className="ck-payment-icon ck-payment-icon-wa">
+                    <MessageCircle className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="ck-payment-info">
+                    <p className="ck-payment-title">Order via WhatsApp</p>
+                    <p className="ck-payment-sub">Confirm &amp; arrange payment with our team</p>
+                  </div>
+                  <div className={cn("ck-payment-radio", paymentMethod === "whatsapp" && "ck-payment-radio-active")}>
+                    {paymentMethod === "whatsapp" && <div className="ck-payment-radio-dot" />}
+                  </div>
+                </button>
               </div>
             </div>
+
+            {paymentMethod === "pinelabs" && eligibleOffers.length > 0 && (
+              <div className="ck-card">
+                <div className="ck-card-header">
+                  <div className="ck-card-icon-wrap">
+                    <Tag className="ck-card-icon" />
+                  </div>
+                  <div>
+                    <h2 className="ck-card-title">Bank Offers</h2>
+                    <p className="ck-card-sub">Select one offer to apply at checkout</p>
+                  </div>
+                </div>
+
+                <div className="ck-offer-list">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOfferId(null)}
+                    className={cn("ck-offer-btn", !selectedOfferId && "ck-offer-btn-active")}
+                  >
+                    <div className="ck-offer-radio">
+                      {!selectedOfferId && <div className="ck-offer-radio-dot" />}
+                    </div>
+                    <div className="ck-offer-copy">
+                      <p className="ck-offer-title">No bank offer</p>
+                      <p className="ck-offer-sub">Pay the standard online amount</p>
+                    </div>
+                  </button>
+
+                  {eligibleOffers.map((offer) => (
+                    <button
+                      type="button"
+                      key={offer.id}
+                      onClick={() => setSelectedOfferId(offer.id)}
+                      className={cn("ck-offer-btn", selectedOfferId === offer.id && "ck-offer-btn-active")}
+                    >
+                      <div className="ck-offer-radio">
+                        {selectedOfferId === offer.id && <div className="ck-offer-radio-dot" />}
+                      </div>
+                      <div className="ck-offer-copy">
+                        <div className="ck-offer-title-row">
+                          <p className="ck-offer-title">{formatOfferValue(offer)}</p>
+                          <span className="ck-offer-save">Save ₹{offer.discountAmount.toLocaleString("en-IN")}</span>
+                        </div>
+                        <p className="ck-offer-sub">
+                          {offer.bankName} · {offer.cardType}
+                          {offer.minOrderAmount > 0 ? ` · Min ₹${offer.minOrderAmount.toLocaleString("en-IN")}` : ""}
+                        </p>
+                        {offer.description && <p className="ck-offer-desc">{offer.description}</p>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </div>
 
@@ -326,23 +508,34 @@ export default function CheckoutPage() {
                   <span className="ck-total-label">Tax</span>
                   <span className="ck-total-val">₹0</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="ck-total-row">
+                    <span className="ck-total-label">Bank Offer</span>
+                    <span className="ck-total-discount">-₹{discountAmount.toLocaleString("en-IN")}</span>
+                  </div>
+                )}
               </div>
 
               <div className="ck-grand">
                 <span className="ck-grand-label">Total</span>
-                <span className="ck-grand-val">₹{totalPrice.toLocaleString()}</span>
+                <span className="ck-grand-val">₹{payableTotal.toLocaleString()}</span>
               </div>
 
               {/* CTA */}
               <button
-                onClick={handlePlaceOrderViaWhatsApp}
+                onClick={handlePlaceOrder}
                 disabled={isLoading || items.length === 0}
                 className="ck-cta"
               >
                 {isLoading ? (
                   <>
                     <div className="ck-cta-spinner" />
-                    <span>Processing…</span>
+                    <span>{paymentMethod === "pinelabs" ? "Redirecting to Payment…" : "Processing…"}</span>
+                  </>
+                ) : paymentMethod === "pinelabs" ? (
+                  <>
+                    <CreditCard className="w-4 h-4" />
+                    <span>Pay ₹{payableTotal.toLocaleString()} Online</span>
                   </>
                 ) : (
                   <>
@@ -354,7 +547,9 @@ export default function CheckoutPage() {
 
               <p className="ck-note">
                 <ShieldCheck className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
-                Your order is confirmed and payment is arranged directly with our team over WhatsApp.
+                {paymentMethod === "pinelabs"
+                  ? "Secured by Pine Labs. You'll be redirected to complete payment."
+                  : "Payment arranged directly with our team over WhatsApp."}
               </p>
 
             </div>
@@ -611,37 +806,101 @@ export default function CheckoutPage() {
         .ck-input:focus { border-color: #a1a1aa; background: #ffffff; }
 
         /* ── Payment ── */
+        .ck-payment-list {
+          padding: 14px 16px 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        @media (min-width: 640px) {
+          .ck-payment-list { padding: 16px 24px 20px; }
+        }
         .ck-payment-option {
-          margin: 14px 16px 18px;
+          width: 100%;
           display: flex;
           align-items: center;
           gap: 12px;
           padding: 14px 16px;
           border-radius: 12px;
-          border: 1.5px solid #09090b;
+          border: 1.5px solid #f0f0f0;
           background: #fafafa;
+          text-align: left;
+          cursor: pointer;
+          transition: all 0.16s ease;
         }
-        @media (min-width: 640px) {
-          .ck-payment-option { margin: 16px 24px 20px; }
-        }
+        .ck-payment-option:hover { border-color: #e4e4e7; }
+        .ck-payment-option-active { border-color: #09090b !important; background: #ffffff !important; }
         .ck-payment-icon {
           width: 34px; height: 34px;
           border-radius: 10px;
-          background: #25D366;
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
         }
+        .ck-payment-icon-pl { background: #dc2626; }
+        .ck-payment-icon-wa { background: #25D366; }
         .ck-payment-info { flex: 1; min-width: 0; }
         .ck-payment-title { font-size: 13px; font-weight: 700; color: #09090b; }
         .ck-payment-sub { font-size: 11px; color: #71717a; font-weight: 500; margin-top: 2px; line-height: 1.4; }
         .ck-payment-radio {
           width: 18px; height: 18px;
           border-radius: 50%;
-          border: 2px solid #09090b;
+          border: 2px solid #d4d4d8;
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
+          transition: border-color 0.16s ease;
         }
+        .ck-payment-radio-active { border-color: #09090b; }
         .ck-payment-radio-dot { width: 8px; height: 8px; border-radius: 50%; background: #09090b; }
+
+        /* ── Offers ── */
+        .ck-offer-list {
+          padding: 14px 16px 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        @media (min-width: 640px) {
+          .ck-offer-list { padding: 16px 24px 20px; }
+        }
+        .ck-offer-btn {
+          width: 100%;
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 14px 16px;
+          border-radius: 12px;
+          border: 1.5px solid #f0f0f0;
+          background: #fafafa;
+          text-align: left;
+          cursor: pointer;
+          transition: all 0.16s ease;
+        }
+        .ck-offer-btn:hover { border-color: #e4e4e7; }
+        .ck-offer-btn-active { border-color: #09090b !important; background: #ffffff !important; }
+        .ck-offer-radio {
+          width: 18px; height: 18px;
+          border-radius: 50%;
+          border: 2px solid #d4d4d8;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+        .ck-offer-btn-active .ck-offer-radio { border-color: #09090b; }
+        .ck-offer-radio-dot { width: 8px; height: 8px; border-radius: 50%; background: #09090b; }
+        .ck-offer-copy { flex: 1; min-width: 0; }
+        .ck-offer-title-row {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 8px;
+        }
+        .ck-offer-title { font-size: 13px; font-weight: 800; color: #09090b; line-height: 1.25; }
+        .ck-offer-sub { font-size: 11px; color: #71717a; font-weight: 600; margin-top: 2px; line-height: 1.35; }
+        .ck-offer-desc { font-size: 10px; color: #a1a1aa; font-weight: 500; margin-top: 2px; line-height: 1.35; }
+        .ck-offer-save {
+          font-size: 10px; font-weight: 900;
+          color: #047857; background: #ecfdf5;
+          border-radius: 999px; padding: 3px 7px;
+          white-space: nowrap;
+        }
 
         /* ── Summary ── */
         .ck-right {}
@@ -742,6 +1001,7 @@ export default function CheckoutPage() {
         }
         .ck-total-label { font-size: 12px; color: #a1a1aa; font-weight: 500; }
         .ck-total-val { font-size: 12px; font-weight: 700; color: #3f3f46; }
+        .ck-total-discount { font-size: 12px; font-weight: 800; color: #059669; }
         .ck-total-free {
           font-size: 11px; font-weight: 800;
           color: #10b981; background: #f0fdf4;

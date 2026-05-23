@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
+import { getTotalStock, hasAvailableVariant } from "@/lib/inventory";
 
 /**
  * GET /api/products/category
@@ -41,7 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Build the base WHERE clause from the slug ──────────────────────────────
-    let baseWhere: any = {};
+    let baseWhere: Prisma.ProductWhereInput = {};
 
     if (slug === "sale") {
       baseWhere = { discount: { gt: 0 } };
@@ -81,7 +83,7 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Apply user filters on top of the base clause ───────────────────────────
-    const filterWhere: any = {
+    const filterWhere: Prisma.ProductWhereInput = {
       ...baseWhere,
       price: { gte: priceMin, lte: priceMax },
     };
@@ -90,34 +92,13 @@ export async function GET(request: NextRequest) {
       filterWhere.discount = { gte: discountMin };
     }
 
-    // Colors: exact match — Prisma's hasSome works fine here
-    if (colors.length > 0) {
-      filterWhere.colors = { hasSome: colors };
-    }
-
     // SubCategory: exact match
     if (subCategories.length > 0) {
       filterWhere.subCategory = { in: subCategories };
     }
 
-    // Sizes: stored as "S:10", "M:5" — need prefix matching.
-    // Prisma array ops don't support prefix matching so we use a raw query
-    // to get matching IDs, then filter by those IDs in the main query.
-    if (sizes.length > 0) {
-      const rows = await prisma.$queryRaw<{ id: string }[]>`
-        SELECT id FROM "Product"
-        WHERE EXISTS (
-          SELECT 1 FROM unnest(sizes) AS s
-          WHERE split_part(s, ':', 1) = ANY(${sizes}::text[])
-        )
-      `;
-      const ids = rows.map((r) => r.id);
-      // Intersect with any existing id filter (e.g. from a future composed filter)
-      filterWhere.id = { in: ids };
-    }
-
     // ── Sort order ─────────────────────────────────────────────────────────────
-    const orderBy: any =
+    const orderBy: Prisma.ProductOrderByWithRelationInput =
       sort === "price-asc"  ? { price: "asc" }      :
       sort === "price-desc" ? { price: "desc" }     :
       sort === "discount"   ? { discount: "desc" }  :
@@ -126,33 +107,60 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    // ── Execute products + count in parallel ───────────────────────────────────
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
-        where: filterWhere,
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          subCategory: true,
-          categoryId: true,
-          price: true,
-          originalPrice: true,
-          discount: true,
-          image: true,
-          stock: true,
-          sizes: true,
-          colors: true,
-          isNew: true,
-          isBestSeller: true,
-          category: { select: { name: true, slug: true } },
-        },
-        orderBy,
-        take: limit,
-        skip,
-      }),
-      prisma.product.count({ where: filterWhere }),
-    ]);
+    const productSelect = {
+      id: true,
+      name: true,
+      slug: true,
+      subCategory: true,
+      categoryId: true,
+      price: true,
+      originalPrice: true,
+      discount: true,
+      image: true,
+      stock: true,
+      sizes: true,
+      colors: true,
+      isNew: true,
+      isBestSeller: true,
+      category: { select: { name: true, slug: true } },
+    } as const;
+
+    const baseProducts = await prisma.product.findMany({
+      where: filterWhere,
+      select: productSelect,
+      orderBy,
+    });
+
+    const filteredProducts = baseProducts.filter((product) => {
+      const sizeEntries = Array.isArray(product.sizes) ? product.sizes : [];
+      if (getTotalStock(sizeEntries) <= 0 && product.stock <= 0) return false;
+
+      if (sizes.length === 0 && colors.length === 0) return true;
+
+      if (sizes.length > 0 && colors.length > 0) {
+        return sizes.some((size) =>
+          colors.some((color) => hasAvailableVariant(sizeEntries, size, color))
+        );
+      }
+
+      if (sizes.length > 0) {
+        return sizes.some((size) => hasAvailableVariant(sizeEntries, size));
+      }
+
+      return colors.some((color) =>
+        sizeEntries.some((entry) => {
+          const dashIdx = entry.lastIndexOf("-");
+          const colonIdx = entry.lastIndexOf(":");
+          if (dashIdx === -1 || colonIdx === -1 || colonIdx <= dashIdx) return false;
+          const qty = parseInt(entry.slice(colonIdx + 1), 10) || 0;
+          const entryColor = entry.slice(dashIdx + 1, colonIdx);
+          return qty > 0 && entryColor === color;
+        })
+      );
+    });
+
+    const total = filteredProducts.length;
+    const products = filteredProducts.slice(skip, skip + limit);
 
     const response = NextResponse.json({ products, total, page, pageSize: limit });
     // Short cache: safe for CDN edge (filtered results change rarely)

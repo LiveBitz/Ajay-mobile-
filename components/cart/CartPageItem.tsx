@@ -2,17 +2,29 @@
 
 import React from "react";
 import Image from "next/image";
-import { Plus, Minus, Trash2, Heart, ShieldCheck, Truck } from "lucide-react";
+import { Plus, Minus, Trash2, Heart } from "lucide-react";
 import { useCart, CartItem } from "@/context/CartContext";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 interface CartPageItemProps {
   item: CartItem;
+  availableQuantity?: number;
+  isCheckingStock?: boolean;
 }
 
-export function CartPageItem({ item }: CartPageItemProps) {
+export function CartPageItem({
+  item,
+  availableQuantity,
+  isCheckingStock = false,
+}: CartPageItemProps) {
   const { updateQuantity, removeItem } = useCart();
+  const hasKnownAvailability = typeof availableQuantity === "number";
+  const isSoldOut = hasKnownAvailability && availableQuantity <= 0;
+  const hasReachedStockLimit =
+    hasKnownAvailability && item.quantity >= availableQuantity;
+  const canIncrement =
+    !isCheckingStock && !isSoldOut && (!hasKnownAvailability || !hasReachedStockLimit);
 
   return (
     <div className="group relative flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 p-5 sm:p-6 bg-white rounded-2xl sm:rounded-3xl border border-zinc-100 hover:border-zinc-200/80 hover:shadow-lg hover:shadow-zinc-950/5 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
@@ -73,6 +85,20 @@ export function CartPageItem({ item }: CartPageItemProps) {
               <p className="text-xs sm:text-sm text-zinc-400 font-medium tracking-tight mt-1">
                 ₹{item.price.toLocaleString("en-IN")} each
               </p>
+              {hasKnownAvailability && (
+                <p
+                  className={cn(
+                    "text-[10px] sm:text-xs font-bold uppercase tracking-wider mt-2",
+                    isSoldOut ? "text-rose-600" : "text-zinc-400"
+                  )}
+                >
+                  {isSoldOut
+                    ? "Out of stock"
+                    : availableQuantity === 1
+                    ? "Only 1 left"
+                    : `${availableQuantity} available`}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -97,8 +123,14 @@ export function CartPageItem({ item }: CartPageItemProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => updateQuantity(item.id, 1)}
-              className="w-9 h-9 rounded-xl hover:bg-white hover:text-zinc-950 text-zinc-400 transition-all active:scale-90"
+              onClick={() => updateQuantity(item.id, 1, availableQuantity)}
+              className="w-9 h-9 rounded-xl hover:bg-white hover:text-zinc-950 text-zinc-400 disabled:opacity-30 disabled:hover:bg-transparent transition-all active:scale-90"
+              disabled={!canIncrement}
+              title={
+                hasReachedStockLimit
+                  ? `Only ${availableQuantity} available`
+                  : "Increase quantity"
+              }
             >
               <Plus className="w-4 h-4" />
             </Button>

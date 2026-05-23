@@ -7,6 +7,7 @@ export interface CartItem {
   productId: string;
   name: string;
   price: number;
+  originalPrice?: number;
   image: string;
   size?: string;
   color?: string;
@@ -17,7 +18,7 @@ interface CartContextType {
   items: CartItem[];
   addItem: (item: Omit<CartItem, "id" | "quantity">) => void;
   removeItem: (id: string) => void;
-  updateQuantity: (id: string, delta: number) => void;
+  updateQuantity: (id: string, delta: number, maxQuantity?: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -27,37 +28,45 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+function loadStoredCart(): CartItem[] {
+  if (typeof window === "undefined") return [];
+
+  const savedCart = localStorage.getItem("souled_cart");
+  if (!savedCart) return [];
+
+  try {
+    const parsed = JSON.parse(savedCart);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter(
+      (item): item is CartItem =>
+        item !== null &&
+        typeof item === "object" &&
+        typeof item.id === "string" &&
+        typeof item.productId === "string" &&
+        typeof item.name === "string" &&
+        typeof item.price === "number" &&
+        (typeof item.originalPrice === "number" || item.originalPrice === undefined) &&
+        typeof item.image === "string" &&
+        typeof item.quantity === "number" &&
+        item.quantity > 0
+    );
+  } catch (err) {
+    console.error("Failed to parse cart", err);
+    return [];
+  }
+}
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Persistence Orchestration
   useEffect(() => {
-    const savedCart = localStorage.getItem("souled_cart");
-    if (savedCart) {
-      try {
-        const parsed = JSON.parse(savedCart);
-        if (Array.isArray(parsed)) {
-          const validItems = parsed.filter(
-            (item): item is CartItem =>
-              item !== null &&
-              typeof item === "object" &&
-              typeof item.id === "string" &&
-              typeof item.productId === "string" &&
-              typeof item.name === "string" &&
-              typeof item.price === "number" &&
-              typeof item.image === "string" &&
-              typeof item.quantity === "number" &&
-              item.quantity > 0
-          );
-          setItems(validItems);
-        }
-      } catch (err) {
-        console.error("Failed to parse cart", err);
-      }
-    }
-    setIsInitialized(true);
+    queueMicrotask(() => {
+      setItems(loadStoredCart());
+      setIsInitialized(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -89,12 +98,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
-  const updateQuantity = useCallback((id: string, delta: number) => {
+  const updateQuantity = useCallback((id: string, delta: number, maxQuantity?: number) => {
     setItems((prev) =>
       prev
         .map((item) => {
           if (item.id === id) {
-            const newQty = Math.max(0, item.quantity + delta);
+            const requestedQty = item.quantity + delta;
+            const cappedQty =
+              typeof maxQuantity === "number"
+                ? Math.min(requestedQty, Math.max(0, maxQuantity))
+                : requestedQty;
+            const newQty = Math.max(0, cappedQty);
             return { ...item, quantity: newQty };
           }
           return item;

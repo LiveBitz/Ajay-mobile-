@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
+import { useCartAvailability } from "@/hooks/useCartAvailability";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
@@ -75,9 +76,10 @@ export function CartSheet() {
     isOpen,
     setIsOpen,
   } = useCart();
+  const { availability, isCheckingStock } = useCartAvailability(items);
 
   const totalSavings = items.reduce((acc, item) => {
-    const original = (item as any).originalPrice ?? item.price;
+    const original = item.originalPrice ?? item.price;
     return acc + (original - item.price) * item.quantity;
   }, 0);
 
@@ -171,7 +173,11 @@ export function CartSheet() {
                     item={item}
                     onRemove={() => removeItem(item.id)}
                     onDecrement={() => updateQuantity(item.id, -1)}
-                    onIncrement={() => updateQuantity(item.id, 1)}
+                    onIncrement={() =>
+                      updateQuantity(item.id, 1, availability[item.id]?.availableQuantity)
+                    }
+                    availableQuantity={availability[item.id]?.availableQuantity}
+                    isCheckingStock={isCheckingStock}
                     index={idx}
                   />
                 ))}
@@ -298,15 +304,17 @@ interface CartItemProps {
     id: string;
     name: string;
     price: number;
+    originalPrice?: number;
     quantity: number;
     image: string;
     size?: string;
     color?: string;
-    [key: string]: any;
   };
   onRemove: () => void;
   onDecrement: () => void;
   onIncrement: () => void;
+  availableQuantity?: number;
+  isCheckingStock?: boolean;
   index: number;
 }
 
@@ -315,13 +323,21 @@ function CartItem({
   onRemove,
   onDecrement,
   onIncrement,
+  availableQuantity,
+  isCheckingStock = false,
   index,
 }: CartItemProps) {
   const colorHex = item.color ? getColorHex(item.color) : null;
   const colorLight = item.color ? isLightColor(item.color) : false;
   const lineTotal = item.price * item.quantity;
-  const originalTotal = ((item as any).originalPrice ?? item.price) * item.quantity;
+  const originalTotal = (item.originalPrice ?? item.price) * item.quantity;
   const hasSaving = originalTotal > lineTotal;
+  const hasKnownAvailability = typeof availableQuantity === "number";
+  const isSoldOut = hasKnownAvailability && availableQuantity <= 0;
+  const hasReachedStockLimit =
+    hasKnownAvailability && item.quantity >= availableQuantity;
+  const canIncrement =
+    !isCheckingStock && !isSoldOut && (!hasKnownAvailability || !hasReachedStockLimit);
 
   return (
     <div
@@ -413,9 +429,15 @@ function CartItem({
               <button
                 onClick={onIncrement}
                 aria-label="Increase quantity"
+                disabled={!canIncrement}
+                title={
+                  hasReachedStockLimit
+                    ? `Only ${availableQuantity} available`
+                    : "Increase quantity"
+                }
                 className={cn(
                   "w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center",
-                  "text-zinc-400 hover:text-zinc-950 hover:bg-zinc-100",
+                  "text-zinc-400 hover:text-zinc-950 hover:bg-zinc-100 disabled:opacity-30 disabled:hover:bg-transparent",
                   "transition-all active:scale-90"
                 )}
               >
@@ -428,6 +450,20 @@ function CartItem({
               <p className="text-sm font-black text-zinc-950 leading-none">
                 ₹{lineTotal.toLocaleString("en-IN")}
               </p>
+              {hasKnownAvailability && (
+                <p
+                  className={cn(
+                    "text-[8px] font-black uppercase tracking-widest mt-1",
+                    isSoldOut ? "text-rose-600" : "text-zinc-400"
+                  )}
+                >
+                  {isSoldOut
+                    ? "Out of stock"
+                    : availableQuantity === 1
+                    ? "Only 1 left"
+                    : `${availableQuantity} left`}
+                </p>
+              )}
               {hasSaving && (
                 <p className="text-[9px] font-bold text-zinc-400 line-through mt-0.5">
                   ₹{originalTotal.toLocaleString("en-IN")}

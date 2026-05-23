@@ -10,8 +10,11 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   getTotalStock, 
-  extractBaseSizes, 
+  extractAvailableBaseSizes, 
+  extractColors,
   getAvailableColorsForSize,
+  hasAvailableSize,
+  hasAvailableVariant,
   parseColor
 } from "@/lib/inventory";
 
@@ -38,26 +41,30 @@ export function ProductSelection({ product, onPriceChange }: ProductSelectionPro
   const [showError, setShowError] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
 
-  // Use shared utility for consistent extraction
-  const cleanSizes = useMemo(() => extractBaseSizes(product.sizes), [product.sizes]);
+  const totalStock = useMemo(() => getTotalStock(product.sizes), [product.sizes]);
+
+  // Only expose variants that can actually be purchased.
+  const cleanSizes = useMemo(() => extractAvailableBaseSizes(product.sizes), [product.sizes]);
   const hasSizes = cleanSizes.length > 0;
   
-  // Get available colors: if size selected, filter by size; otherwise show all
+  // Get available colors: if size selected, filter by that in-stock storage.
   const availableColors = useMemo(() => {
+    if (totalStock <= 0) {
+      return [];
+    }
     if (!selectedSize) {
-      return product.colors;
+      const inStockColors = extractColors(product.sizes);
+      return inStockColors.length > 0 ? inStockColors : product.colors;
     }
-    const colorsForSize = getAvailableColorsForSize(product.sizes, selectedSize);
-    if (colorsForSize.length === 0) {
-      return product.colors;
-    }
-    return colorsForSize;
-  }, [selectedSize, product.sizes, product.colors]);
+    return getAvailableColorsForSize(product.sizes, selectedSize);
+  }, [selectedSize, product.sizes, product.colors, totalStock]);
 
   const hasColors = availableColors.length > 0;
 
   // When a size is selected, look up variant price and notify parent
   const handleSizeSelect = (size: string) => {
+    if (!hasAvailableSize(product.sizes, size)) return;
+
     setSelectedSize(size);
     setSelectedColor(null);
     setShowError(false);
@@ -73,10 +80,18 @@ export function ProductSelection({ product, onPriceChange }: ProductSelectionPro
   };
 
   const handleAddToCart = () => {
+    if (totalStock <= 0) {
+      setShowError(true);
+      setTimeout(() => setShowError(false), 3000);
+      return;
+    }
+
     const isSizeMissing = hasSizes && !selectedSize;
     const isColorMissing = hasColors && !selectedColor;
+    const isVariantUnavailable =
+      hasSizes && selectedSize ? !hasAvailableVariant(product.sizes, selectedSize, selectedColor) : false;
 
-    if (isSizeMissing || isColorMissing) {
+    if (isSizeMissing || isColorMissing || isVariantUnavailable) {
       setShowError(true);
       setTimeout(() => setShowError(false), 3000);
       return;
@@ -108,8 +123,8 @@ export function ProductSelection({ product, onPriceChange }: ProductSelectionPro
           : `${product.name} has been removed from your wishlist`,
         duration: 2000,
       });
-    } catch (error: any) {
-      const errorMsg = error.message || "Failed to update wishlist";
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : "Failed to update wishlist";
       if (errorMsg.includes("login")) {
         toast({
           title: "Login Required",
@@ -144,10 +159,14 @@ export function ProductSelection({ product, onPriceChange }: ProductSelectionPro
             <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600">
               <Info className="w-5 h-5 shrink-0" />
               <p className="text-xs font-bold uppercase tracking-tight">
-                {hasSizes && !selectedSize && hasColors && !selectedColor
+                {totalStock <= 0
+                  ? "This product is currently out of stock"
+                  : hasSizes && !selectedSize && hasColors && !selectedColor
                   ? "Please select Size and Color"
                   : hasSizes && !selectedSize
                   ? "Please select a Size"
+                  : hasSizes && selectedSize && !hasAvailableVariant(product.sizes, selectedSize, selectedColor)
+                  ? "Selected variant is out of stock"
                   : "Please select a Color"}
               </p>
             </div>
@@ -173,22 +192,14 @@ export function ProductSelection({ product, onPriceChange }: ProductSelectionPro
           <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-5 gap-3">
             {cleanSizes.map((size: string) => {
               const isSelected = selectedSize === size;
-              
-              // Check if this size has any inventory
-              const hasInventory = product.sizes.some((entry: string) => 
-                entry.startsWith(size + "-")
-              );
 
               return (
                 <button
                   key={size}
-                  disabled={!hasInventory}
                   onClick={() => handleSizeSelect(size)}
                   className={cn(
                     "relative group rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-300 overflow-hidden px-3 py-2",
-                    !hasInventory
-                      ? "bg-zinc-50 border-zinc-100 text-zinc-200 cursor-not-allowed"
-                      : isSelected
+                    isSelected
                       ? "bg-zinc-950 border-zinc-950 text-white shadow-xl shadow-zinc-200"
                       : "bg-white border-zinc-100 text-zinc-900 hover:border-zinc-200 active:scale-95"
                   )}
@@ -203,11 +214,6 @@ export function ProductSelection({ product, onPriceChange }: ProductSelectionPro
                       isSelected ? "text-zinc-300" : "text-brand"
                     )}>
                       ₹{product.variantPricing[size].price.toLocaleString("en-IN")}
-                    </span>
-                  )}
-                  {!hasInventory && (
-                    <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="block w-[140%] h-0.5 bg-zinc-200/50 rotate-[35deg]" />
                     </span>
                   )}
                 </button>
@@ -284,10 +290,11 @@ export function ProductSelection({ product, onPriceChange }: ProductSelectionPro
         <div className="flex gap-3">
           <Button
             onClick={handleAddToCart}
+            disabled={totalStock <= 0}
             className="flex-1 h-12 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm tracking-wide shadow-sm transition-all duration-200 active:scale-95 gap-2.5 group"
           >
             <ShoppingBag className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
-            Add to Cart
+            {totalStock <= 0 ? "Out of Stock" : "Add to Cart"}
           </Button>
           <Button
             onClick={handleWishlistClick}
@@ -310,10 +317,11 @@ export function ProductSelection({ product, onPriceChange }: ProductSelectionPro
 
         <Button
           onClick={handleAddToCart}
+          disabled={totalStock <= 0}
           className="w-full h-12 rounded-xl text-white font-bold text-sm tracking-wide transition-all duration-200 active:scale-95"
           style={{ backgroundColor: "#dc2626" }}
         >
-          Buy Now
+          {totalStock <= 0 ? "Out of Stock" : "Buy Now"}
         </Button>
       </div>
     </div>

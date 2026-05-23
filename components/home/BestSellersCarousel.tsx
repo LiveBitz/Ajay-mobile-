@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/context/CartContext";
+import { getTotalStock, requiresVariantSelection } from "@/lib/inventory";
 
 interface Product {
   id: string | number;
@@ -18,6 +19,7 @@ interface Product {
   discount: number;
   image: string;
   stock?: number;
+  sizes?: string[];
   isNew?: boolean;
   isBestSeller?: boolean;
 }
@@ -225,7 +227,9 @@ function BestSellerCard({ product }: { product: Product }) {
   const { toast } = useToast();
   const { addItem } = useCart();
 
-  const isOutOfStock = typeof product.stock === "number" && product.stock <= 0;
+  const hasVariantOptions = requiresVariantSelection(product.sizes);
+  const totalStock = product.sizes?.length ? getTotalStock(product.sizes) : product.stock ?? 0;
+  const isOutOfStock = totalStock <= 0;
   const wishlisted = isWishlisted(String(product.id));
   const savings = product.originalPrice - product.price;
 
@@ -242,8 +246,8 @@ function BestSellerCard({ product }: { product: Product }) {
           : `${product.name} added to your wishlist`,
         duration: 2000,
       });
-    } catch (error: any) {
-      if (error?.message?.includes("login")) {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes("login")) {
         toast({ title: "Login Required", description: "Please login to add items to your wishlist", variant: "destructive", duration: 3000 });
       }
     } finally {
@@ -254,7 +258,7 @@ function BestSellerCard({ product }: { product: Product }) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isOutOfStock) return;
+    if (isOutOfStock || hasVariantOptions) return;
     setIsAddingToCart(true);
     try {
       addItem({ productId: String(product.id), name: product.name, price: product.price, image: product.image });
@@ -396,28 +400,43 @@ function BestSellerCard({ product }: { product: Product }) {
             )}
           </Link>
 
-          {/* Add to Cart */}
-          <button
-            onClick={handleAddToCart}
-            disabled={isOutOfStock || isAddingToCart}
-            className="w-full h-9 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider transition-all duration-200"
-            style={
-              isOutOfStock
-                ? { backgroundColor: "#111111", border: "1px solid #27272a", color: "#52525b", cursor: "not-allowed" }
-                : isAddingToCart
-                ? { backgroundColor: "#dc2626", border: "1px solid #dc2626", color: "#fff" }
-                : hovered
-                ? { backgroundColor: "#dc2626", border: "1px solid #dc2626", color: "#fff" }
-                : { backgroundColor: "#27272a", border: "1px solid #3f3f46", color: "#a1a1aa" }
-            }
-          >
-            <ShoppingBag
-              className={cn("w-3.5 h-3.5", isAddingToCart && "animate-bounce")}
-            />
-            <span>
-              {isOutOfStock ? "Out of Stock" : isAddingToCart ? "Adding..." : "Add to Cart"}
-            </span>
-          </button>
+          {/* Add to Cart / Variant Selection */}
+          {hasVariantOptions && !isOutOfStock ? (
+            <Link
+              href={`/product/${product.slug}`}
+              className="w-full h-9 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider transition-all duration-200"
+              style={
+                hovered
+                  ? { backgroundColor: "#dc2626", border: "1px solid #dc2626", color: "#fff" }
+                  : { backgroundColor: "#27272a", border: "1px solid #3f3f46", color: "#a1a1aa" }
+              }
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+              <span>View Options</span>
+            </Link>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              disabled={isOutOfStock || isAddingToCart}
+              className="w-full h-9 rounded-xl flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider transition-all duration-200"
+              style={
+                isOutOfStock
+                  ? { backgroundColor: "#111111", border: "1px solid #27272a", color: "#52525b", cursor: "not-allowed" }
+                  : isAddingToCart
+                  ? { backgroundColor: "#dc2626", border: "1px solid #dc2626", color: "#fff" }
+                  : hovered
+                  ? { backgroundColor: "#dc2626", border: "1px solid #dc2626", color: "#fff" }
+                  : { backgroundColor: "#27272a", border: "1px solid #3f3f46", color: "#a1a1aa" }
+              }
+            >
+              <ShoppingBag
+                className={cn("w-3.5 h-3.5", isAddingToCart && "animate-bounce")}
+              />
+              <span>
+                {isOutOfStock ? "Out of Stock" : isAddingToCart ? "Adding..." : "Add to Cart"}
+              </span>
+            </button>
+          )}
         </div>
       </div>
     </div>

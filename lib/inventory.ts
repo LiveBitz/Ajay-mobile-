@@ -37,13 +37,25 @@ export const cleanLabel = (str: string): string => {
   return str.split("|#|")[0].split(":")[0].trim();
 };
 
+const splitInventoryEntry = (
+  entry: string
+): { key: string; quantity: number } | null => {
+  if (typeof entry !== "string" || !entry.includes(":")) return null;
+
+  const colonIdx = entry.lastIndexOf(":");
+  const key = entry.slice(0, colonIdx);
+  const quantity = parseInt(entry.slice(colonIdx + 1), 10) || 0;
+
+  return { key, quantity };
+};
+
 /**
  * Extracts base size from inventory entry
  * "S-Purple:5" → "S"
  */
 export const extractBaseSize = (entry: string): string => {
-  if (!entry.includes(":")) return entry;
-  const key = entry.split(":")[0];
+  const parsed = splitInventoryEntry(entry);
+  const key = parsed ? parsed.key : entry;
   const label = key.includes("-") ? key.split("-")[0] : key;
   return cleanLabel(label);
 };
@@ -54,10 +66,21 @@ export const extractBaseSize = (entry: string): string => {
  * "S:10" → null (old format)
  */
 export const extractColor = (entry: string): string | null => {
-  if (!entry.includes(":")) return null;
-  const key = entry.split(":")[0];
-  if (!key.includes("-")) return null; // Old format
-  return key.split("-")[1];
+  const parsed = splitInventoryEntry(entry);
+  if (!parsed) return null;
+
+  const dashIdx = parsed.key.indexOf("-");
+  if (dashIdx === -1) return null; // Old format
+
+  return parsed.key.slice(dashIdx + 1);
+};
+
+export const getInventoryQuantity = (entry: string): number => {
+  return splitInventoryEntry(entry)?.quantity ?? 0;
+};
+
+export const isInventoryEntryInStock = (entry: string): boolean => {
+  return getInventoryQuantity(entry) > 0;
 };
 
 /**
@@ -71,7 +94,7 @@ export const getAvailableColorsForSize = (
   const colors = new Set<string>();
   
   sizes.forEach((entry) => {
-    if (!entry.includes(":")) return;
+    if (!isInventoryEntryInStock(entry)) return;
     
     const baseSize = extractBaseSize(entry);
     if (baseSize !== targetSize) return;
@@ -98,6 +121,18 @@ export const extractBaseSizes = (sizes: string[] = []): string[] => {
   return Array.from(baseSizes);
 };
 
+export const extractAvailableBaseSizes = (sizes: string[] = []): string[] => {
+  const baseSizes = new Set<string>();
+
+  sizes.forEach((entry) => {
+    if (!isInventoryEntryInStock(entry)) return;
+    const baseSize = extractBaseSize(entry);
+    if (baseSize) baseSizes.add(baseSize);
+  });
+
+  return Array.from(baseSizes);
+};
+
 /**
  * Gets all unique colors from inventory entries
  * New format only: ["S-Purple:5", "M-Black:3"] → ["Purple", "Black"]
@@ -106,11 +141,38 @@ export const extractColors = (sizes: string[] = []): string[] => {
   const colors = new Set<string>();
   
   sizes.forEach((entry) => {
+    if (!isInventoryEntryInStock(entry)) return;
     const color = extractColor(entry);
     if (color) colors.add(color);
   });
   
   return Array.from(colors);
+};
+
+export const hasAvailableSize = (sizes: string[], targetSize: string): boolean => {
+  return sizes.some(
+    (entry) => isInventoryEntryInStock(entry) && extractBaseSize(entry) === targetSize
+  );
+};
+
+export const hasAvailableVariant = (
+  sizes: string[],
+  targetSize: string | null,
+  targetColor?: string | null
+): boolean => {
+  if (!targetSize) return false;
+
+  return sizes.some((entry) => {
+    if (!isInventoryEntryInStock(entry)) return false;
+    if (extractBaseSize(entry) !== targetSize) return false;
+
+    const color = extractColor(entry);
+    return !targetColor || !color || color === targetColor;
+  });
+};
+
+export const requiresVariantSelection = (sizes: string[] = []): boolean => {
+  return extractAvailableBaseSizes(sizes).length > 0;
 };
 
 /**
@@ -140,7 +202,7 @@ export const validateInventoryMatrix = (
   const errors: string[] = [];
   
   // Check for negative quantities
-  Object.entries(inventory).forEach(([_, qty]) => {
+  Object.values(inventory).forEach((qty) => {
     if (qty < 0) {
       errors.push("Inventory quantities cannot be negative");
     }

@@ -173,8 +173,13 @@ model Order {
   
   // Status & Payment
   status        String      @default("pending") // pending, confirmed, shipped, delivered, cancelled
-  paymentMethod String      @default("cod") // cod = Cash on Delivery
-  paymentStatus String      @default("pending") // pending, completed
+  paymentMethod String      @default("whatsapp") // whatsapp, pinelabs
+  paymentStatus String      @default("pending")  // pending, paid, failed
+
+  // Pine Labs Plural fields (null for WhatsApp orders)
+  pinelabsOrderId   String?   // PLO-XXXXXX from Pine Labs
+  pinelabsTxnId     String?   // Transaction ID after payment
+  pinelabsCheckoutUrl String? // Stored so retries return the same URL
   
   // Timestamps
   createdAt     DateTime    @default(now())

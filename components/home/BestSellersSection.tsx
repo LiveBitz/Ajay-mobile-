@@ -17,6 +17,8 @@ async function getBestSellers() {
       originalPrice: true,
       discount: true,
       image: true,
+      stock: true,
+      sizes: true,
       isNew: true,
       isBestSeller: true,
     },
