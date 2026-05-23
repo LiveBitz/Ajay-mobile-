@@ -36,6 +36,13 @@ interface BankOffer {
   description: string;
 }
 
+const OFFER_BANK_COLORS: Record<string, string> = {
+  "HDFC Bank": "#004C9A", "SBI": "#22409A", "ICICI Bank": "#F26522",
+  "Axis Bank": "#800080", "Kotak Mahindra Bank": "#EE3124", "Yes Bank": "#00305B",
+  "IndusInd Bank": "#E31837", "IDFC First Bank": "#005DA0", "Bank of Baroda": "#F26C00",
+  "Punjab National Bank": "#1B4B9B", "BHIM": "#3C6EB4", "Other": "#71717a",
+};
+
 function calculateOfferDiscount(offer: BankOffer, subtotal: number) {
   if (subtotal < offer.minOrderAmount) return 0;
   const rawDiscount =
@@ -409,54 +416,73 @@ export default function CheckoutPage() {
 
             {paymentMethod === "pinelabs" && eligibleOffers.length > 0 && (
               <div className="ck-card">
-                <div className="ck-card-header">
-                  <div className="ck-card-icon-wrap">
-                    <Tag className="ck-card-icon" />
+                {/* Header */}
+                <div className="ck-offer-header">
+                  <div className="ck-offer-header-left">
+                    <div className="ck-offer-header-icon">
+                      <Tag className="w-3.5 h-3.5 text-red-500" />
+                    </div>
+                    <div>
+                      <p className="ck-offer-header-label">Bank Offers</p>
+                      <p className="ck-offer-header-sub">Select one offer to apply at checkout</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="ck-card-title">Bank Offers</h2>
-                    <p className="ck-card-sub">Select one offer to apply at checkout</p>
-                  </div>
+                  <span className="ck-offer-count">{eligibleOffers.length} available</span>
                 </div>
 
                 <div className="ck-offer-list">
+                  {/* No offer row */}
                   <button
                     type="button"
                     onClick={() => setSelectedOfferId(null)}
                     className={cn("ck-offer-btn", !selectedOfferId && "ck-offer-btn-active")}
                   >
-                    <div className="ck-offer-radio">
+                    <div className={cn("ck-offer-radio", !selectedOfferId && "ck-offer-radio-active")}>
                       {!selectedOfferId && <div className="ck-offer-radio-dot" />}
                     </div>
+                    <div className="ck-offer-badge ck-offer-badge-none">—</div>
                     <div className="ck-offer-copy">
                       <p className="ck-offer-title">No bank offer</p>
                       <p className="ck-offer-sub">Pay the standard online amount</p>
                     </div>
                   </button>
 
-                  {eligibleOffers.map((offer) => (
-                    <button
-                      type="button"
-                      key={offer.id}
-                      onClick={() => setSelectedOfferId(offer.id)}
-                      className={cn("ck-offer-btn", selectedOfferId === offer.id && "ck-offer-btn-active")}
-                    >
-                      <div className="ck-offer-radio">
-                        {selectedOfferId === offer.id && <div className="ck-offer-radio-dot" />}
-                      </div>
-                      <div className="ck-offer-copy">
-                        <div className="ck-offer-title-row">
-                          <p className="ck-offer-title">{formatOfferValue(offer)}</p>
-                          <span className="ck-offer-save">Save ₹{offer.discountAmount.toLocaleString("en-IN")}</span>
+                  {eligibleOffers.map((offer) => {
+                    const isActive = selectedOfferId === offer.id;
+                    const color = OFFER_BANK_COLORS[offer.bankName] ?? "#71717a";
+                    const initials = offer.bankName === "BHIM" ? "UPI"
+                      : offer.bankName.replace(" Bank","").split(" ").length > 1
+                        ? (offer.bankName.replace(" Bank","").split(" ")[0][0] + offer.bankName.replace(" Bank","").split(" ")[1][0]).toUpperCase()
+                        : offer.bankName.slice(0,2).toUpperCase();
+                    return (
+                      <button
+                        type="button"
+                        key={offer.id}
+                        onClick={() => setSelectedOfferId(offer.id)}
+                        className={cn("ck-offer-btn", isActive && "ck-offer-btn-active")}
+                      >
+                        <div className={cn("ck-offer-radio", isActive && "ck-offer-radio-active")}>
+                          {isActive && <div className="ck-offer-radio-dot" />}
                         </div>
-                        <p className="ck-offer-sub">
-                          {offer.bankName} · {offer.cardType}
-                          {offer.minOrderAmount > 0 ? ` · Min ₹${offer.minOrderAmount.toLocaleString("en-IN")}` : ""}
-                        </p>
-                        {offer.description && <p className="ck-offer-desc">{offer.description}</p>}
-                      </div>
-                    </button>
-                  ))}
+                        <div
+                          className="ck-offer-badge"
+                          style={{ backgroundColor: color }}
+                        >
+                          {initials}
+                        </div>
+                        <div className="ck-offer-copy">
+                          <div className="ck-offer-title-row">
+                            <p className="ck-offer-title">{formatOfferValue(offer)}</p>
+                            <span className="ck-offer-save">Save ₹{offer.discountAmount.toLocaleString("en-IN")}</span>
+                          </div>
+                          <p className="ck-offer-sub">
+                            {offer.bankName} · {offer.cardType}
+                            {offer.minOrderAmount > 0 ? ` · Min ₹${offer.minOrderAmount.toLocaleString("en-IN")}` : ""}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -563,14 +589,17 @@ export default function CheckoutPage() {
         .ck-root {
           min-height: 100vh;
           background: #f8f8f8;
-          padding-top: 0;
+          padding-top: 32px;
+        }
+        @media (min-width: 768px) {
+          .ck-root { padding-top: 0; }
         }
 
         /* ── Header ── */
         .ck-header {
           position: sticky;
           top: 0;
-          z-index: 40;
+          z-index: 50;
           background: rgba(255,255,255,0.95);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
@@ -853,53 +882,78 @@ export default function CheckoutPage() {
         .ck-payment-radio-dot { width: 8px; height: 8px; border-radius: 50%; background: #09090b; }
 
         /* ── Offers ── */
+        /* ── Bank Offer header ── */
+        .ck-offer-header {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 14px 16px 12px; border-bottom: 1px solid #f4f4f5;
+        }
+        @media (min-width: 640px) { .ck-offer-header { padding: 16px 20px 14px; } }
+        .ck-offer-header-left { display: flex; align-items: center; gap: 10px; }
+        .ck-offer-header-icon {
+          width: 30px; height: 30px; border-radius: 10px;
+          background: #fff0f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .ck-offer-header-label { font-size: 13px; font-weight: 900; color: #09090b; line-height: 1.2; }
+        .ck-offer-header-sub { font-size: 11px; color: #a1a1aa; font-weight: 500; margin-top: 1px; }
+        .ck-offer-count {
+          font-size: 10px; font-weight: 700; color: #71717a;
+          background: #f4f4f5; border: 1px solid #e4e4e7;
+          border-radius: 999px; padding: 3px 9px; white-space: nowrap;
+        }
+
+        /* ── Offer list ── */
         .ck-offer-list {
-          padding: 14px 16px 18px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
+          padding: 10px 12px 14px;
+          display: flex; flex-direction: column; gap: 6px;
         }
-        @media (min-width: 640px) {
-          .ck-offer-list { padding: 16px 24px 20px; }
-        }
+        @media (min-width: 640px) { .ck-offer-list { padding: 12px 16px 16px; } }
+
         .ck-offer-btn {
-          width: 100%;
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          padding: 14px 16px;
-          border-radius: 12px;
-          border: 1.5px solid #f0f0f0;
-          background: #fafafa;
-          text-align: left;
-          cursor: pointer;
-          transition: all 0.16s ease;
+          width: 100%; display: flex; align-items: center; gap: 10px;
+          padding: 11px 13px; border-radius: 12px;
+          border: 1.5px solid #f0f0f0; background: #fafafa;
+          text-align: left; cursor: pointer;
+          transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
         }
-        .ck-offer-btn:hover { border-color: #e4e4e7; }
-        .ck-offer-btn-active { border-color: #09090b !important; background: #ffffff !important; }
+        .ck-offer-btn:hover { border-color: #e4e4e7; background: #f9f9f9; }
+        .ck-offer-btn-active {
+          border-color: #dc2626 !important; background: #fff8f8 !important;
+          box-shadow: 0 0 0 3px rgba(220,38,38,0.07);
+        }
+
+        /* Radio */
         .ck-offer-radio {
-          width: 18px; height: 18px;
-          border-radius: 50%;
+          width: 17px; height: 17px; border-radius: 50%;
           border: 2px solid #d4d4d8;
           display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-          margin-top: 2px;
+          flex-shrink: 0; transition: border-color 0.15s;
         }
-        .ck-offer-btn-active .ck-offer-radio { border-color: #09090b; }
-        .ck-offer-radio-dot { width: 8px; height: 8px; border-radius: 50%; background: #09090b; }
+        .ck-offer-radio-active { border-color: #dc2626 !important; }
+        .ck-offer-radio-dot { width: 7px; height: 7px; border-radius: 50%; background: #dc2626; }
+
+        /* Bank badge */
+        .ck-offer-badge {
+          width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 10px; font-weight: 900; color: #fff; letter-spacing: 0.03em;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+        .ck-offer-badge-none {
+          background: #f4f4f5 !important; color: #a1a1aa;
+          font-size: 13px; font-weight: 700; box-shadow: none;
+        }
+
+        /* Copy */
         .ck-offer-copy { flex: 1; min-width: 0; }
         .ck-offer-title-row {
-          display: flex; align-items: center; justify-content: space-between;
-          gap: 8px;
+          display: flex; align-items: center; justify-content: space-between; gap: 8px;
         }
         .ck-offer-title { font-size: 13px; font-weight: 800; color: #09090b; line-height: 1.25; }
-        .ck-offer-sub { font-size: 11px; color: #71717a; font-weight: 600; margin-top: 2px; line-height: 1.35; }
-        .ck-offer-desc { font-size: 10px; color: #a1a1aa; font-weight: 500; margin-top: 2px; line-height: 1.35; }
+        .ck-offer-sub { font-size: 11px; color: #a1a1aa; font-weight: 500; margin-top: 2px; line-height: 1.3; }
         .ck-offer-save {
-          font-size: 10px; font-weight: 900;
-          color: #047857; background: #ecfdf5;
-          border-radius: 999px; padding: 3px 7px;
-          white-space: nowrap;
+          font-size: 10px; font-weight: 900; white-space: nowrap;
+          color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0;
+          border-radius: 999px; padding: 2px 8px;
         }
 
         /* ── Summary ── */
