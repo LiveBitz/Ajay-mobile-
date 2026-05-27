@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Truck, MapPin, Package, MessageCircle, AlertCircle } from "lucide-react";
+import { CheckCircle, MapPin, MessageCircle, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
@@ -59,7 +59,7 @@ export default function OrderConfirmationPage() {
   const { toast } = useToast();
 
   // Fetch order function
-  const fetchOrder = async (showError = false) => {
+  const fetchOrder = useCallback(async (showError = false) => {
     try {
       const supabase = createClient();
       const { data: userData, error: userError } =
@@ -89,9 +89,9 @@ export default function OrderConfirmationPage() {
       setError(null);
 
       // Stop polling if order is no longer pending
-      if (data.paymentStatus === "completed" || data.status === "confirmed") {
+      if (data.paymentStatus === "paid" || data.paymentStatus === "failed" || data.status === "confirmed") {
         setPollingActive(false);
-        if (data.paymentStatus === "completed") {
+        if (data.paymentStatus === "paid") {
           toast({
             title: "Order Confirmed!",
             description: "Your order has been confirmed by our team.",
@@ -99,21 +99,21 @@ export default function OrderConfirmationPage() {
           });
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (showError) {
-        setError(err.message || "Failed to load order");
+        setError((err as Error).message || "Failed to load order");
       }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orderId, router, toast]);
 
   // Initial fetch on mount
   useEffect(() => {
     if (orderId) {
       fetchOrder(true);
     }
-  }, [orderId, router]);
+  }, [orderId, fetchOrder]);
 
   // Real-time polling for order updates
   useEffect(() => {
@@ -124,7 +124,7 @@ export default function OrderConfirmationPage() {
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);
-  }, [orderId, pollingActive]);
+  }, [orderId, pollingActive, fetchOrder]);
 
   const handleResendWhatsApp = async () => {
     if (!order) return;
@@ -167,10 +167,10 @@ export default function OrderConfirmationPage() {
       setTimeout(() => {
         redirectToWhatsApp(adminPhone, orderDetails);
       }, 500);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
-        description: error.message || "Failed to open WhatsApp",
+        description: (error as Error).message || "Failed to open WhatsApp",
         variant: "destructive",
       });
     } finally {
@@ -382,7 +382,7 @@ export default function OrderConfirmationPage() {
                     {isResending ? "Opening..." : "Send Order on WhatsApp"}
                   </Button>
                   <p className="text-xs text-green-700 mt-2">
-                    ⚠️ If you didn't send the message yet, please click above. If you already sent it, you can proceed to continue shopping.
+                    ⚠️ If you didn&apos;t send the message yet, please click above. If you already sent it, you can proceed to continue shopping.
                   </p>
                 </div>
               </div>
@@ -391,8 +391,8 @@ export default function OrderConfirmationPage() {
         )}
 
         {/* Confirmation Message - Show when order is confirmed */}
-        {order.paymentMethod === "whatsapp" && 
-         order.paymentStatus === "completed" && (
+        {order.paymentMethod === "whatsapp" &&
+         order.paymentStatus === "paid" && (
           <Card className="p-6 border-2 border-green-200 rounded-2xl mb-8 bg-green-50 animate-in fade-in slide-in-from-bottom-4">
             <div className="flex gap-4">
               <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />

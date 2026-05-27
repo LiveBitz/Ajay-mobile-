@@ -32,7 +32,7 @@ export async function PATCH(
       );
     }
 
-    const validPaymentStatuses = ["pending", "completed", "rejected"];
+    const validPaymentStatuses = ["pending", "paid", "failed"];
     if (paymentStatus && !validPaymentStatuses.includes(paymentStatus)) {
       return NextResponse.json(
         { error: "Invalid payment status" },
@@ -105,9 +105,9 @@ export async function PATCH(
     });
 
     return NextResponse.json(order);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating order:", error);
-    if (error.code === "P2025") {
+    if ((error as { code?: string }).code === "P2025") {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
     return NextResponse.json(
