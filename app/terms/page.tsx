@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions",
-  description: "Terms and Conditions for Priya Mobile Park — Jaipur's trusted mobile store.",
+  description: "Terms and Conditions for Priya Mobile Park — India's trusted mobile store.",
 };
 
 export default function TermsAndConditions() {

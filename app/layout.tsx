@@ -24,23 +24,23 @@ const siteUrl = "https://www.priyamobilepark.com";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Priya Mobile Park | Best Smartphones & Mobile Phones in Jaipur",
+    default: "Priya Mobile Park | Best Smartphones & Mobile Phones in India",
     template: "%s | Priya Mobile Park",
   },
   description:
-    "Buy latest smartphones, iPhones, Samsung Galaxy, OnePlus & accessories at best prices. Genuine products, fast delivery & easy returns. Priya Mobile Park — Jaipur's trusted mobile store.",
+    "Buy latest smartphones, iPhones, Samsung Galaxy, OnePlus & accessories at best prices. Genuine products, fast delivery & easy returns. Priya Mobile Park — India's trusted mobile store.",
   keywords: [
     "Priya Mobile Park",
-    "buy smartphones Jaipur",
-    "mobile phones Jaipur",
-    "iPhone price Jaipur",
-    "Samsung Galaxy Jaipur",
+    "buy smartphones online India",
+    "mobile phones India",
+    "iPhone price India",
+    "Samsung Galaxy India",
     "OnePlus phones",
-    "best mobile shop Jaipur",
-    "smartphone store Rajasthan",
+    "best mobile shop India",
+    "smartphone store India",
     "buy phone online India",
     "Apple iPhone India",
-    "mobile accessories Jaipur",
+    "mobile accessories India",
     "priyamobilepark.com",
   ],
   authors: [{ name: "Priya Mobile Park", url: siteUrl }],
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: siteUrl,
     siteName: "Priya Mobile Park",
-    title: "Priya Mobile Park | Best Smartphones & Mobile Phones in Jaipur",
+    title: "Priya Mobile Park | Best Smartphones & Mobile Phones in India",
     description:
       "Buy latest smartphones, iPhones, Samsung Galaxy, OnePlus & accessories at best prices. Genuine products, fast delivery & easy returns.",
     images: [
@@ -74,9 +74,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Priya Mobile Park | Best Smartphones in Jaipur",
+    title: "Priya Mobile Park | Best Smartphones in India",
     description:
-      "Buy latest smartphones at best prices. Genuine products, fast delivery & easy returns. Jaipur's trusted mobile store.",
+      "Buy latest smartphones at best prices. Genuine products, fast delivery & easy returns. India's trusted mobile store.",
     images: ["/images/cropped_circle_image.png"],
   },
   robots: {
