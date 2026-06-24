@@ -196,9 +196,7 @@ export async function Footer() {
           </div>
           <p className="text-xs text-zinc-500 text-center sm:text-right">
             Built by{" "}
-            <span className="text-zinc-300 font-semibold">Himanshu Meena</span>{" "}
-            &{" "}
-            <span className="text-zinc-300 font-semibold">Ashibur Rehman</span>
+            <span className="text-zinc-300 font-semibold">Scalisite</span>
           </p>
         </div>
       </div>

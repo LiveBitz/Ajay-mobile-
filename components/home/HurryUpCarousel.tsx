@@ -1,49 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Zap, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Zap, ChevronLeft, ChevronRight } from "lucide-react";
 import { HurryUpProductCard } from "./HurryUpProductCard";
 
 interface HurryUpCarouselProps {
   products: any[];
 }
 
-function useCountdown(hours = 23, minutes = 59, seconds = 45) {
-  const [time, setTime] = useState({ h: hours, m: minutes, s: seconds });
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime((prev) => {
-        if (prev.s > 0) return { ...prev, s: prev.s - 1 };
-        if (prev.m > 0) return { ...prev, m: prev.m - 1, s: 59 };
-        if (prev.h > 0) return { h: prev.h - 1, m: 59, s: 59 };
-        return { h: 0, m: 0, s: 0 };
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-  return time;
-}
-
-function TimerBlock({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="flex flex-col items-center">
-      <div
-        className="timer-block-box flex items-center justify-center rounded-lg"
-        style={{ backgroundColor: "#1c1c1c", border: "1px solid #3f3f46" }}
-      >
-        <span className="timer-block-num font-black text-white tabular-nums leading-none">
-          {String(value).padStart(2, "0")}
-        </span>
-      </div>
-      <span className="text-[9px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">
-        {label}
-      </span>
-    </div>
-  );
-}
-
 export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
-  const countdown = useCountdown(23, 59, 45);
   const carouselRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
   const draggedRef = useRef(false);
@@ -145,9 +110,9 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
           </div>
 
           <h2 className="hurryup-title font-black text-white leading-[0.95] tracking-tight mb-2">
-            Up to{" "}
+            Unbeatable{" "}
             <span className="relative inline-block">
-              <span className="text-red-500">40% OFF</span>
+              <span className="text-red-500">Deals</span>
               <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-red-500/40 rounded-full" />
             </span>
             <br />
@@ -157,29 +122,12 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
           </h2>
 
           <p className="text-zinc-500 text-[11px] md:text-xs font-medium">
-            While stock lasts · Limited time only
+            Priya Mobile Park · While stock lasts
           </p>
         </div>
 
-        {/* Right: Countdown + Nav */}
+        {/* Right: Nav (desktop only) */}
         <div className="hurryup-right">
-          {/* Timer */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <Clock className="w-3 h-3 text-zinc-500" />
-              <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-                Ends in
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <TimerBlock value={countdown.h} label="Hrs" />
-              <span className="text-zinc-500 font-black text-lg mb-4">:</span>
-              <TimerBlock value={countdown.m} label="Min" />
-              <span className="text-zinc-500 font-black text-lg mb-4">:</span>
-              <TimerBlock value={countdown.s} label="Sec" />
-            </div>
-          </div>
-
           {/* Desktop nav arrows */}
           <div className="hidden lg:flex items-center gap-2">
             <button
@@ -238,14 +186,12 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
 
     </div>
     <style>{`
-      .hurryup-header { display: flex; flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
+      .hurryup-header { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
       @media (min-width: 1024px) { .hurryup-header { align-items: flex-end; gap: 24px; margin-bottom: 28px; } }
       .hurryup-right { display: flex; flex-direction: column; align-items: flex-end; gap: 16px; flex-shrink: 0; }
       @media (min-width: 1024px) { .hurryup-right { gap: 16px; } }
       .hurryup-title { font-size: clamp(22px, 4.5vw, 52px); }
       .hurryup-subtitle { font-size: clamp(14px, 2.8vw, 34px); }
-      .timer-block-box { width: clamp(38px, 5vw, 52px); height: clamp(38px, 5vw, 52px); }
-      .timer-block-num { font-size: clamp(15px, 2.2vw, 22px); }
       .hurryup-carousel { display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 10px; padding-bottom: 10px; scroll-behavior: smooth; touch-action: manipulation; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; cursor: grab; user-select: none; }
       .hurryup-carousel:active { cursor: grabbing; }
       .hurryup-carousel::-webkit-scrollbar { display: none; }

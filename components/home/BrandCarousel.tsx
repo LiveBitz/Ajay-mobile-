@@ -149,7 +149,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
               Shop by Brand
             </h2>
             <p className="text-[11px] md:text-xs font-medium mt-1 text-zinc-400">
-              Genuine products · Best prices · Warranty included
+              Genuine products at Priya Mobile Park · Warranty included
             </p>
           </div>
 

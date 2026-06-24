@@ -3,6 +3,7 @@
 import { useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Flame } from "lucide-react";
 import { Banner } from "@prisma/client";
 import { getBannerLinkTag, normalizeBannerLink } from "@/lib/banner-link";
 
@@ -84,7 +85,7 @@ export function HeroSubBanners({
 
           {/* Heading */}
           <div className="flex items-center gap-2 mb-3 md:mb-4">
-            <div className="w-4 h-0.5 rounded-full bg-red-600" />
+            <Flame className="w-4 h-4 text-red-600 fill-red-600/20" />
             <p className="text-[11px] md:text-xs uppercase tracking-[0.16em] font-bold text-zinc-400">
               {heading}
             </p>

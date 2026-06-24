@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Heart, ShoppingBag, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, ShoppingBag, Zap, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import { useToast } from "@/hooks/use-toast";
@@ -139,7 +139,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
           <div>
             {/* Eyebrow */}
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-5 h-0.5 rounded-full" style={{ backgroundColor: "#dc2626" }} />
+              <Flame className="w-4 h-4 fill-red-600/20" style={{ color: "#dc2626" }} />
               <span className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: "#dc2626" }}>
                 Trending Now
               </span>
@@ -151,7 +151,7 @@ export function BestSellersCarousel({ products }: BestSellersCarouselProps) {
               Best Selling Phones
             </h2>
             <p className="text-xs md:text-sm font-medium mt-1.5" style={{ color: "#71717a" }}>
-              The most loved devices this season
+              Priya Mobile Park&apos;s most-loved devices this season
             </p>
           </div>
 

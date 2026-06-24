@@ -35,7 +35,7 @@ export async function NewArrivals() {
     Latest Launches
   </h2>
   <p className="text-[12px] md:text-xs text-zinc-400 font-medium max-w-[260px] leading-relaxed">
-    Newest smartphone releases with cutting-edge technology
+    Newest smartphone releases, handpicked by Priya Mobile Park
   </p>
 </div>
 
