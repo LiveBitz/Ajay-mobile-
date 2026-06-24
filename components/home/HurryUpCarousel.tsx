@@ -238,10 +238,10 @@ export function HurryUpCarousel({ products }: HurryUpCarouselProps) {
 
     </div>
     <style>{`
-      .hurryup-header { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
-      @media (min-width: 1024px) { .hurryup-header { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; } }
-      .hurryup-right { display: flex; flex-direction: row; align-items: flex-end; gap: 20px; }
-      @media (min-width: 1024px) { .hurryup-right { flex-direction: column; align-items: flex-end; gap: 16px; } }
+      .hurryup-header { display: flex; flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
+      @media (min-width: 1024px) { .hurryup-header { align-items: flex-end; gap: 24px; margin-bottom: 28px; } }
+      .hurryup-right { display: flex; flex-direction: column; align-items: flex-end; gap: 16px; flex-shrink: 0; }
+      @media (min-width: 1024px) { .hurryup-right { gap: 16px; } }
       .hurryup-title { font-size: clamp(22px, 4.5vw, 52px); }
       .hurryup-subtitle { font-size: clamp(14px, 2.8vw, 34px); }
       .timer-block-box { width: clamp(38px, 5vw, 52px); height: clamp(38px, 5vw, 52px); }
