@@ -97,15 +97,21 @@ export function ProductSelection({ product, onPriceChange }: ProductSelectionPro
       return;
     }
 
+    // Use the selected variant's price, not the base product price.
+    const variantPrice =
+      selectedSize && product.variantPricing?.[selectedSize]
+        ? product.variantPricing[selectedSize].price
+        : product.price;
+
     addItem({
       productId: product.id,
       name: product.name,
-      price: product.price,
+      price: variantPrice,
       image: product.image,
       size: selectedSize || undefined,
       color: selectedColor || undefined,
     });
-    
+
     setShowError(false);
   };
 

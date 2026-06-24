@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
     const productsMap = new Map(
       (await prisma.product.findMany({
         where: { id: { in: productIds } },
-        select: { id: true, name: true, price: true, sizes: true, stock: true }
+        select: { id: true, name: true, price: true, sizes: true, stock: true, variantPricing: true }
       })).map(p => [p.id, p])
     );
 
@@ -261,13 +261,24 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const itemTotal = product.price * item.quantity;
+      // Resolve the variant-specific price (e.g. "12 GB | 256 GB") if set,
+      // otherwise fall back to the base product price. The server is the
+      // source of truth for what the customer is charged.
+      let unitPrice = product.price;
+      if (item.size && product.variantPricing && typeof product.variantPricing === "object") {
+        const vp = (product.variantPricing as Record<string, { price?: number }>)[item.size];
+        if (vp && typeof vp.price === "number" && vp.price > 0) {
+          unitPrice = vp.price;
+        }
+      }
+
+      const itemTotal = unitPrice * item.quantity;
       subtotal += itemTotal;
 
       orderItems.push({
         productId: item.productId,
         quantity: item.quantity,
-        price: product.price,
+        price: unitPrice,
         size: item.size || null,
         color: item.color || null,
       });
