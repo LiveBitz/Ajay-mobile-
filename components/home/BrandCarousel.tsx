@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flame } from "lucide-react";
 import { Category } from "@prisma/client";
 
 interface BrandCarouselProps {
@@ -140,7 +140,7 @@ export function BrandCarousel({ categories }: BrandCarouselProps) {
         <div className="flex items-end justify-between gap-4 mb-5 md:mb-7">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-4 h-0.5 rounded-full bg-red-600" />
+              <Flame className="w-4 h-4 text-red-600 fill-red-600/20" />
               <span className="text-[11px] md:text-xs font-bold uppercase tracking-[0.18em] text-red-600">
                 Official Stores
               </span>
