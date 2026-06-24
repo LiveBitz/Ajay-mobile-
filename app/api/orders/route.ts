@@ -387,6 +387,7 @@ export async function POST(request: NextRequest) {
           paymentMethod: paymentMethod,
           paymentStatus: "pending",
           status: "pending",
+          couponCodeId: appliedCouponId,
           items: {
             create: orderItems,
           },
@@ -400,18 +401,17 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // For Pine Labs orders, stock is deducted on payment confirmation (webhook/status).
-      // For WhatsApp/COD orders, deduct immediately since there's no async payment step.
+      // For Pine Labs orders, stock is deducted AND the coupon is consumed on
+      // payment confirmation (webhook/status). For WhatsApp/COD there is no async
+      // payment step, so deduct stock and consume the coupon immediately.
       if (paymentMethod !== "pinelabs") {
         await deductStock(tx, createdOrder.items);
-      }
-
-      // Mark coupon as used atomically with the order
-      if (appliedCouponId) {
-        await tx.couponCode.update({
-          where: { id: appliedCouponId },
-          data: { usedAt: new Date(), usedByOrderId: createdOrder.id },
-        });
+        if (appliedCouponId) {
+          await tx.couponCode.update({
+            where: { id: appliedCouponId },
+            data: { usedAt: new Date(), usedByOrderId: createdOrder.id },
+          });
+        }
       }
 
       return createdOrder;

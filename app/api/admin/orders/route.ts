@@ -17,8 +17,18 @@ export async function GET(request: NextRequest) {
 
     const take = pageSize;
     const skip = (page - 1) * pageSize;
-    
+
+    // Hide Pine Labs orders that haven't completed payment.
+    // A Pine Labs order is created in the DB *before* the customer pays, so
+    // abandoned/cancelled checkouts would otherwise linger as "pending" ghosts.
+    // WhatsApp/COD orders are paid offline, so they stay visible while pending.
     const orders = await prisma.order.findMany({
+      where: {
+        NOT: {
+          paymentMethod: "pinelabs",
+          paymentStatus: { in: ["pending", "failed"] },
+        },
+      },
       select: {
         id: true,
         orderNumber: true,

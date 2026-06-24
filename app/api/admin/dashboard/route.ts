@@ -3,6 +3,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { addCacheHeaders, CACHE_STRATEGIES } from "@/lib/cache-headers";
 import { verifyAdminRequest } from "@/lib/admin-auth";
 
+// Exclude Pine Labs orders that never completed payment (abandoned/cancelled
+// checkouts created in the DB before redirect). These would otherwise inflate
+// revenue and order counts. WhatsApp/COD orders are paid offline, so they stay.
+const PAID_ORDER_FILTER = {
+  NOT: {
+    paymentMethod: "pinelabs",
+    paymentStatus: { in: ["pending", "failed"] },
+  },
+};
+
 export async function GET(req: NextRequest) {
   try {
     const auth = await verifyAdminRequest(req);
@@ -71,6 +81,7 @@ export async function GET(req: NextRequest) {
         id: true,
       },
       where: {
+        ...PAID_ORDER_FILTER,
         createdAt: {
           gte: firstDay,
           lte: lastDay,
@@ -87,6 +98,7 @@ export async function GET(req: NextRequest) {
         total: true,
       },
       where: {
+        ...PAID_ORDER_FILTER,
         createdAt: {
           gte: firstDay,
           lte: lastDay,
@@ -204,6 +216,7 @@ export async function GET(req: NextRequest) {
     const recentOrders = await prisma.order.findMany({
       take: 5,
       orderBy: { createdAt: "desc" },
+      where: PAID_ORDER_FILTER,
       select: {
         id: true,
         orderNumber: true,
@@ -220,6 +233,7 @@ export async function GET(req: NextRequest) {
         id: true,
       },
       where: {
+        ...PAID_ORDER_FILTER,
         createdAt: {
           gte: firstDay,
           lte: lastDay,

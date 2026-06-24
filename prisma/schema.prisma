@@ -176,6 +176,9 @@ model Order {
   paymentMethod String      @default("whatsapp") // whatsapp, pinelabs
   paymentStatus String      @default("pending")  // pending, paid, failed
 
+  // Coupon applied to this order (consumed at payment confirmation for Pine Labs)
+  couponCodeId  String?
+
   // Pine Labs Plural fields (null for WhatsApp orders)
   pinelabsOrderId   String?   // PLO-XXXXXX from Pine Labs
   pinelabsTxnId     String?   // Transaction ID after payment

@@ -63,6 +63,14 @@ export async function confirmPaidOrder({
     });
   }
 
+  // Consume the coupon now that payment is confirmed (one-time use).
+  if (order.couponCodeId) {
+    await tx.couponCode.updateMany({
+      where: { id: order.couponCodeId, usedAt: null },
+      data: { usedAt: new Date(), usedByOrderId: orderId },
+    });
+  }
+
   const products = await tx.orderItem.findMany({
     where: { orderId },
     select: {
