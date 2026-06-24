@@ -43,6 +43,7 @@ const createOrderSchema = z.object({
   contactInfo:   contactInfoSchema,
   paymentMethod: z.enum(["whatsapp", "cod", "online", "pinelabs"]).default("whatsapp"),
   bankOfferId:   z.string().min(1).optional().nullable(),
+  couponCode:    z.string().max(30).optional().nullable(),
 });
 
 export async function GET(request: NextRequest) {
@@ -213,7 +214,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
 
-    const { items, address, contactInfo, paymentMethod, bankOfferId } = body;
+    const { items, address, contactInfo, paymentMethod, bankOfferId, couponCode } = body;
 
     // Calculate totals and validate products
     // Phase 7: Batch fetch all products instead of N+1 loop
@@ -274,6 +275,38 @@ export async function POST(request: NextRequest) {
 
     let discount = 0;
     let appliedOfferLabel: string | null = null;
+    let appliedCouponId: string | null = null;
+
+    // ── Coupon code discount (any payment method) ──
+    if (couponCode) {
+      const coupon = await prisma.couponCode.findUnique({
+        where: { code: couponCode.trim().toUpperCase() },
+      });
+
+      if (!coupon || !coupon.isActive || coupon.usedAt) {
+        return NextResponse.json({ error: "Coupon code is invalid or has already been used." }, { status: 400 });
+      }
+      if (coupon.expiresAt && new Date() > coupon.expiresAt) {
+        return NextResponse.json({ error: "This coupon code has expired." }, { status: 400 });
+      }
+      if (subtotal < coupon.minOrderAmount) {
+        return NextResponse.json(
+          { error: `Minimum order amount of ₹${coupon.minOrderAmount.toLocaleString("en-IN")} required for this coupon.` },
+          { status: 400 }
+        );
+      }
+
+      let couponDiscount = 0;
+      if (coupon.discountType === "flat") {
+        couponDiscount = coupon.discountValue;
+      } else {
+        const raw = (subtotal * coupon.discountValue) / 100;
+        couponDiscount = coupon.maxDiscount ? Math.min(raw, coupon.maxDiscount) : raw;
+      }
+      discount += Math.round(Math.max(0, Math.min(subtotal, couponDiscount)));
+      appliedCouponId = coupon.id;
+      appliedOfferLabel = `Coupon ${coupon.code}`;
+    }
 
     if (paymentMethod === "pinelabs" && bankOfferId) {
       const now = new Date();
@@ -371,6 +404,14 @@ export async function POST(request: NextRequest) {
       // For WhatsApp/COD orders, deduct immediately since there's no async payment step.
       if (paymentMethod !== "pinelabs") {
         await deductStock(tx, createdOrder.items);
+      }
+
+      // Mark coupon as used atomically with the order
+      if (appliedCouponId) {
+        await tx.couponCode.update({
+          where: { id: appliedCouponId },
+          data: { usedAt: new Date(), usedByOrderId: createdOrder.id },
+        });
       }
 
       return createdOrder;

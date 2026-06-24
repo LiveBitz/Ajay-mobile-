@@ -72,6 +72,12 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"whatsapp" | "pinelabs">("pinelabs");
   const [offers, setOffers] = useState<BankOffer[]>([]);
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
+
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("");
+  const [couponApplied, setCouponApplied] = useState<{ id: string; code: string; discount: number } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState("");
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showManualEntry, setShowManualEntry] = useState(false);
@@ -131,9 +137,41 @@ export default function CheckoutPage() {
 
   const selectedOffer =
     eligibleOffers.find((offer) => offer.id === selectedOfferId) ?? null;
-  const discountAmount =
+  const bankDiscount =
     paymentMethod === "pinelabs" && selectedOffer ? selectedOffer.discountAmount : 0;
+  const couponDiscount = couponApplied ? couponApplied.discount : 0;
+  const discountAmount = bankDiscount + couponDiscount;
   const payableTotal = Math.max(0, totalPrice - discountAmount);
+
+  async function applyCoupon() {
+    if (!couponInput.trim()) return;
+    setCouponError("");
+    setCouponLoading(true);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponInput.trim(), subtotal: totalPrice }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setCouponError(data.error || "Invalid coupon."); }
+      else {
+        setCouponApplied({ id: data.id, code: data.code, discount: data.discount });
+        setCouponInput("");
+        toast({ title: "Coupon applied!", description: `You save ₹${data.discount.toLocaleString("en-IN")} with ${data.code}` });
+      }
+    } catch {
+      setCouponError("Failed to apply coupon. Try again.");
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  function removeCoupon() {
+    setCouponApplied(null);
+    setCouponError("");
+    setCouponInput("");
+  }
 
   async function createOrder() {
     const orderItems = items.map((item) => ({
@@ -147,6 +185,7 @@ export default function CheckoutPage() {
         contactInfo: { name: address.name, email: userEmail, phone: address.phone },
         paymentMethod,
         bankOfferId: paymentMethod === "pinelabs" ? selectedOffer?.id ?? null : null,
+        couponCode: couponApplied ? couponApplied.code : null,
       }),
     });
     if (!res.ok) {
@@ -520,6 +559,38 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Coupon input */}
+              <div className="mb-3">
+                {couponApplied ? (
+                  <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-sm font-black text-emerald-700 tracking-wider">{couponApplied.code}</span>
+                      <span className="text-xs font-bold text-emerald-600">-₹{couponApplied.discount.toLocaleString("en-IN")}</span>
+                    </div>
+                    <button onClick={removeCoupon} className="text-emerald-400 hover:text-red-400 transition-colors text-xs font-black">Remove</button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      value={couponInput}
+                      onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError(""); }}
+                      onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
+                      placeholder="Enter coupon code"
+                      className="flex-1 border border-zinc-200 rounded-xl px-3 py-2.5 text-sm font-bold tracking-wider uppercase focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand placeholder:normal-case placeholder:font-normal"
+                    />
+                    <button
+                      onClick={applyCoupon}
+                      disabled={couponLoading || !couponInput.trim()}
+                      className="px-4 py-2.5 bg-brand text-white rounded-xl text-sm font-black hover:bg-brand/90 disabled:opacity-40 transition-colors whitespace-nowrap"
+                    >
+                      {couponLoading ? "…" : "Apply"}
+                    </button>
+                  </div>
+                )}
+                {couponError && <p className="text-xs text-red-500 font-bold mt-1.5">{couponError}</p>}
+              </div>
+
               {/* Totals */}
               <div className="ck-totals">
                 <div className="ck-total-row">
@@ -534,10 +605,16 @@ export default function CheckoutPage() {
                   <span className="ck-total-label">Tax</span>
                   <span className="ck-total-val">₹0</span>
                 </div>
-                {discountAmount > 0 && (
+                {bankDiscount > 0 && (
                   <div className="ck-total-row">
                     <span className="ck-total-label">Bank Offer</span>
-                    <span className="ck-total-discount">-₹{discountAmount.toLocaleString("en-IN")}</span>
+                    <span className="ck-total-discount">-₹{bankDiscount.toLocaleString("en-IN")}</span>
+                  </div>
+                )}
+                {couponDiscount > 0 && (
+                  <div className="ck-total-row">
+                    <span className="ck-total-label">Coupon ({couponApplied?.code})</span>
+                    <span className="ck-total-discount">-₹{couponDiscount.toLocaleString("en-IN")}</span>
                   </div>
                 )}
               </div>

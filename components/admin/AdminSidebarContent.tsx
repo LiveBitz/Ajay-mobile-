@@ -15,6 +15,7 @@ import {
   Users,
   Star,
   Tag,
+  Ticket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,7 @@ const navItems = [
   { label: "Featured Categories", href: "/admin/featured-categories", icon: Star },
   { label: "Banners", href: "/admin/banners", icon: Store },
   { label: "Bank Offers", href: "/admin/offers", icon: Tag },
+  { label: "Coupons", href: "/admin/coupons", icon: Ticket },
   { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
   { label: "Users", href: "/admin/users", icon: Users },
 ];
