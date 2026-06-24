@@ -176,8 +176,10 @@ export async function GET(req: NextRequest) {
     }
 
     // Get top products by orders (Fixed N+1 query issue)
+    // Only count items from paid/legit orders, not abandoned Pine Labs checkouts.
     const topProducts = await prisma.orderItem.groupBy({
       by: ["productId"],
+      where: { order: PAID_ORDER_FILTER },
       _sum: {
         quantity: true,
       },

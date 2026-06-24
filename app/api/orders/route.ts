@@ -407,10 +407,16 @@ export async function POST(request: NextRequest) {
       if (paymentMethod !== "pinelabs") {
         await deductStock(tx, createdOrder.items);
         if (appliedCouponId) {
-          await tx.couponCode.update({
-            where: { id: appliedCouponId },
+          // Guard against concurrent reuse: the validity check above ran outside
+          // this transaction, so claim the coupon only if still unused. If another
+          // order already took it, abort so this order rolls back entirely.
+          const claimed = await tx.couponCode.updateMany({
+            where: { id: appliedCouponId, usedAt: null },
             data: { usedAt: new Date(), usedByOrderId: createdOrder.id },
           });
+          if (claimed.count !== 1) {
+            throw new Error("Coupon code has already been used.");
+          }
         }
       }
 
@@ -458,6 +464,9 @@ export async function POST(request: NextRequest) {
     }
     if (prismaError.message?.startsWith("Insufficient stock")) {
       return NextResponse.json({ error: prismaError.message }, { status: 422 });
+    }
+    if (prismaError.message === "Coupon code has already been used.") {
+      return NextResponse.json({ error: prismaError.message }, { status: 409 });
     }
 
     // All other errors: log internally, return generic message to client
