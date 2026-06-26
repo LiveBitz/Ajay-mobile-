@@ -57,7 +57,7 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-const REFRESH_INTERVAL = 5000; // 5 seconds auto-refresh
+const REFRESH_INTERVAL = 60000; // 60s auto-refresh — the dashboard runs several heavy DB aggregations, so a tighter interval needlessly burns compute
 
 export default function DashboardContent() {
   const [data, setData] = useState<DashboardData | null>(null);

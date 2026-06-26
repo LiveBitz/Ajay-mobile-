@@ -12,7 +12,9 @@ import { getBanners } from "@/lib/actions/banner-actions";
 import { getCategories } from "@/lib/actions/category-actions";
 import { getSiteSetting } from "@/lib/actions/settings-actions";
 
-export const revalidate = 300;
+// On-demand revalidation (revalidatePath) fires whenever stock/price/banners
+// change, so the time-based window can be long — this just caps cache staleness.
+export const revalidate = 1800;
 
 // ✅ Reusable divider — dark variant for between dark sections, light for between light sections
 function Divider({ dark = false, className = "" }: { dark?: boolean; className?: string }) {

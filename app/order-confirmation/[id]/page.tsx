@@ -56,6 +56,7 @@ export default function OrderConfirmationPage() {
   const [error, setError] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
   const [pollingActive, setPollingActive] = useState(true);
+  const pollCountRef = React.useRef(0);
   const { toast } = useToast();
 
   // Fetch order function
@@ -88,8 +89,18 @@ export default function OrderConfirmationPage() {
       setOrder(data);
       setError(null);
 
-      // Stop polling if order is no longer pending
-      if (data.paymentStatus === "paid" || data.paymentStatus === "failed" || data.status === "confirmed") {
+      // Decide whether to keep polling.
+      // - Resolved orders (paid/failed/confirmed) → stop.
+      // - WhatsApp/COD orders are confirmed manually by an admin (could be hours
+      //   later, when the customer is long gone), so there is nothing to poll for
+      //   here — stop immediately to avoid hammering the API indefinitely.
+      const isResolved =
+        data.paymentStatus === "paid" ||
+        data.paymentStatus === "failed" ||
+        data.status === "confirmed";
+      const isManualPayment = data.paymentMethod === "whatsapp" || data.paymentMethod === "cod";
+
+      if (isResolved || isManualPayment) {
         setPollingActive(false);
         if (data.paymentStatus === "paid") {
           toast({
@@ -115,11 +126,20 @@ export default function OrderConfirmationPage() {
     }
   }, [orderId, fetchOrder]);
 
-  // Real-time polling for order updates
+  // Real-time polling for order updates — only for online payments awaiting
+  // confirmation, and capped at ~2 minutes so an abandoned tab can't poll forever.
   useEffect(() => {
     if (!orderId || !pollingActive) return;
 
+    const MAX_POLLS = 24; // 24 × 5s ≈ 2 minutes
+    pollCountRef.current = 0;
+
     const pollInterval = setInterval(() => {
+      pollCountRef.current += 1;
+      if (pollCountRef.current > MAX_POLLS) {
+        setPollingActive(false);
+        return;
+      }
       fetchOrder(false);
     }, 5000); // Poll every 5 seconds
 

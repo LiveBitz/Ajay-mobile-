@@ -441,19 +441,24 @@ export async function POST(request: NextRequest) {
     );
 
     // ✅ REVALIDATE AFFECTED PATHS FOR REAL-TIME UI UPDATE
-    try {
-      revalidatePath("/");                    // Home page
-      revalidatePath("/category");            // Category pages
-      revalidatePath("/cart");                // Cart page
-      revalidatePath("/admin/products");      // Admin products
-      
-      // Revalidate product detail pages
-      for (const orderItem of order.items) {
-        const product = orderItem.product;
-        revalidatePath(`/product/${product.slug}`);
+    // Only revalidate when stock actually changed. For Pine Labs, stock is held
+    // until payment is confirmed (webhook/status route revalidates then), so
+    // revalidating here would be wasted ISR writes. (/cart is a dynamic per-user
+    // page, so it's intentionally not revalidated.)
+    if (paymentMethod !== "pinelabs") {
+      try {
+        revalidatePath("/");                    // Home page
+        revalidatePath("/category");            // Category pages
+        revalidatePath("/admin/products");      // Admin products
+
+        // Revalidate product detail pages whose stock changed
+        for (const orderItem of order.items) {
+          const product = orderItem.product;
+          revalidatePath(`/product/${product.slug}`);
+        }
+      } catch (err) {
+        console.warn("Failed to revalidate paths:", err);
       }
-    } catch (err) {
-      console.warn("Failed to revalidate paths:", err);
     }
 
     return NextResponse.json(

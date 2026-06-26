@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { SearchCatalog } from "@/components/catalog/SearchCatalog";
 import type { Metadata } from "next";
 
-export const revalidate = 300;
+export const revalidate = 1800;
 
 export async function generateMetadata({
   searchParams,

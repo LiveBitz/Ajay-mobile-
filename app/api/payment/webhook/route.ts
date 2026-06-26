@@ -7,7 +7,6 @@ import { revalidatePath } from "next/cache";
 
 function revalidateStockPaths(productSlugs: string[], categorySlugs: string[]) {
   revalidatePath("/");
-  revalidatePath("/cart");
   revalidatePath("/admin/products");
   for (const slug of productSlugs) {
     revalidatePath(`/product/${slug}`);

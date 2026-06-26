@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { getTotalStock } from "@/lib/inventory";
 import type { Metadata } from "next";
 
-export const revalidate = 300; // 5 minutes - real-time updates
+export const revalidate = 1800; // on-demand revalidation handles stock/price changes; this just caps staleness
 
 // ✅ Dynamic metadata per category (with OG image for social share previews)
 export async function generateMetadata({
