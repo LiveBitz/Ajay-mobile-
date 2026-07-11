@@ -34,12 +34,20 @@ function isLocalUrl(url: string): boolean {
   }
 }
 
+// Strips trailing slashes AND a stray trailing dot after the hostname
+// (e.g. "https://example.com." → "https://example.com") — a trailing dot
+// denotes an absolute FQDN in DNS, but browsers/TLS treat it as a different
+// hostname than the certificate's SAN, causing the redirect to fail outright.
+function sanitizeSiteUrl(url: string): string {
+  return url.replace(/\/+$/, "").replace(/\.$/, "");
+}
+
 function getPaymentReturnBaseUrl(req: NextRequest): string {
   const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (process.env.NODE_ENV === "production" && configuredSiteUrl && !isLocalUrl(configuredSiteUrl)) {
-    return configuredSiteUrl.replace(/\/+$/, "");
+    return sanitizeSiteUrl(configuredSiteUrl);
   }
-  return getRequestOrigin(req).replace(/\/+$/, "");
+  return sanitizeSiteUrl(getRequestOrigin(req));
 }
 
 export async function POST(req: NextRequest) {
