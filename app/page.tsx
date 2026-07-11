@@ -8,6 +8,7 @@ import { NewsletterBanner } from "@/components/home/NewsletterBanner";
 import { BrandCarousel } from "@/components/home/BrandCarousel";
 import { BestSellersSection } from "@/components/home/BestSellersSection";
 import { FeaturedCategoriesSection } from "@/components/home/FeaturedCategoriesSection";
+import { FallingTechIcons } from "@/components/home/FallingTechIcons";
 import { getBanners } from "@/lib/actions/banner-actions";
 import { getCategories } from "@/lib/actions/category-actions";
 import { getSiteSetting } from "@/lib/actions/settings-actions";
@@ -67,10 +68,16 @@ export default async function Home() {
   const showFeatured = (await getSiteSetting("show_featured_categories", "true")) === "true";
 
   return (
-    <main
-      className="flex flex-col w-full pt-10 md:pt-4"
-      style={{ backgroundColor: "#0a0a0a" }}
-    >
+    <>
+      {/* Falls from the very top of the page (over the navbar), fades out
+          before reaching the hero banner. Positioned outside <main> since it
+          must anchor to the page top, not the dark section background. */}
+      <FallingTechIcons />
+
+      <main
+        className="flex flex-col w-full pt-10 md:pt-4"
+        style={{ backgroundColor: "#0a0a0a" }}
+      >
 
       {/* ── 1. Featured Categories ── dark */}
       {showFeatured && (
@@ -163,6 +170,7 @@ export default async function Home() {
         </Section>
       )}
 
-    </main>
+      </main>
+    </>
   );
 }
