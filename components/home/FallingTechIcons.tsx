@@ -55,6 +55,8 @@ export function FallingTechIcons() {
           animation-name: falling-tech-drop;
           animation-timing-function: ease-in;
           animation-iteration-count: infinite;
+          animation-fill-mode: backwards;
+          opacity: 0;
           will-change: transform, opacity;
         }
         @keyframes falling-tech-drop {
