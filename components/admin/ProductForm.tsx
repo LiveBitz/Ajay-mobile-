@@ -537,11 +537,13 @@ export function ProductForm({
 
   // ── Color helpers ──
   const toggleColor = (colorName: string) => {
-    const isSelected = formData.colors.includes(colorName);
+    const isSelected = (formData.colors as string[]).some(
+      (c: string) => cleanColorName(c) === colorName
+    );
     if (isSelected) {
       setFormData((p) => ({
         ...p,
-        colors: (p.colors as string[]).filter((c: string) => c !== colorName),
+        colors: (p.colors as string[]).filter((c: string) => cleanColorName(c) !== colorName),
       }));
       // Clean up stock entries for this color
       setSizeColorStock((prev) => {
@@ -549,14 +551,21 @@ export function ProductForm({
         Object.keys(updated).forEach((k) => {
           // The color is everything after the first dash
           const keyColor = k.slice(k.indexOf("-") + 1);
-          if (keyColor === colorName) delete updated[k];
+          if (cleanColorName(keyColor) === colorName) delete updated[k];
         });
         return updated;
       });
     } else {
-      // Prevent duplicate colors
-      if (!formData.colors.includes(colorName)) {
-        setFormData((p) => ({ ...p, colors: [...p.colors, colorName] }));
+      // Attach the preset's hex code so the swatch renders correctly on the
+      // storefront — without it, colors like "Titanium Grey" aren't valid
+      // CSS values and fall back to a blank/white swatch.
+      const preset = PRESET_COLORS.find((p) => p.name === colorName);
+      const formattedColor = preset ? `${colorName}|#|${preset.hex}` : colorName;
+      const alreadyExists = (formData.colors as string[]).some(
+        (c: string) => cleanColorName(c) === colorName
+      );
+      if (!alreadyExists) {
+        setFormData((p) => ({ ...p, colors: [...p.colors, formattedColor] }));
       }
     }
   };
