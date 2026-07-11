@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Heart, ShoppingBag, User, Menu, X,
   ChevronRight, ChevronDown, LogIn, HelpCircle,
@@ -46,20 +47,21 @@ export function Navbar({ categoryNames = [] }: { categoryNames?: string[] }) {
   // Ref to the search pill container — used to detect outside touches on iOS
   const searchPillRef = React.useRef<HTMLDivElement>(null);
 
-  const [placeholder, setPlaceholder] = useState("Smartphones");
+  // Rotating search suggestions — capped to 5 words, cycling every 2s with a fade animation.
+  const FALLBACK_SEARCH_WORDS = ["iPhone", "Samsung", "Realme", "OnePlus", "Vivo"];
+  const searchWords = (categoryNames.length > 0 ? categoryNames : FALLBACK_SEARCH_WORDS).slice(0, 5);
+  const [placeholder, setPlaceholder] = useState(searchWords[0] ?? "Smartphones");
 
   useEffect(() => {
-    if (categoryNames.length > 0) {
-      setPlaceholder(categoryNames[0]);
-      const interval = setInterval(() => {
-        setPlaceholder(prev => {
-          const currentIndex = categoryNames.indexOf(prev);
-          const nextIndex = (currentIndex + 1) % categoryNames.length;
-          return categoryNames[nextIndex];
-        });
-      }, 5000);
-      return () => clearInterval(interval);
-    }
+    if (searchWords.length === 0) return;
+    setPlaceholder(searchWords[0]);
+    let index = 0;
+    const interval = setInterval(() => {
+      index = (index + 1) % searchWords.length;
+      setPlaceholder(searchWords[index]);
+    }, 2000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryNames]);
 
   const goToSearchResults = React.useCallback((rawQuery: string) => {
@@ -558,8 +560,23 @@ export function Navbar({ categoryNames = [] }: { categoryNames?: string[] }) {
                            active:scale-[0.99] transition-all duration-200"
               >
                 <Search className="w-4 h-4 text-zinc-400 shrink-0" />
-                <span className="text-sm font-medium text-zinc-400 flex-1 text-left select-none">
-                  Search for "Smartphones"
+                <span className="text-sm font-medium text-zinc-400 flex-1 min-w-0 text-left select-none flex items-baseline overflow-hidden">
+                  <span className="shrink-0">Search for "</span>
+                  <span className="inline-block h-[1.2em] overflow-hidden min-w-0 max-w-[45%]">
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={placeholder}
+                        initial={{ y: 8, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -8, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="block whitespace-nowrap truncate"
+                      >
+                        {placeholder}
+                      </motion.span>
+                    </AnimatePresence>
+                  </span>
+                  <span className="shrink-0">"</span>
                 </span>
               </button>
             ) : (

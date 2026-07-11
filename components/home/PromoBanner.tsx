@@ -75,12 +75,12 @@ export function PromoBanner({ banners = [] }: PromoBannerProps) {
           </div>
 
           <h2 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-5xl font-black text-white mb-2 tracking-tight leading-[1.02] sm:leading-[0.98]">
-            Grab the <span className="text-brand">Best Deals</span>
+            Own It Today with <span className="text-brand">Easy EMI</span>
             <br />
-            <span className="text-zinc-400">Limited-Time Promotions</span>
+            <span className="text-zinc-400">No Cost EMI on Top Brands</span>
           </h2>
           <p className="text-sm md:text-base text-zinc-400 font-medium max-w-[56ch]">
-            Check out our latest deals and exclusive promotions
+            Split your purchase into easy monthly installments
           </p>
           <div className="mt-5 md:mt-6 h-[2px] w-20 sm:w-28 rounded-full bg-gradient-to-r from-brand via-red-400/70 to-transparent" />
         </div>

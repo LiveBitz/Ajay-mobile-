@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Flame } from "lucide-react";
@@ -29,15 +29,51 @@ export function HeroSubBanners({
   const draggedRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
+  const autoScrollIndexRef = useRef(0);
+  const pausedUntilRef = useRef(0);
+
+  // Pause auto-scroll for a few seconds whenever the user touches/drags the row,
+  // regardless of pointer type (mouse, touch, pen all fire pointerdown).
+  const pauseAutoScroll = useCallback(() => {
+    pausedUntilRef.current = Date.now() + 4000;
+  }, []);
+
+  // Auto-advance the mobile banner row every few seconds, looping back to the
+  // start. Skips entirely for a single banner, while paused, when the tab is
+  // hidden, or when the user prefers reduced motion.
+  useEffect(() => {
+    const total = banners.slice(startIndex, startIndex + maxItems).length;
+    if (total <= 1) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    autoScrollIndexRef.current = 0;
+
+    const intervalId = setInterval(() => {
+      const el = rowRef.current;
+      if (!el || Date.now() < pausedUntilRef.current || document.visibilityState !== "visible") return;
+
+      const firstCard = el.firstElementChild as HTMLElement | null;
+      if (!firstCard) return;
+
+      const gap = 12; // matches .hero-sub-scroll { gap: 12px }
+      const step = firstCard.offsetWidth + gap;
+
+      autoScrollIndexRef.current = (autoScrollIndexRef.current + 1) % total;
+      el.scrollTo({ left: autoScrollIndexRef.current * step, behavior: "smooth" });
+    }, 3500);
+
+    return () => clearInterval(intervalId);
+  }, [banners, startIndex, maxItems]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    pauseAutoScroll();
     if (e.pointerType !== "mouse" || e.button !== 0) return;
     isDraggingRef.current = true;
     draggedRef.current = false;
     dragStartXRef.current = e.clientX;
     dragStartScrollLeftRef.current = e.currentTarget.scrollLeft;
     e.currentTarget.setPointerCapture(e.pointerId);
-  }, []);
+  }, [pauseAutoScroll]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current || e.pointerType !== "mouse") return;

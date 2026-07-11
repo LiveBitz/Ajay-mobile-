@@ -196,7 +196,14 @@ export async function Footer() {
           </div>
           <p className="text-xs text-zinc-500 text-center sm:text-right">
             Built by{" "}
-            <span className="text-zinc-300 font-semibold">Scalisite</span>
+            <a
+              href="https://scalisite.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-300 font-semibold hover:text-red-400 transition-colors"
+            >
+              Scalisite
+            </a>
           </p>
         </div>
       </div>
