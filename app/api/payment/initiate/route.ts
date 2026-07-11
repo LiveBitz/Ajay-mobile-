@@ -83,7 +83,11 @@ export async function POST(req: NextRequest) {
     }
 
     const siteUrl = getPaymentReturnBaseUrl(req);
-    const returnUrl = `${siteUrl}/payment/return?orderId=${order.id}`;
+    // Route through /api/payment/callback, not /payment/return directly —
+    // Pine Labs delivers this as a POST, and /payment/return is a plain page
+    // route that only accepts GET. The callback route accepts both and
+    // forwards to the page via a redirect.
+    const returnUrl = `${siteUrl}/api/payment/callback?orderId=${order.id}`;
 
     const amountPaisa = getPaymentAmountPaisa(order.total);
 
