@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch user's wishlist with selective fields (Phase 6 Optimization)
     const wishlist = await prisma.wishlist.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, product: { isArchived: false } },
       select: {
         id: true,
         userId: true,
@@ -95,12 +95,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if product exists
+    // Check if product exists and is not archived
     const product = await prisma.product.findUnique({
       where: { id: productId },
     });
 
-    if (!product) {
+    if (!product || product.isArchived) {
       return NextResponse.json(
         { error: "Product not found" },
         { status: 404 }

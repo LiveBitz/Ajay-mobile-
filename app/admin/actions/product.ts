@@ -162,7 +162,7 @@ export async function createProduct(data: any) {
         features: data.features || [],
         inTheBox: (data.inTheBox || []).filter(Boolean),
         warranty: data.warranty || "1 Year Manufacturer",
-        returnPolicy: data.returnPolicy || "7-Day Returns",
+        returnPolicy: data.returnPolicy || "No Returns After Delivery",
         variantPricing: data.variantPricing || undefined,
         isNew: Boolean(data.isNew),
         isBestSeller: Boolean(data.isBestSeller),
@@ -237,7 +237,7 @@ export async function updateProduct(id: string, data: any) {
         features: data.features || [],
         inTheBox: (data.inTheBox || []).filter(Boolean),
         warranty: data.warranty || "1 Year Manufacturer",
-        returnPolicy: data.returnPolicy || "7-Day Returns",
+        returnPolicy: data.returnPolicy || "No Returns After Delivery",
         variantPricing: data.variantPricing || undefined,
         isNew: Boolean(data.isNew),
         isBestSeller: Boolean(data.isBestSeller),
@@ -265,9 +265,58 @@ export async function deleteProduct(id: string) {
 
     revalidatePath("/admin/products");
     revalidatePath("/");
+    return { success: true, archived: false };
+  } catch (error) {
+    // P2003: foreign key constraint failed — this product has existing
+    // orders (OrderItem references it). Rather than blocking the admin
+    // entirely, archive it instead: hidden from storefront/admin list,
+    // but order history stays intact since the row still exists.
+    if ((error as { code?: string }).code === "P2003") {
+      try {
+        const auth = await verifyAdminAction();
+        if (!auth.authorized) return { success: false, error: auth.error };
+
+        await prisma.product.update({
+          where: { id },
+          data: { isArchived: true, stock: 0 },
+        });
+        revalidatePath("/admin/products");
+        revalidatePath("/");
+        return {
+          success: true,
+          archived: true,
+          message: "This product has order history, so it was archived instead of permanently deleted. It's now hidden from the store.",
+        };
+      } catch (archiveError) {
+        console.error("Failed to archive product:", archiveError);
+        return { success: false, error: "Database error" };
+      }
+    }
+
+    console.error("Failed to delete product:", error);
+    if ((error as { code?: string }).code === "P2025") {
+      return { success: false, error: "Product not found — it may have already been deleted." };
+    }
+
+    return { success: false, error: "Database error" };
+  }
+}
+
+export async function restoreProduct(id: string) {
+  try {
+    const auth = await verifyAdminAction();
+    if (!auth.authorized) return { success: false, error: auth.error };
+
+    await prisma.product.update({
+      where: { id },
+      data: { isArchived: false },
+    });
+
+    revalidatePath("/admin/products");
+    revalidatePath("/");
     return { success: true };
   } catch (error) {
-    console.error("Failed to delete product:", error);
+    console.error("Failed to restore product:", error);
     return { success: false, error: "Database error" };
   }
 }

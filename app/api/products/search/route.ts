@@ -56,7 +56,8 @@ export async function GET(request: NextRequest) {
               { features: { hasSome: [searchTerm] } },
             ],
           },
-          { stock: { gt: 0 } } // Only return products with stock > 0
+          { stock: { gt: 0 } }, // Only return products with stock > 0
+          { isArchived: false },
         ]
       },
       select: {

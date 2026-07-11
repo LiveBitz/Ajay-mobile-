@@ -10,8 +10,8 @@ export function FeaturesStrip() {
     },
     {
       icon: <RotateCcw className="w-5 h-5 text-zinc-600" />,
-      title: "Easy Returns",
-      subtitle: "7-day hassle-free returns",
+      title: "DOA & Damage Protection",
+      subtitle: "Covered on arrival — see Return Policy",
     },
     {
       icon: <ShieldCheck className="w-5 h-5 text-zinc-600" />,

@@ -6,7 +6,7 @@ import { NewArrivalsCarousel } from "./NewArrivalsCarousel";
 
 async function getNewArrivals() {
   const products = await prisma.product.findMany({
-    where: { isNew: true },
+    where: { isNew: true, isArchived: false },
     orderBy: { createdAt: "desc" },
     take: 20,
   });

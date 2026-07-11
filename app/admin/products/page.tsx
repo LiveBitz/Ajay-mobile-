@@ -22,9 +22,9 @@ import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 15;
 
-async function getProducts(page: number, search?: string, categoryId?: string) {
+async function getProducts(page: number, search?: string, categoryId?: string, showArchived?: boolean) {
   const skip = (page - 1) * PAGE_SIZE;
-  const where: any = {};
+  const where: any = { isArchived: !!showArchived };
 
   if (search) {
     where.OR = [
@@ -53,6 +53,7 @@ async function getProducts(page: number, search?: string, categoryId?: string) {
       sizes: true,
       isNew: true,
       isBestSeller: true,
+      isArchived: true,
       createdAt: true,
       categoryId: true,
       category: {
@@ -63,8 +64,8 @@ async function getProducts(page: number, search?: string, categoryId?: string) {
   });
 }
 
-async function getTotalProducts(search?: string, categoryId?: string) {
-  const where: any = {};
+async function getTotalProducts(search?: string, categoryId?: string, showArchived?: boolean) {
+  const where: any = { isArchived: !!showArchived };
 
   if (search) {
     where.OR = [
@@ -78,6 +79,10 @@ async function getTotalProducts(search?: string, categoryId?: string) {
   }
 
   return await prisma.product.count({ where });
+}
+
+async function getArchivedCount() {
+  return await prisma.product.count({ where: { isArchived: true } });
 }
 
 async function getCategories() {
@@ -138,11 +143,13 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
   const currentPage = Number(params.page) || 1;
   const search = typeof params.search === "string" ? params.search : undefined;
   const categoryId = typeof params.category === "string" ? params.category : undefined;
+  const showArchived = params.archived === "true";
 
-  const [products, totalCount, categories] = await Promise.all([
-    getProducts(currentPage, search, categoryId),
-    getTotalProducts(search, categoryId),
+  const [products, totalCount, categories, archivedCount] = await Promise.all([
+    getProducts(currentPage, search, categoryId, showArchived),
+    getTotalProducts(search, categoryId, showArchived),
     getCategories(),
+    getArchivedCount(),
   ]);
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
@@ -183,10 +190,29 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
             {totalCount} products across {categories.length} categories
           </p>
         </div>
-        <div className="w-full sm:w-auto">
-          <AddProductButton />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Link
+            href={showArchived ? "/admin/products" : "/admin/products?archived=true"}
+            className="flex-1 sm:flex-none"
+          >
+            <Button
+              variant="outline"
+              className="w-full rounded-xl border-zinc-200 text-zinc-600 hover:bg-zinc-50 text-sm font-bold"
+            >
+              {showArchived ? "View Active" : `Archived (${archivedCount})`}
+            </Button>
+          </Link>
+          <div className="flex-1 sm:flex-none">
+            <AddProductButton />
+          </div>
         </div>
       </div>
+
+      {showArchived && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-sm text-amber-800">
+          Viewing archived products — hidden from the storefront. These have order history attached, which is why they were archived instead of deleted. Click <strong>Restore</strong> to bring one back.
+        </div>
+      )}
 
       {/* ── Stats Strip ── */}
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
@@ -382,7 +408,7 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
                             <Edit className="w-3.5 h-3.5 text-zinc-500" />
                           </Button>
                         </Link>
-                        <DeleteProductButton id={p.id} name={p.name} />
+                        <DeleteProductButton id={p.id} name={p.name} isArchived={p.isArchived} />
                       </div>
                     </td>
                   </tr>
@@ -519,7 +545,7 @@ export default async function ProductsAdminPage({ searchParams }: PageProps) {
                         Edit
                       </Button>
                     </Link>
-                    <DeleteProductButton id={p.id} name={p.name} />
+                    <DeleteProductButton id={p.id} name={p.name} isArchived={p.isArchived} />
                   </div>
                 </div>
               </div>

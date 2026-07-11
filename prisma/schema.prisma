@@ -85,10 +85,11 @@ model Product {
   features      String[] @default([])
   inTheBox      String[] @default([])
   warranty      String   @default("1 Year Manufacturer")
-  returnPolicy  String   @default("7-Day Returns")
+  returnPolicy  String   @default("No Returns After Delivery")
   variantPricing Json?    // Per-variant pricing: {"8GB | 128GB": {"price": 49999, "originalPrice": 59999}}
   isNew         Boolean  @default(false)
   isBestSeller  Boolean  @default(false)
+  isArchived    Boolean  @default(false) // Soft-deleted — hidden from storefront/admin list, kept for order history integrity
   wishlists     Wishlist[]
   orderItems    OrderItem[]
   createdAt     DateTime @default(now())
@@ -96,6 +97,7 @@ model Product {
 
   // ✅ Performance Indexes
   @@index([categoryId])      // For filtering by category
+  @@index([isArchived])      // For excluding archived products from listings
   @@index([isNew])          // For "New Arrivals" section
   @@index([isBestSeller])   // For "Best Sellers" section
   @@index([slug])           // PHASE 1: Product detail page queries (/product/[slug])

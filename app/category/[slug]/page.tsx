@@ -48,8 +48,9 @@ export async function generateMetadata({
   // If no category/group image, grab the first product image in that category
   if (!ogImage) {
     const first = await prisma.product.findFirst({
-      where:
-        slug === "sale"
+      where: {
+        isArchived: false,
+        ...(slug === "sale"
           ? { discount: { gt: 0 } }
           : slug === "new-arrivals"
           ? { isNew: true }
@@ -58,7 +59,8 @@ export async function generateMetadata({
                 { category: { slug: { equals: slug, mode: "insensitive" } } },
                 { category: { parent: { slug: { equals: slug, mode: "insensitive" } } } },
               ],
-            },
+            }),
+      },
       select: { image: true },
       orderBy: { createdAt: "desc" },
     });
@@ -131,7 +133,7 @@ export default async function CategoryPage({
   }
 
   // ✅ Clean where clause
-  const whereClause: Prisma.ProductWhereInput =
+  const baseWhereClause: Prisma.ProductWhereInput =
     slug === "sale"
       ? { discount: { gt: 0 } }
       : slug === "new-arrivals"
@@ -149,6 +151,7 @@ export default async function CategoryPage({
             { category: { parent: { slug: { equals: slug, mode: "insensitive" } } } },
           ],
         };
+  const whereClause: Prisma.ProductWhereInput = { AND: [baseWhereClause, { isArchived: false }] };
 
   // Fetch only the first page of products for SSR (fast initial load) +
   // a lightweight facet query over ALL products so the filter sidebar has

@@ -86,6 +86,7 @@ export async function GET(request: NextRequest) {
     const filterWhere: Prisma.ProductWhereInput = {
       ...baseWhere,
       price: { gte: priceMin, lte: priceMax },
+      isArchived: false,
     };
 
     if (discountMin > 0) {

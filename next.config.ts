@@ -24,6 +24,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co" },
       { protocol: "https", hostname: "api.dicebear.com" },
       { protocol: "https", hostname: "placehold.co" },
+      { protocol: "https", hostname: "www.scalisite.com" },
     ],
   },
 

@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
     
     // Get total products and categories
     const [productCount, categoryCount, orderCount] = await Promise.all([
-      prisma.product.count(),
+      prisma.product.count({ where: { isArchived: false } }),
       prisma.category.count(),
       prisma.order.count(),
     ]);

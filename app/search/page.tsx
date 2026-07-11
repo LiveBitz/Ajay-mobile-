@@ -33,15 +33,18 @@ export default async function SearchPage({
 
   // Search products by name or description
   const products = await prisma.product.findMany({
-    where: q
-      ? {
-          OR: [
-            { name: { contains: q, mode: "insensitive" } },
-            { description: { contains: q, mode: "insensitive" } },
-            { category: { name: { contains: q, mode: "insensitive" } } },
-          ],
-        }
-      : {},
+    where: {
+      isArchived: false,
+      ...(q
+        ? {
+            OR: [
+              { name: { contains: q, mode: "insensitive" } },
+              { description: { contains: q, mode: "insensitive" } },
+              { category: { name: { contains: q, mode: "insensitive" } } },
+            ],
+          }
+        : {}),
+    },
     select: {
       id: true,
       name: true,

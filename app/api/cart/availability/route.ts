@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     );
 
     const products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
+      where: { id: { in: productIds }, isArchived: false },
       select: { id: true, name: true, stock: true, sizes: true },
     });
     const productsById = new Map(products.map((product) => [product.id, product]));

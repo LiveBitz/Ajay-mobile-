@@ -7,6 +7,7 @@ async function getBestSellerProducts() {
     where: {
       isBestSeller: true,
       stock: { gt: 0 },
+      isArchived: false,
     },
     orderBy: { createdAt: "desc" },
     take: 12,

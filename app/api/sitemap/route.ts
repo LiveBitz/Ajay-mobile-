@@ -6,6 +6,7 @@ export async function GET() {
     // Get all products for sitemap
     const products = await prisma.product.findMany({
       select: { slug: true, updatedAt: true },
+      where: { isArchived: false },
       take: 50000, // Sitemap limit
     });
 

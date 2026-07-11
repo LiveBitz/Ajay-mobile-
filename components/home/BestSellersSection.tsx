@@ -5,9 +5,10 @@ import { BestSellersCarousel } from "@/components/home/BestSellersCarousel";
 async function getBestSellers() {
   // Fetch bestseller products with stock > 0
   const products = await prisma.product.findMany({
-    where: { 
+    where: {
       isBestSeller: true,
-      stock: { gt: 0 }
+      stock: { gt: 0 },
+      isArchived: false,
     },
     select: {
       id: true,

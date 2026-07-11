@@ -6,9 +6,10 @@ import { SectionHeading } from "@/components/shared/SectionHeading";
 async function getBestSellers() {
   // Phase 7: Filter by stock in database query instead of JavaScript (40% less data)
   const products = await prisma.product.findMany({
-    where: { 
+    where: {
       isBestSeller: true,
-      stock: { gt: 0 }  // Only fetch products with stock
+      stock: { gt: 0 },  // Only fetch products with stock
+      isArchived: false,
     },
     orderBy: { createdAt: 'desc' },
     take: 8  // Only fetch needed products

@@ -325,7 +325,7 @@ export function ProductForm({
     features: Array.isArray(initialData?.features) ? initialData.features : [],
     inTheBox: Array.isArray(initialData?.inTheBox) ? initialData.inTheBox : [],
     warranty: initialData?.warranty || "1 Year Manufacturer",
-    returnPolicy: initialData?.returnPolicy || "7-Day Returns",
+    returnPolicy: initialData?.returnPolicy || "No Returns After Delivery",
   });
 
   // ── Specs: free-form key-value rows ──
@@ -2034,7 +2034,7 @@ export function ProductForm({
                       Return Policy
                     </label>
                     <Input
-                      placeholder="e.g. 7-Day Returns"
+                      placeholder="e.g. No Returns After Delivery"
                       value={formData.returnPolicy}
                       onChange={(e) => setFormData(p => ({ ...p, returnPolicy: e.target.value }))}
                       className="rounded-2xl border-zinc-100 h-13 sm:h-14 font-bold text-sm text-zinc-900 shadow-sm focus:ring-2 focus:ring-brand/20"

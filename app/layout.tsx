@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     template: "%s | Priya Mobile Park",
   },
   description:
-    "Buy latest smartphones, iPhones, Samsung Galaxy, OnePlus & accessories at best prices. Genuine products, fast delivery & easy returns. Priya Mobile Park — India's trusted mobile store.",
+    "Buy latest smartphones, iPhones, Samsung Galaxy, OnePlus & accessories at best prices. Genuine products, fast delivery & manufacturer warranty. Priya Mobile Park — India's trusted mobile store.",
   keywords: [
     "Priya Mobile Park",
     "buy smartphones online India",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     siteName: "Priya Mobile Park",
     title: "Priya Mobile Park | Best Smartphones & Mobile Phones in India",
     description:
-      "Buy latest smartphones, iPhones, Samsung Galaxy, OnePlus & accessories at best prices. Genuine products, fast delivery & easy returns.",
+      "Buy latest smartphones, iPhones, Samsung Galaxy, OnePlus & accessories at best prices. Genuine products, fast delivery & manufacturer warranty.",
     images: [
       {
         url: "/images/cropped_circle_image.png",
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Priya Mobile Park | Best Smartphones in India",
     description:
-      "Buy latest smartphones at best prices. Genuine products, fast delivery & easy returns. India's trusted mobile store.",
+      "Buy latest smartphones at best prices. Genuine products, fast delivery & manufacturer warranty. India's trusted mobile store.",
     images: ["/images/cropped_circle_image.png"],
   },
   robots: {

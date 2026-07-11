@@ -20,6 +20,7 @@ export const revalidate = 300; // ISR: regenerate in background every 5 minutes
 // then cached) because dynamicParams defaults to true.
 export async function generateStaticParams() {
   const products = await prisma.product.findMany({
+    where: { isArchived: false },
     select: { slug: true },
   });
   return products.map((p) => ({ slug: p.slug }));
@@ -42,8 +43,8 @@ async function getActiveOffers() {
 }
 
 async function getProduct(slug: string) {
-  return await prisma.product.findUnique({
-    where: { slug },
+  return await prisma.product.findFirst({
+    where: { slug, isArchived: false },
     select: {
       id: true,
       name: true,
@@ -86,7 +87,7 @@ export async function generateMetadata({
     title: `${product.name} — Buy at ₹${price}`,
     description:
       product.description ||
-      `Buy ${product.name} at ₹${price}. Genuine product, fast delivery & 7-day easy returns. Shop at Priya Mobile Park.`,
+      `Buy ${product.name} at ₹${price}. Genuine product, fast delivery & manufacturer warranty. Shop at Priya Mobile Park.`,
     alternates: { canonical: `/product/${product.slug}` },
     openGraph: {
       title: `${product.name} | Priya Mobile Park`,
@@ -338,9 +339,18 @@ export default async function ProductDetailsPage({
                       <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wide shrink-0 pt-0.5 min-w-[90px]">
                         {spec.label}
                       </span>
-                      <span className="text-sm font-semibold text-zinc-900 text-right leading-relaxed">
-                        {spec.value}
-                      </span>
+                      {spec.label === "Return Policy" ? (
+                        <span className="text-sm font-semibold text-zinc-900 text-right leading-relaxed">
+                          {spec.value}{" "}
+                          <Link href="/refund-policy" className="text-brand underline underline-offset-2 hover:text-red-700 transition-colors">
+                            View policy
+                          </Link>
+                        </span>
+                      ) : (
+                        <span className="text-sm font-semibold text-zinc-900 text-right leading-relaxed">
+                          {spec.value}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>

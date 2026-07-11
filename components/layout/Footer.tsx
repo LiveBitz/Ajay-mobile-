@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   LockKeyhole,
   Headset,
+  Instagram,
 } from "lucide-react";
 import prisma from "@/lib/prisma";
 
@@ -194,19 +195,99 @@ export async function Footer() {
               <span className="text-zinc-300 font-semibold">Ajoy Kundu</span>
             </p>
           </div>
-          <p className="text-xs text-zinc-500 text-center sm:text-right">
-            Built by{" "}
+          <div className="scalisite-badge">
             <a
               href="https://scalisite.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-zinc-300 font-semibold hover:text-red-400 transition-colors"
+              className="scalisite-badge-link group"
             >
-              Scalisite
+              <span className="scalisite-badge-label">Built by</span>
+              <span className="scalisite-badge-icon">
+                <Image
+                  src="https://www.scalisite.com/Logo.png"
+                  alt="Scalisite"
+                  width={16}
+                  height={16}
+                  className="object-contain"
+                />
+              </span>
+              <span className="scalisite-badge-name group-hover:text-red-400 transition-colors">Scalisite</span>
             </a>
-          </p>
+            <a
+              href="https://www.instagram.com/scalisite/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Scalisite on Instagram"
+              className="text-zinc-500 hover:text-red-400 transition-colors"
+            >
+              <Instagram className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
       </div>
+
+      <style>{`
+        .scalisite-badge {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 5px 12px 5px 6px;
+          border-radius: 9999px;
+          background: #17171a;
+          border: 1px solid rgba(255,255,255,0.08);
+          overflow: hidden;
+        }
+        .scalisite-badge-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .scalisite-badge-label {
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #71717a;
+          margin-left: 8px;
+        }
+        .scalisite-badge-icon {
+          width: 22px;
+          height: 22px;
+          border-radius: 7px;
+          background: #ffffff;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          overflow: hidden;
+        }
+        .scalisite-badge-name {
+          font-size: 13px;
+          font-weight: 800;
+          color: #f4f4f5;
+        }
+        /* Subtle premium shimmer sweep — continuous, minimal */
+        .scalisite-badge::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 35%;
+          height: 100%;
+          background: linear-gradient(120deg, transparent, rgba(255,255,255,0.10), transparent);
+          animation: scalisite-shimmer 3s ease-in-out infinite;
+          pointer-events: none;
+        }
+        @keyframes scalisite-shimmer {
+          0%   { transform: translateX(-120%); }
+          100% { transform: translateX(380%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .scalisite-badge::after { animation: none; }
+        }
+      `}</style>
     </footer>
   );
 }
