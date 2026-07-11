@@ -48,7 +48,7 @@ export async function Footer() {
   ];
 
   return (
-    <footer className="relative mt-16 overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
+    <footer className="relative overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
 
       {/* Layered background for depth */}
       <div className="absolute inset-0 pointer-events-none">
