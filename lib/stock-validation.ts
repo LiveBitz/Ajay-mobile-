@@ -1,3 +1,5 @@
+import { cleanColorName } from "./inventory";
+
 interface ProductInventory {
   name: string;
   stock: number;
@@ -29,8 +31,13 @@ export function getAvailableQuantity(product: ProductInventory, selection: CartS
     }
 
     const size = key.slice(0, dashIdx);
-    const color = key.slice(dashIdx + 1);
-    if (size === selection.size && (!selection.color || color === selection.color)) {
+    // Either side may carry embedded hex metadata ("Name|#|#hex") — clean
+    // both before comparing, since we don't control which format the
+    // customer's cart (possibly cached from before this normalization
+    // existed) or the stored variant happens to be in.
+    const color = cleanColorName(key.slice(dashIdx + 1));
+    const selectionColor = selection.color ? cleanColorName(selection.color) : selection.color;
+    if (size === selection.size && (!selectionColor || color === selectionColor)) {
       return qty;
     }
   }

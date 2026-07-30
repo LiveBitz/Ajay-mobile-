@@ -20,6 +20,7 @@ interface ProductCardProps {
     originalPrice: number;
     discount: number;
     image: string;
+    thumbnail?: string | null;
     stock?: number;
     sizes?: string[];
     isNew?: boolean;
@@ -41,6 +42,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const isOutOfStock = totalStock === 0;
   const wishlisted = isWishlisted(String(product.id));
   const savings = product.originalPrice - product.price;
+  const displayImage = product.thumbnail || product.image;
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -80,7 +82,7 @@ export function ProductCard({ product }: ProductCardProps) {
         productId: String(product.id),
         name: product.name,
         price: product.price,
-        image: product.image,
+        image: displayImage,
       });
       toast({
         title: "Added to Cart",
@@ -111,7 +113,7 @@ export function ProductCard({ product }: ProductCardProps) {
             src={
               imgError
                 ? "https://placehold.co/600/f4f4f5/a1a1aa?text=Phone"
-                : product.image
+                : displayImage
             }
             alt={product.name}
             fill

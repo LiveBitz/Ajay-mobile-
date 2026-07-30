@@ -18,6 +18,7 @@ interface Product {
   originalPrice: number;
   discount: number;
   image: string;
+  thumbnail?: string | null;
   stock?: number;
   sizes?: string[];
   isNew?: boolean;
@@ -232,6 +233,7 @@ function BestSellerCard({ product }: { product: Product }) {
   const isOutOfStock = totalStock <= 0;
   const wishlisted = isWishlisted(String(product.id));
   const savings = product.originalPrice - product.price;
+  const displayImage = product.thumbnail || product.image;
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -261,7 +263,7 @@ function BestSellerCard({ product }: { product: Product }) {
     if (isOutOfStock || hasVariantOptions) return;
     setIsAddingToCart(true);
     try {
-      addItem({ productId: String(product.id), name: product.name, price: product.price, image: product.image });
+      addItem({ productId: String(product.id), name: product.name, price: product.price, image: displayImage });
       toast({ title: "Added to Cart", description: `${product.name} has been added to your cart.` });
     } catch {
       toast({ title: "Error", description: "Failed to add product to cart", variant: "destructive" });
@@ -293,7 +295,7 @@ function BestSellerCard({ product }: { product: Product }) {
         <div className="relative overflow-hidden" style={{ paddingBottom: "86%", backgroundColor: "#212121" }}>
           <Link href={`/product/${product.slug}`} className="absolute inset-0 block">
             <Image
-              src={product.image}
+              src={displayImage}
               alt={product.name}
               fill
               className="object-cover"

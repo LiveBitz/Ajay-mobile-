@@ -24,6 +24,7 @@ interface ProductSelectionProps {
     name: string;
     price: number;
     image: string;
+    thumbnail?: string | null;
     sizes: string[];
     colors: string[];
     variantPricing?: Record<string, { price: number; originalPrice: number }> | null;
@@ -107,9 +108,12 @@ export function ProductSelection({ product, onPriceChange }: ProductSelectionPro
       productId: product.id,
       name: product.name,
       price: variantPrice,
-      image: product.image,
+      image: product.thumbnail || product.image,
       size: selectedSize || undefined,
-      color: selectedColor || undefined,
+      // Store just the clean color name — selectedColor may carry the
+      // "Name|#|#hex" storage format, which would otherwise leak into the
+      // cart, order, and every downstream display as raw text.
+      color: selectedColor ? parseColor(selectedColor).name || undefined : undefined,
     });
 
     setShowError(false);

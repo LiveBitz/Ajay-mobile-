@@ -14,6 +14,7 @@ export interface WishlistItem {
     originalPrice: number;
     discount: number;
     image: string;
+    thumbnail?: string | null;
   };
   createdAt: string;
 }

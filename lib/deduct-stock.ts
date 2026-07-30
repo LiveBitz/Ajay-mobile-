@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { getTotalStock } from "@/lib/inventory";
+import { getTotalStock, cleanColorName } from "@/lib/inventory";
 
 type Tx = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
@@ -38,8 +38,11 @@ export async function deductStock(tx: Tx, items: OrderItemWithProduct[]) {
 
         if (isColorVariant) {
           const size = key.slice(0, dashIdx);
-          const color = key.slice(dashIdx + 1);
-          if (size === orderItem.size && (!orderItem.color || color === orderItem.color)) {
+          // Either side may carry embedded hex metadata ("Name|#|#hex") —
+          // clean both before comparing so matching works regardless of format.
+          const color = cleanColorName(key.slice(dashIdx + 1));
+          const orderColor = orderItem.color ? cleanColorName(orderItem.color) : orderItem.color;
+          if (size === orderItem.size && (!orderColor || color === orderColor)) {
             matchedVariant = true;
             const currentQty = parseInt(quantity) || 0;
             if (currentQty < orderItem.quantity) {

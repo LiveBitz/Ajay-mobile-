@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { Plus, Minus, Trash2, Heart } from "lucide-react";
 import { useCart, CartItem } from "@/context/CartContext";
+import { cleanColorName } from "@/lib/inventory";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -67,11 +68,11 @@ export function CartPageItem({
                 )}
                 {item.color && (
                   <div className="flex items-center gap-2 text-xs font-semibold text-zinc-600 px-3 py-1.5 rounded-lg bg-zinc-50 border border-zinc-200">
-                    <span 
-                      className="w-3 h-3 rounded-full ring-2 ring-white ring-offset-1 flex-shrink-0" 
-                      style={{ backgroundColor: item.color.toLowerCase(), boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.1)' }} 
+                    <span
+                      className="w-3 h-3 rounded-full ring-2 ring-white ring-offset-1 flex-shrink-0"
+                      style={{ backgroundColor: cleanColorName(item.color).toLowerCase(), boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.1)' }}
                     />
-                    <span className="font-bold text-zinc-950 capitalize">{item.color}</span>
+                    <span className="font-bold text-zinc-950 capitalize">{cleanColorName(item.color)}</span>
                   </div>
                 )}
               </div>

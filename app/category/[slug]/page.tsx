@@ -166,6 +166,7 @@ export default async function CategoryPage({
     originalPrice: true,
     discount: true,
     image: true,
+    thumbnail: true,
     stock: true,
     sizes: true,
     colors: true,

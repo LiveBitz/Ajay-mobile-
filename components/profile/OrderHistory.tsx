@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { cleanColorName } from "@/lib/inventory";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -235,7 +236,7 @@ export function OrderHistory() {
                             <div className="flex flex-wrap gap-3 mt-2 text-xs text-zinc-600">
                               <span>Qty: {item.quantity}</span>
                               {item.size && <span>Size: {item.size}</span>}
-                              {item.color && <span>Color: {item.color}</span>}
+                              {item.color && <span>Color: {cleanColorName(item.color)}</span>}
                             </div>
                           </div>
 

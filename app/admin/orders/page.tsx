@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { cleanColorName } from "@/lib/inventory";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -345,7 +346,7 @@ export default function AdminOrdersPage() {
                             )}
                             {item.color && (
                               <p className="text-zinc-500">
-                                Color: {item.color}
+                                Color: {cleanColorName(item.color)}
                               </p>
                             )}
                           </div>

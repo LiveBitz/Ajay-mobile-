@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
             name: true,
             slug: true,
             image: true,
+            thumbnail: true,
             price: true,
             originalPrice: true,
             discount: true,

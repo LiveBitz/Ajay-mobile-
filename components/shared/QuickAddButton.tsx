@@ -14,6 +14,7 @@ interface QuickAddButtonProps {
     slug: string;
     price: number;
     image: string;
+    thumbnail?: string | null;
     stock?: number | null;
     sizes?: string[];
   };
@@ -41,7 +42,7 @@ export function QuickAddButton({ product, className = "" }: QuickAddButtonProps)
         productId: String(product.id),
         name: product.name,
         price: product.price,
-        image: product.image,
+        image: product.thumbnail || product.image,
         // Could add default size/color selection here if needed
       });
 

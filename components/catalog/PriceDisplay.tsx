@@ -18,6 +18,7 @@ interface PriceDisplayProps {
     originalPrice: number;
     discount: number;
     image: string;
+    thumbnail?: string | null;
     sizes: string[];
     colors: string[];
     variantPricing?: Record<string, VariantPrice> | null;

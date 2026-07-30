@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { redirectToWhatsApp } from "@/lib/whatsapp-order";
+import { cleanColorName } from "@/lib/inventory";
 
 interface Address {
   id?: string;
@@ -551,7 +552,7 @@ export default function CheckoutPage() {
                       <p className="ck-item-name">{item.name}</p>
                       <div className="ck-item-meta">
                         {item.size && <span className="ck-item-tag">{item.size}</span>}
-                        {item.color && <span className="ck-item-tag">{item.color}</span>}
+                        {item.color && <span className="ck-item-tag">{cleanColorName(item.color)}</span>}
                       </div>
                     </div>
                     <p className="ck-item-price">₹{(item.price * item.quantity).toLocaleString()}</p>

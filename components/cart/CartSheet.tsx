@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
 import { useCartAvailability } from "@/hooks/useCartAvailability";
+import { cleanColorName } from "@/lib/inventory";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
@@ -327,8 +328,9 @@ function CartItem({
   isCheckingStock = false,
   index,
 }: CartItemProps) {
-  const colorHex = item.color ? getColorHex(item.color) : null;
-  const colorLight = item.color ? isLightColor(item.color) : false;
+  const cleanColor = item.color ? cleanColorName(item.color) : null;
+  const colorHex = cleanColor ? getColorHex(cleanColor) : null;
+  const colorLight = cleanColor ? isLightColor(cleanColor) : false;
   const lineTotal = item.price * item.quantity;
   const originalTotal = (item.originalPrice ?? item.price) * item.quantity;
   const hasSaving = originalTotal > lineTotal;
@@ -390,7 +392,7 @@ function CartItem({
                 {item.size}
               </span>
             )}
-            {item.color && colorHex && (
+            {cleanColor && colorHex && (
               <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full bg-zinc-100">
                 <span
                   className={cn(
@@ -400,7 +402,7 @@ function CartItem({
                   style={{ backgroundColor: colorHex }}
                 />
                 <span className="text-zinc-500 text-[8px] font-black uppercase tracking-widest">
-                  {item.color}
+                  {cleanColor}
                 </span>
               </span>
             )}

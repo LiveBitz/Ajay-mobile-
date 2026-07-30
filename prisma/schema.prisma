@@ -80,7 +80,8 @@ model Product {
   sizes         String[] // Supported in PostgreSQL
   colors        String[] 
   image         String
-  images        String[] 
+  images        String[]
+  thumbnail     String?  // Small (~400px) variant for grids/carousels/cart — falls back to `image` if not set
   description   String   @default("")
   features      String[] @default([])
   inTheBox      String[] @default([])

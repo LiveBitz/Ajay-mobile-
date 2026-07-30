@@ -18,6 +18,7 @@ interface HurryUpProductCardProps {
     originalPrice: number;
     discount?: number | null;
     image: string;
+    thumbnail?: string | null;
     stock?: number | null;
     sizes?: string[];
   };
@@ -39,6 +40,7 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
   const hasVariantOptions = requiresVariantSelection(product.sizes);
   const totalStock = product.sizes?.length ? getTotalStock(product.sizes) : product.stock ?? 0;
   const isOutOfStock = totalStock <= 0;
+  const displayImage = product.thumbnail || product.image;
 
   const handleWishlistClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -79,7 +81,7 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
         productId: String(product.id),
         name: product.name,
         price: product.price,
-        image: product.image,
+        image: displayImage,
       });
       toast({
         title: "Added to Cart",
@@ -119,7 +121,7 @@ export function HurryUpProductCard({ product }: HurryUpProductCardProps) {
         <div className="relative aspect-square overflow-hidden shrink-0" style={{ backgroundColor: "#27272a" }}>
           <Link href={`/product/${product.slug}`} className="absolute inset-0 block">
             <img
-              src={product.image}
+              src={displayImage}
               alt={product.name}
               className="w-full h-full object-cover transition-transform duration-500 md:group-hover:scale-105"
               onError={(e) => {

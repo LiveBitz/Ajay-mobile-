@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { cleanColorName } from "@/lib/inventory";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -343,7 +344,7 @@ export default function OrderConfirmationPage() {
                   <div className="flex gap-4 mt-2 text-xs text-zinc-500">
                     <span>Qty: {item.quantity}</span>
                     {item.size && <span>Size: {item.size}</span>}
-                    {item.color && <span>Color: {item.color}</span>}
+                    {item.color && <span>Color: {cleanColorName(item.color)}</span>}
                   </div>
                   <p className="text-sm font-bold text-zinc-950 mt-3">
                     ₹{((item.price ?? 0) * (item.quantity ?? 0)).toLocaleString()}

@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  // unsafe-eval needed by Next.js dev/turbopack
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://picsum.photos https://i.pinimg.com https://images.unsplash.com https://i.imgur.com https://zmsbmnxqhmxaaemnswzc.supabase.co https://zjhxlwanzqdigsvqxzau.supabase.co https://api.dicebear.com https://placehold.co",
+      "img-src 'self' data: blob: https://picsum.photos https://i.pinimg.com https://images.unsplash.com https://i.imgur.com https://zmsbmnxqhmxaaemnswzc.supabase.co https://zjhxlwanzqdigsvqxzau.supabase.co https://api.dicebear.com https://placehold.co https://www.scalisite.com",
       "font-src 'self' data:",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://nominatim.openstreetmap.org",
       "frame-ancestors 'none'",

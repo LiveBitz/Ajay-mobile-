@@ -56,6 +56,7 @@ async function getProduct(slug: string) {
       discount: true,
       image: true,
       images: true,
+      thumbnail: true,
       sizes: true,
       colors: true,
       isNew: true,
