@@ -6,6 +6,7 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { parseColor } from "@/lib/inventory";
 import { Filters } from "@/hooks/useProductFilter";
 
 interface FilterSidebarProps {
@@ -53,6 +54,35 @@ const colorMap: Record<string, { hex: string; border?: string }> = {
   Gold:     { hex: "#FFD700", border: "border-yellow-300" },
   Lake:     { hex: "#4A7C9E" },
 };
+
+/**
+ * Resolves a stored colour string to a swatch colour + border.
+ * Stored values may be "Name|#|#hex", a bare hex, or just a name — and names
+ * are often multi-word marketing labels ("Festive Green"). Falls back through
+ * progressively looser matches so a swatch is never rendered invisible.
+ */
+function resolveSwatch(rawColor: string): { hex: string; border?: string; name: string } {
+  const { name, hex } = parseColor(rawColor);
+
+  // 1. Explicit hex from the stored metadata (or a bare hex value).
+  if (hex.startsWith("#")) return { hex, border: colorMap[name]?.border, name };
+
+  // 2. Exact preset match.
+  const exact = colorMap[name];
+  if (exact) return { ...exact, name };
+
+  // 3. Preset name appearing as a word inside a longer label
+  //    ("Festive Green" → Green, "Dune Gold" → Gold).
+  const words = name.toLowerCase().split(/[\s-]+/);
+  const presetKey = Object.keys(colorMap).find((k) => words.includes(k.toLowerCase()));
+  if (presetKey) return { ...colorMap[presetKey], name };
+
+  // 4. Single-word names may be valid CSS colour keywords.
+  if (words.length === 1) return { hex: words[0], border: "border-zinc-200", name };
+
+  // 5. Nothing matched — neutral chip so the (clean) label still reads clearly.
+  return { hex: "#E4E4E7", border: "border-zinc-300", name };
+}
 
 const discounts = [10, 20, 30, 40, 50];
 
@@ -265,17 +295,21 @@ export function FilterSidebar({
               <div className="mt-3 flex flex-wrap gap-3">
                 {availableColors.map((colorName) => {
                   const count   = counts.colors[colorName] ?? 0;
-                  const info    = colorMap[colorName] ?? { hex: colorName.toLowerCase() };
+                  // Stored colours may carry embedded hex metadata ("Name|#|#hex").
+                  // Resolve to a real swatch colour + clean label — the raw
+                  // string stays the filter value so matching is unaffected.
+                  const info    = resolveSwatch(colorName);
                   const checked = filters.colors.includes(colorName);
                   const disabled = count === 0 && !checked;
-                  const isLight = ["White", "Yellow", "Beige", "Lavender", "Mint", "Silver", "Gold"].includes(colorName);
+                  const isLight = ["White", "Yellow", "Beige", "Lavender", "Mint", "Silver", "Gold"]
+                    .some((c) => info.name.toLowerCase().includes(c.toLowerCase()));
 
                   return (
                     <div key={colorName} className="flex flex-col items-center gap-1.5">
                       <button
                         onClick={() => !disabled && toggleArrayFilter("colors", colorName)}
                         disabled={disabled}
-                        title={`${colorName} (${count})`}
+                        title={`${info.name} (${count})`}
                         className={cn(
                           "w-9 h-9 rounded-[10px] border-[1.5px] transition-all duration-150 relative flex items-center justify-center",
                           info.border ?? "border-zinc-200",
@@ -293,7 +327,7 @@ export function FilterSidebar({
                         )}
                       </button>
                       <span className="text-xs font-medium text-zinc-400 truncate max-w-[40px] text-center leading-tight">
-                        {colorName}
+                        {info.name}
                       </span>
                     </div>
                   );
